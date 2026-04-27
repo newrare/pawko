@@ -19,7 +19,7 @@ export class Entity {
   /**
    * @param {{ id?: number, type?: string }} [opts]
    */
-  constructor({ id, type = 'entity' } = {}) {
+  constructor({ id, type = "entity" } = {}) {
     this.id = id ?? nextId++;
     this.type = type;
   }

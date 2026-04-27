@@ -1,6 +1,6 @@
-import Phaser from 'phaser';
-import { SCENE_KEYS } from '../configs/constants.js';
-import { GameController } from '../controllers/game-controller.js';
+import Phaser from "phaser";
+import { SCENE_KEYS } from "../configs/constants.js";
+import { GameController } from "../controllers/game-controller.js";
 
 /**
  * GameScene — the main gameplay scene. Stays thin on purpose: every piece of
@@ -24,6 +24,8 @@ export class GameScene extends Phaser.Scene {
   create(data = {}) {
     this.#controller = new GameController(this, data);
     this.#controller.start();
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.#controller?.destroy());
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () =>
+      this.#controller?.destroy(),
+    );
   }
 }

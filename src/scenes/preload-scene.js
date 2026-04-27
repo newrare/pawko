@@ -1,7 +1,7 @@
-import Phaser from 'phaser';
-import { SCENE_KEYS } from '../configs/constants.js';
-import { layout } from '../managers/layout-manager.js';
-import { audioManager } from '../managers/audio-manager.js';
+import Phaser from "phaser";
+import { SCENE_KEYS } from "../configs/constants.js";
+import { layout } from "../managers/layout-manager.js";
+import { audioManager } from "../managers/audio-manager.js";
 
 /**
  * Preload scene — loads images and warms up the audio pool. Renders a tiny
@@ -19,12 +19,16 @@ export class PreloadScene extends Phaser.Scene {
     const barX = (width - barW) / 2;
     const barY = height / 2;
 
-    const bg = this.add.rectangle(barX + barW / 2, barY, barW, barH, 0x222230).setOrigin(0.5);
-    const fill = this.add.rectangle(barX, barY, 0, barH, 0x6da9ff).setOrigin(0, 0.5);
-    this.load.on('progress', (v) => {
+    const bg = this.add
+      .rectangle(barX + barW / 2, barY, barW, barH, 0x222230)
+      .setOrigin(0.5);
+    const fill = this.add
+      .rectangle(barX, barY, 0, barH, 0x6da9ff)
+      .setOrigin(0, 0.5);
+    this.load.on("progress", (v) => {
       fill.width = barW * v;
     });
-    this.load.on('complete', () => {
+    this.load.on("complete", () => {
       bg.destroy();
       fill.destroy();
     });

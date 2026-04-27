@@ -7,8 +7,7 @@
   align-items: center;
   justify-content: center;
   background: var(--gt-color-overlay);
-  padding:
-    calc(var(--gt-safe-top, 0px) + 12px)
+  padding: calc(var(--gt-safe-top, 0px) + 12px)
     calc(var(--gt-safe-right, 0px) + 12px)
     calc(var(--gt-safe-bottom, 0px) + 12px)
     calc(var(--gt-safe-left, 0px) + 12px);
@@ -27,7 +26,8 @@
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--gt-radius-lg);
   box-shadow: var(--gt-shadow-md);
-  animation: gt-pop-in var(--anim-modal-open, 200ms) cubic-bezier(0.18, 1.2, 0.34, 1) forwards;
+  animation: gt-pop-in var(--anim-modal-open, 200ms)
+    cubic-bezier(0.18, 1.2, 0.34, 1) forwards;
 }
 
 .gt-modal-title {

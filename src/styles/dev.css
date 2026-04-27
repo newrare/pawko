@@ -20,7 +20,11 @@
   position: absolute;
   background: rgba(0, 255, 136, 0.85);
   color: #001a0a;
-  font: 700 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font:
+    700 10px/1 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
   padding: 3px 5px;
   border-radius: 3px;
   white-space: nowrap;
@@ -64,7 +68,11 @@
   cursor: pointer;
   padding: 6px 10px;
   border-radius: 4px;
-  font: 700 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font:
+    700 11px/1 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: #d4ffe5;

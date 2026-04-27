@@ -1,7 +1,7 @@
-import { en } from '../locales/en.js';
-import { fr } from '../locales/fr.js';
-import { STORAGE_KEYS, DEFAULT_LOCALE } from '../configs/constants.js';
-import { EventEmitter } from '../utils/event-emitter.js';
+import { en } from "../locales/en.js";
+import { fr } from "../locales/fr.js";
+import { STORAGE_KEYS, DEFAULT_LOCALE } from "../configs/constants.js";
+import { EventEmitter } from "../utils/event-emitter.js";
 
 const LOCALES = { en, fr };
 
@@ -13,7 +13,7 @@ class I18nManager extends EventEmitter {
     super();
     const saved = localStorage.getItem(STORAGE_KEYS.LOCALE);
     if (saved && LOCALES[saved]) this.#locale = saved;
-    else if (typeof navigator !== 'undefined') {
+    else if (typeof navigator !== "undefined") {
       const lang = navigator.language?.slice(0, 2);
       if (lang && LOCALES[lang]) this.#locale = lang;
     }
@@ -58,12 +58,12 @@ class I18nManager extends EventEmitter {
     if (!LOCALES[code] || code === this.#locale) return;
     this.#locale = code;
     localStorage.setItem(STORAGE_KEYS.LOCALE, code);
-    this.emit('change', code);
+    this.emit("change", code);
   }
 
   /** Subscribe to locale changes. */
   onChange(callback) {
-    return this.on('change', callback);
+    return this.on("change", callback);
   }
 }
 

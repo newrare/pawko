@@ -1,9 +1,9 @@
-import { ListenerBag } from '../utils/listener-bag.js';
-import { InputManager } from '../managers/input-manager.js';
-import { layout } from '../managers/layout-manager.js';
-import { i18n } from '../managers/i18n-manager.js';
-import { gameEvents } from '../utils/event-emitter.js';
-import { MenuModal } from '../components/menu-modal.js';
+import { ListenerBag } from "../utils/listener-bag.js";
+import { InputManager } from "../managers/input-manager.js";
+import { layout } from "../managers/layout-manager.js";
+import { i18n } from "../managers/i18n-manager.js";
+import { gameEvents } from "../utils/event-emitter.js";
+import { MenuModal } from "../components/menu-modal.js";
 
 /**
  * GameController — orchestrates a play session.
@@ -58,7 +58,7 @@ export class GameController {
     this.#bag.add(layout.onChange(() => this.#onLayoutChange()));
     this.#bag.add(i18n.onChange(() => this.#onLocaleChange()));
 
-    gameEvents.emit('game:start', this.#data);
+    gameEvents.emit("game:start", this.#data);
   }
 
   /** Toggle the in-game menu modal. */
@@ -87,7 +87,7 @@ export class GameController {
    */
   #handleDirection(_direction) {
     /* TODO: pass to gameplay logic. */
-    gameEvents.emit('input:direction', _direction);
+    gameEvents.emit("input:direction", _direction);
   }
 
   #onLayoutChange() {
@@ -103,6 +103,6 @@ export class GameController {
     this.#bag.dispose();
     this.#input = null;
     this.#menu = null;
-    gameEvents.emit('game:end');
+    gameEvents.emit("game:end");
   }
 }

@@ -102,7 +102,7 @@ export class ListenerBag {
       try {
         fn();
       } catch (err) {
-        console.error('[ListenerBag] cleanup threw:', err);
+        console.error("[ListenerBag] cleanup threw:", err);
       }
     }
   }

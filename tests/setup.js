@@ -8,7 +8,7 @@
  * regardless of the Node version.
  */
 
-import { afterEach, beforeEach } from 'vitest';
+import { afterEach, beforeEach } from "vitest";
 
 class MemoryStorage {
   #store = new Map();
@@ -34,7 +34,11 @@ class MemoryStorage {
 
 function installStorage(name) {
   const existing = globalThis[name];
-  if (existing && typeof existing.clear === 'function' && typeof existing.getItem === 'function') {
+  if (
+    existing &&
+    typeof existing.clear === "function" &&
+    typeof existing.getItem === "function"
+  ) {
     return; // a working Storage is already present
   }
   const storage = new MemoryStorage();
@@ -43,7 +47,7 @@ function installStorage(name) {
     writable: true,
     value: storage,
   });
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     Object.defineProperty(window, name, {
       configurable: true,
       writable: true,
@@ -52,8 +56,8 @@ function installStorage(name) {
   }
 }
 
-installStorage('localStorage');
-installStorage('sessionStorage');
+installStorage("localStorage");
+installStorage("sessionStorage");
 
 beforeEach(() => {
   globalThis.localStorage.clear();
@@ -61,6 +65,6 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  document.body.innerHTML = '';
-  document.documentElement.removeAttribute('data-orientation');
+  document.body.innerHTML = "";
+  document.documentElement.removeAttribute("data-orientation");
 });

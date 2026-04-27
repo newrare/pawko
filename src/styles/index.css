@@ -1,14 +1,14 @@
 /* --- Single CSS entry. Each module lives in its own file to keep the bundle
        grep-friendly. Add a new component? Add the file + the @import here. --- */
 
-@import './tokens.css';
-@import './base.css';
-@import './layout.css';
-@import './animations.css';
-@import './dev.css';
+@import "./tokens.css";
+@import "./base.css";
+@import "./layout.css";
+@import "./animations.css";
+@import "./dev.css";
 
-@import './components/button.css';
-@import './components/modal.css';
-@import './components/toggle.css';
-@import './components/title.css';
-@import './components/styleguide.css';
+@import "./components/button.css";
+@import "./components/modal.css";
+@import "./components/toggle.css";
+@import "./components/title.css";
+@import "./components/styleguide.css";

@@ -15,8 +15,12 @@
 }
 
 /* Per-orientation tweaks. Use sparingly; layout values come from JS. */
-:root[data-orientation='portrait'] .gt-orient-only-landscape { display: none; }
-:root[data-orientation='landscape'] .gt-orient-only-portrait { display: none; }
+:root[data-orientation="portrait"] .gt-orient-only-landscape {
+  display: none;
+}
+:root[data-orientation="landscape"] .gt-orient-only-portrait {
+  display: none;
+}
 
 /* Scene root: fills #game-container and flex-centers content. Mount this
    element directly on #game-container (not via Phaser DOM) so positioning

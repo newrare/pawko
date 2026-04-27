@@ -1,4 +1,4 @@
-import { ListenerBag } from './listener-bag.js';
+import { ListenerBag } from "./listener-bag.js";
 
 /**
  * Enable keyboard navigation on focusable elements within a container.
@@ -12,7 +12,8 @@ import { ListenerBag } from './listener-bag.js';
  */
 export function enableKeyboardNav(container, options = {}) {
   const SELECTOR =
-    options.selector ?? 'button:not([disabled]), [data-action]:not([data-disabled])';
+    options.selector ??
+    "button:not([disabled]), [data-action]:not([data-disabled])";
   const { gridColumns } = options;
 
   let usingMouse = false;
@@ -22,8 +23,10 @@ export function enableKeyboardNav(container, options = {}) {
   const getFocusable = () =>
     [...container.querySelectorAll(SELECTOR)].filter((el) => {
       if (el.disabled) return false;
-      const style = el.getAttribute('style') ?? '';
-      return !style.includes('display:none') && !style.includes('display: none');
+      const style = el.getAttribute("style") ?? "";
+      return (
+        !style.includes("display:none") && !style.includes("display: none")
+      );
     });
 
   /**
@@ -36,7 +39,7 @@ export function enableKeyboardNav(container, options = {}) {
     items[i]?.focus();
   };
 
-  bag.on(container, 'pointermove', () => {
+  bag.on(container, "pointermove", () => {
     if (usingMouse) return;
     usingMouse = true;
     const active = document.activeElement;
@@ -54,37 +57,40 @@ export function enableKeyboardNav(container, options = {}) {
     const idx = items.indexOf(/** @type {HTMLElement} */ (active));
 
     switch (event.code) {
-      case 'ArrowDown':
-      case 'ArrowRight': {
+      case "ArrowDown":
+      case "ArrowRight": {
         event.preventDefault();
         usingMouse = false;
-        const step = event.code === 'ArrowDown' && gridColumns ? gridColumns : 1;
+        const step =
+          event.code === "ArrowDown" && gridColumns ? gridColumns : 1;
         focusIndex(items, idx + step);
         break;
       }
-      case 'ArrowUp':
-      case 'ArrowLeft': {
+      case "ArrowUp":
+      case "ArrowLeft": {
         event.preventDefault();
         usingMouse = false;
-        const step = event.code === 'ArrowUp' && gridColumns ? gridColumns : 1;
+        const step = event.code === "ArrowUp" && gridColumns ? gridColumns : 1;
         focusIndex(items, idx <= 0 ? items.length - 1 : idx - step);
         break;
       }
-      case 'Enter':
-      case 'Space': {
+      case "Enter":
+      case "Space": {
         if (active && items.includes(/** @type {HTMLElement} */ (active))) {
           event.preventDefault();
-          active.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }));
+          active.dispatchEvent(
+            new PointerEvent("pointerdown", { bubbles: true }),
+          );
         }
         break;
       }
-      case 'Escape':
+      case "Escape":
         options.onEscape?.();
         break;
     }
   };
 
-  bag.on(window, 'keydown', handler);
+  bag.on(window, "keydown", handler);
 
   // Auto-focus first item once.
   const initial = getFocusable();

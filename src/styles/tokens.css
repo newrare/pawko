@@ -3,18 +3,18 @@
 
 :root {
   /* Colors */
-  --gt-color-bg:        #0e0e1a;
-  --gt-color-surface:   #1d1d2e;
+  --gt-color-bg: #0e0e1a;
+  --gt-color-surface: #1d1d2e;
   --gt-color-surface-2: #262638;
-  --gt-color-text:      #e9e9f1;
-  --gt-color-text-dim:  #9696a8;
-  --gt-color-primary:   #6da9ff;
+  --gt-color-text: #e9e9f1;
+  --gt-color-text-dim: #9696a8;
+  --gt-color-primary: #6da9ff;
   --gt-color-primary-2: #4d8be6;
-  --gt-color-success:   #4ed28b;
-  --gt-color-danger:    #ff6b6b;
-  --gt-color-warning:   #ffc66b;
-  --gt-color-focus:     #ffd166;
-  --gt-color-overlay:   rgba(8, 8, 16, 0.72);
+  --gt-color-success: #4ed28b;
+  --gt-color-danger: #ff6b6b;
+  --gt-color-warning: #ffc66b;
+  --gt-color-focus: #ffd166;
+  --gt-color-overlay: rgba(8, 8, 16, 0.72);
 
   /* Radii */
   --gt-radius-sm: 6px;
@@ -35,6 +35,6 @@
   --gt-space-6: 32px;
 
   /* Typography */
-  --gt-font-body:   system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --gt-font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --gt-font-display: var(--gt-font-body);
 }

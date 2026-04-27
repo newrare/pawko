@@ -13,13 +13,23 @@
   letter-spacing: 0.02em;
   background: var(--gt-color-primary);
   color: #ffffff;
-  transition: transform var(--anim-fast, 120ms) ease,
-              filter var(--anim-fast, 120ms) ease;
+  transition:
+    transform var(--anim-fast, 120ms) ease,
+    filter var(--anim-fast, 120ms) ease;
 }
 
-.gt-btn:hover    { filter: brightness(1.1); }
-.gt-btn:active   { transform: scale(0.97); }
-.gt-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; filter: none; }
+.gt-btn:hover {
+  filter: brightness(1.1);
+}
+.gt-btn:active {
+  transform: scale(0.97);
+}
+.gt-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  filter: none;
+}
 
 .gt-btn--secondary {
   background: var(--gt-color-surface-2);

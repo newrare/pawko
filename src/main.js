@@ -1,8 +1,8 @@
-import Phaser from 'phaser';
-import { Capacitor } from '@capacitor/core';
-import { App } from '@capacitor/app';
-import gameConfig from './configs/game-config.js';
-import { APP_NAME, SCENE_KEYS } from './configs/constants.js';
+import Phaser from "phaser";
+import { Capacitor } from "@capacitor/core";
+import { App } from "@capacitor/app";
+import gameConfig from "./configs/game-config.js";
+import { APP_NAME, SCENE_KEYS } from "./configs/constants.js";
 
 /* Set the page title from the centralized constant. */
 document.title = APP_NAME;
@@ -19,14 +19,16 @@ const game = new Phaser.Game(gameConfig);
    Styleguide scene. Both branches use dynamic imports so Vite strips them
    from production. */
 if (import.meta.env.DEV) {
-  import('./scenes/styleguide-scene.js').then(({ StyleguideScene }) => {
+  import("./scenes/styleguide-scene.js").then(({ StyleguideScene }) => {
     game.scene.add(SCENE_KEYS.STYLEGUIDE, StyleguideScene);
   });
-  import('./utils/dev-overlay.js').then(({ installDevOverlay }) => {
+  import("./utils/dev-overlay.js").then(({ installDevOverlay }) => {
     const switchScene = (key) => {
-      [SCENE_KEYS.TITLE, SCENE_KEYS.STYLEGUIDE, SCENE_KEYS.GAME].forEach((k) => {
-        if (k !== key) game.scene.stop(k);
-      });
+      [SCENE_KEYS.TITLE, SCENE_KEYS.STYLEGUIDE, SCENE_KEYS.GAME].forEach(
+        (k) => {
+          if (k !== key) game.scene.stop(k);
+        },
+      );
       game.scene.start(key);
     };
     const install = () =>
@@ -35,7 +37,7 @@ if (import.meta.env.DEV) {
         onStyleguide: () => switchScene(SCENE_KEYS.STYLEGUIDE),
       });
     if (document.body) install();
-    else document.addEventListener('DOMContentLoaded', install, { once: true });
+    else document.addEventListener("DOMContentLoaded", install, { once: true });
   });
 }
 

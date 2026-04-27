@@ -8,9 +8,9 @@
 
 // ─── Game identity ─────────────────────────────────────────────────────────
 
-export const APP_ID = 'game-template';
-export const APP_NAME = 'Game Template';
-export const APP_VERSION = '0.1.0';
+export const APP_ID = "com.pawko.game";
+export const APP_NAME = "Pawko";
+export const APP_VERSION = "0.1.0";
 
 // ─── Orientation ───────────────────────────────────────────────────────────
 
@@ -22,8 +22,8 @@ export const APP_VERSION = '0.1.0';
  * to behave differently in portrait vs. landscape.
  */
 export const ORIENTATIONS = /** @type {const} */ ({
-  PORTRAIT: 'portrait',
-  LANDSCAPE: 'landscape',
+  PORTRAIT: "portrait",
+  LANDSCAPE: "landscape",
 });
 
 /** Active orientation for the current game. Change this single line to switch. */
@@ -32,12 +32,12 @@ export const ORIENTATION = ORIENTATIONS.LANDSCAPE;
 // ─── Scenes ────────────────────────────────────────────────────────────────
 
 export const SCENE_KEYS = /** @type {const} */ ({
-  BOOT: 'BootScene',
-  PRELOAD: 'PreloadScene',
-  TITLE: 'TitleScene',
-  GAME: 'GameScene',
+  BOOT: "BootScene",
+  PRELOAD: "PreloadScene",
+  TITLE: "TitleScene",
+  GAME: "GameScene",
   /** Dev-only: registered conditionally by game-config.js. */
-  STYLEGUIDE: 'StyleguideScene',
+  STYLEGUIDE: "StyleguideScene",
 });
 
 // ─── Layout ────────────────────────────────────────────────────────────────
@@ -116,7 +116,7 @@ export const DEFAULT_OPTIONS = {
  * to `SFX` and (optionally) `SFX_VOLUMES`.
  */
 export const AUDIO = {
-  MUSIC: 'sounds/music.mp3',
+  MUSIC: "sounds/music.mp3",
   MUSIC_VOLUME: 0.4,
   SFX_VOLUME: 0.6,
   /** Per-key volume multipliers (applied on top of SFX_VOLUME). */
@@ -125,11 +125,11 @@ export const AUDIO = {
   },
   /** Map of key → asset path. */
   SFX: {
-    click: 'sounds/sfx-click.mp3',
+    click: "sounds/sfx-click.mp3",
   },
 };
 
 // ─── Locales ───────────────────────────────────────────────────────────────
 
-export const DEFAULT_LOCALE = 'en';
-export const AVAILABLE_LOCALES = ['en', 'fr'];
+export const DEFAULT_LOCALE = "en";
+export const AVAILABLE_LOCALES = ["en", "fr"];

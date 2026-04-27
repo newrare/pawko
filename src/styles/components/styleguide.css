@@ -78,7 +78,11 @@
   position: absolute;
   left: 4px;
   bottom: 4px;
-  font: 700 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font:
+    700 10px/1 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
   color: #fff;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
 }
@@ -101,7 +105,15 @@
   color: var(--gt-color-text);
 }
 
-.gt-sg-anim--fade-in  { animation: gt-fade-in  1.4s ease-in-out infinite alternate; }
-.gt-sg-anim--pop-in   { animation: gt-pop-in   1.4s ease-in-out infinite alternate; }
-.gt-sg-anim--slide-up { animation: gt-slide-up 1.4s ease-in-out infinite alternate; }
-.gt-sg-anim--pulse    { animation: gt-pulse    1.4s ease-in-out infinite; }
+.gt-sg-anim--fade-in {
+  animation: gt-fade-in 1.4s ease-in-out infinite alternate;
+}
+.gt-sg-anim--pop-in {
+  animation: gt-pop-in 1.4s ease-in-out infinite alternate;
+}
+.gt-sg-anim--slide-up {
+  animation: gt-slide-up 1.4s ease-in-out infinite alternate;
+}
+.gt-sg-anim--pulse {
+  animation: gt-pulse 1.4s ease-in-out infinite;
+}

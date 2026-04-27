@@ -1,5 +1,5 @@
-import { SWIPE_THRESHOLD } from '../configs/constants.js';
-import { ListenerBag } from './listener-bag.js';
+import { SWIPE_THRESHOLD } from "../configs/constants.js";
+import { ListenerBag } from "./listener-bag.js";
 
 /**
  * SwipeDetector — pure detect-on-move swipe recogniser.
@@ -49,15 +49,20 @@ export class SwipeDetector {
    *   target?: EventTarget,
    * }} options
    */
-  constructor({ onDirection, shouldIgnore, threshold = SWIPE_THRESHOLD, target = window }) {
+  constructor({
+    onDirection,
+    shouldIgnore,
+    threshold = SWIPE_THRESHOLD,
+    target = window,
+  }) {
     this.#onDirection = onDirection;
     this.#shouldIgnore = shouldIgnore ?? (() => false);
     this.#threshold = threshold;
 
-    this.#bag.on(target, 'touchstart', this.#onTouchStart, { passive: false });
-    this.#bag.on(target, 'touchmove', this.#onTouchMove, { passive: false });
-    this.#bag.on(target, 'touchend', this.#onTouchEnd, { passive: false });
-    this.#bag.on(target, 'touchcancel', this.#onTouchCancel, { passive: true });
+    this.#bag.on(target, "touchstart", this.#onTouchStart, { passive: false });
+    this.#bag.on(target, "touchmove", this.#onTouchMove, { passive: false });
+    this.#bag.on(target, "touchend", this.#onTouchEnd, { passive: false });
+    this.#bag.on(target, "touchcancel", this.#onTouchCancel, { passive: true });
   }
 
   /** Tear down all listeners. Idempotent. */
@@ -87,7 +92,9 @@ export class SwipeDetector {
   #onTouchMove = (e) => {
     if (this.#touchOnUI || this.#touchId === null || this.#fired) return;
     e.preventDefault();
-    const touch = [...e.changedTouches].find((t) => t.identifier === this.#touchId);
+    const touch = [...e.changedTouches].find(
+      (t) => t.identifier === this.#touchId,
+    );
     if (!touch) return;
 
     const dx = touch.clientX - this.#startX;
@@ -107,7 +114,9 @@ export class SwipeDetector {
       return;
     }
     if (this.#touchId === null) return;
-    const touch = [...e.changedTouches].find((t) => t.identifier === this.#touchId);
+    const touch = [...e.changedTouches].find(
+      (t) => t.identifier === this.#touchId,
+    );
     if (!touch) return;
 
     /* Fallback when touchmove was throttled and the finger lifted before a
@@ -133,7 +142,9 @@ export class SwipeDetector {
       return;
     }
     if (this.#touchId !== null) {
-      const cancelled = [...e.changedTouches].find((t) => t.identifier === this.#touchId);
+      const cancelled = [...e.changedTouches].find(
+        (t) => t.identifier === this.#touchId,
+      );
       if (cancelled) {
         this.#touchId = null;
         this.#fired = false;
@@ -150,6 +161,6 @@ export class SwipeDetector {
  * @returns {'up' | 'down' | 'left' | 'right'}
  */
 function directionOf(dx, dy, absDx, absDy) {
-  if (absDx >= absDy) return dx > 0 ? 'right' : 'left';
-  return dy > 0 ? 'down' : 'up';
+  if (absDx >= absDy) return dx > 0 ? "right" : "left";
+  return dy > 0 ? "down" : "up";
 }

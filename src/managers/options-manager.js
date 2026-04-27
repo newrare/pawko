@@ -1,5 +1,5 @@
-import { STORAGE_KEYS, DEFAULT_OPTIONS } from '../configs/constants.js';
-import { EventEmitter } from '../utils/event-emitter.js';
+import { STORAGE_KEYS, DEFAULT_OPTIONS } from "../configs/constants.js";
+import { EventEmitter } from "../utils/event-emitter.js";
 
 /**
  * OptionsManager — single source of truth for user preferences persisted in
@@ -33,13 +33,13 @@ class OptionsManager extends EventEmitter {
     if (this.#options[key] === value) return;
     this.#options[key] = value;
     this.#save();
-    this.emit('change', key, value);
+    this.emit("change", key, value);
     this.emit(`change:${key}`, value);
   }
 
   /** Subscribe to any option change. */
   onChange(callback) {
-    return this.on('change', callback);
+    return this.on("change", callback);
   }
 
   // ─── Convenience accessors ───────────────────────────

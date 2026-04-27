@@ -1,5 +1,10 @@
-import { ORIENTATION, ORIENTATIONS, SAFE_ZONE, ANIM } from '../configs/constants.js';
-import { EventEmitter } from '../utils/event-emitter.js';
+import {
+  ORIENTATION,
+  ORIENTATIONS,
+  SAFE_ZONE,
+  ANIM,
+} from "../configs/constants.js";
+import { EventEmitter } from "../utils/event-emitter.js";
 
 /**
  * LayoutManager — computes a centered safe-zone box from the viewport and
@@ -54,10 +59,10 @@ class LayoutManager extends EventEmitter {
     this.height = h;
 
     const root = getComputedStyle(document.documentElement);
-    const envTop = parseFloat(root.getPropertyValue('--sai-top')) || 0;
-    const envBottom = parseFloat(root.getPropertyValue('--sai-bottom')) || 0;
-    const envLeft = parseFloat(root.getPropertyValue('--sai-left')) || 0;
-    const envRight = parseFloat(root.getPropertyValue('--sai-right')) || 0;
+    const envTop = parseFloat(root.getPropertyValue("--sai-top")) || 0;
+    const envBottom = parseFloat(root.getPropertyValue("--sai-bottom")) || 0;
+    const envLeft = parseFloat(root.getPropertyValue("--sai-left")) || 0;
+    const envRight = parseFloat(root.getPropertyValue("--sai-right")) || 0;
 
     const insetTop = Math.max(envTop, h * SAFE_ZONE.MIN_TOP);
     const insetBottom = Math.max(envBottom, h * SAFE_ZONE.MIN_BOTTOM);
@@ -65,8 +70,12 @@ class LayoutManager extends EventEmitter {
     const insetRight = Math.max(envRight, w * SAFE_ZONE.MIN_SIDE);
 
     const isPortrait = ORIENTATION === ORIENTATIONS.PORTRAIT;
-    const maxW = isPortrait ? SAFE_ZONE.MAX_WIDTH_PORTRAIT : SAFE_ZONE.MAX_WIDTH_LANDSCAPE;
-    const maxH = isPortrait ? SAFE_ZONE.MAX_HEIGHT_PORTRAIT : SAFE_ZONE.MAX_HEIGHT_LANDSCAPE;
+    const maxW = isPortrait
+      ? SAFE_ZONE.MAX_WIDTH_PORTRAIT
+      : SAFE_ZONE.MAX_WIDTH_LANDSCAPE;
+    const maxH = isPortrait
+      ? SAFE_ZONE.MAX_HEIGHT_PORTRAIT
+      : SAFE_ZONE.MAX_HEIGHT_LANDSCAPE;
 
     const availW = w - insetLeft - insetRight;
     const availH = h - insetTop - insetBottom;
@@ -91,38 +100,44 @@ class LayoutManager extends EventEmitter {
     this.safe.cy = top + cappedHeight / 2;
 
     this.#publishLayoutVars();
-    this.emit('change', this);
+    this.emit("change", this);
   }
 
   /** Subscribe to layout changes (fired on every `update`). */
   onChange(callback) {
-    return this.on('change', callback);
+    return this.on("change", callback);
   }
 
   // ─── Publish CSS vars ──────────────────────────────────────────────────
 
   #publishLayoutVars() {
     const r = document.documentElement.style;
-    r.setProperty('--gt-vw', `${Math.round(this.width)}px`);
-    r.setProperty('--gt-vh', `${Math.round(this.height)}px`);
-    r.setProperty('--gt-safe-top', `${Math.round(this.safe.top)}px`);
-    r.setProperty('--gt-safe-bottom', `${Math.round(this.height - this.safe.bottom)}px`);
-    r.setProperty('--gt-safe-left', `${Math.round(this.safe.left)}px`);
-    r.setProperty('--gt-safe-right', `${Math.round(this.width - this.safe.right)}px`);
-    r.setProperty('--gt-safe-width', `${Math.round(this.safe.width)}px`);
-    r.setProperty('--gt-safe-height', `${Math.round(this.safe.height)}px`);
-    r.setProperty('--gt-safe-cx', `${Math.round(this.safe.cx)}px`);
-    r.setProperty('--gt-safe-cy', `${Math.round(this.safe.cy)}px`);
-    document.documentElement.setAttribute('data-orientation', this.orientation);
+    r.setProperty("--gt-vw", `${Math.round(this.width)}px`);
+    r.setProperty("--gt-vh", `${Math.round(this.height)}px`);
+    r.setProperty("--gt-safe-top", `${Math.round(this.safe.top)}px`);
+    r.setProperty(
+      "--gt-safe-bottom",
+      `${Math.round(this.height - this.safe.bottom)}px`,
+    );
+    r.setProperty("--gt-safe-left", `${Math.round(this.safe.left)}px`);
+    r.setProperty(
+      "--gt-safe-right",
+      `${Math.round(this.width - this.safe.right)}px`,
+    );
+    r.setProperty("--gt-safe-width", `${Math.round(this.safe.width)}px`);
+    r.setProperty("--gt-safe-height", `${Math.round(this.safe.height)}px`);
+    r.setProperty("--gt-safe-cx", `${Math.round(this.safe.cx)}px`);
+    r.setProperty("--gt-safe-cy", `${Math.round(this.safe.cy)}px`);
+    document.documentElement.setAttribute("data-orientation", this.orientation);
   }
 
   #publishAnimVars() {
     const r = document.documentElement.style;
-    r.setProperty('--anim-fast', `${ANIM.FAST}ms`);
-    r.setProperty('--anim-normal', `${ANIM.NORMAL}ms`);
-    r.setProperty('--anim-slow', `${ANIM.SLOW}ms`);
-    r.setProperty('--anim-modal-open', `${ANIM.MODAL_OPEN}ms`);
-    r.setProperty('--anim-modal-close', `${ANIM.MODAL_CLOSE}ms`);
+    r.setProperty("--anim-fast", `${ANIM.FAST}ms`);
+    r.setProperty("--anim-normal", `${ANIM.NORMAL}ms`);
+    r.setProperty("--anim-slow", `${ANIM.SLOW}ms`);
+    r.setProperty("--anim-modal-open", `${ANIM.MODAL_OPEN}ms`);
+    r.setProperty("--anim-modal-close", `${ANIM.MODAL_CLOSE}ms`);
   }
 }
 

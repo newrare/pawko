@@ -15,25 +15,32 @@ export function el(tag, attrs = {}, children) {
   const node = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) {
     if (v == null || v === false) continue;
-    if (k === 'class') node.className = String(v);
-    else if (k === 'dataset') {
-      for (const [dk, dv] of Object.entries(/** @type {Record<string, string>} */ (v))) {
+    if (k === "class") node.className = String(v);
+    else if (k === "dataset") {
+      for (const [dk, dv] of Object.entries(
+        /** @type {Record<string, string>} */ (v),
+      )) {
         node.dataset[dk] = dv;
       }
-    } else if (k.startsWith('on') && typeof v === 'function') {
-      node.addEventListener(k.slice(2).toLowerCase(), /** @type {EventListener} */ (v));
+    } else if (k.startsWith("on") && typeof v === "function") {
+      node.addEventListener(
+        k.slice(2).toLowerCase(),
+        /** @type {EventListener} */ (v),
+      );
     } else if (v === true) {
-      node.setAttribute(k, '');
+      node.setAttribute(k, "");
     } else {
       node.setAttribute(k, String(v));
     }
   }
   if (children !== undefined) {
-    if (typeof children === 'string') {
+    if (typeof children === "string") {
       node.textContent = children;
     } else {
       for (const child of children) {
-        node.append(typeof child === 'string' ? document.createTextNode(child) : child);
+        node.append(
+          typeof child === "string" ? document.createTextNode(child) : child,
+        );
       }
     }
   }

@@ -1,5 +1,5 @@
-import { ListenerBag } from '../utils/listener-bag.js';
-import { SwipeDetector } from '../utils/swipe-detector.js';
+import { ListenerBag } from "../utils/listener-bag.js";
+import { SwipeDetector } from "../utils/swipe-detector.js";
 
 /**
  * InputManager — keyboard arrows / WASD / Escape + touch swipe.
@@ -28,7 +28,8 @@ export class InputManager {
    * Selector that marks elements where touches should fall through to the
    * browser instead of triggering a swipe. Override at construction.
    */
-  static UI_SELECTOR = 'button, a, input, textarea, .gt-modal-overlay, .gt-clickable, [data-action]';
+  static UI_SELECTOR =
+    "button, a, input, textarea, .gt-modal-overlay, .gt-clickable, [data-action]";
 
   /**
    * @param {Phaser.Scene} scene
@@ -39,7 +40,10 @@ export class InputManager {
    *   uiSelector?: string,
    * }} callbacks
    */
-  constructor(scene, { onDirection, onMenu = () => {}, isBlocked = () => false, uiSelector }) {
+  constructor(
+    scene,
+    { onDirection, onMenu = () => {}, isBlocked = () => false, uiSelector },
+  ) {
     this.#onDirection = onDirection;
     this.#onMenu = onMenu;
     this.#isBlocked = isBlocked;
@@ -48,8 +52,8 @@ export class InputManager {
 
     // Keyboard
     const onKey = this.#handleKey;
-    scene.input.keyboard?.on('keydown', onKey, this);
-    this.#bag.add(() => scene.input.keyboard?.off('keydown', onKey, this));
+    scene.input.keyboard?.on("keydown", onKey, this);
+    this.#bag.add(() => scene.input.keyboard?.off("keydown", onKey, this));
 
     // Touch — delegated to SwipeDetector
     this.#swipe = new SwipeDetector({
@@ -67,7 +71,7 @@ export class InputManager {
 
   /** @param {KeyboardEvent} event */
   #handleKey = (event) => {
-    if (event.code === 'Escape') {
+    if (event.code === "Escape") {
       this.#onMenu();
       return;
     }
@@ -75,21 +79,21 @@ export class InputManager {
     /** @type {'up' | 'down' | 'left' | 'right' | null} */
     let direction = null;
     switch (event.code) {
-      case 'ArrowUp':
-      case 'KeyW':
-        direction = 'up';
+      case "ArrowUp":
+      case "KeyW":
+        direction = "up";
         break;
-      case 'ArrowDown':
-      case 'KeyS':
-        direction = 'down';
+      case "ArrowDown":
+      case "KeyS":
+        direction = "down";
         break;
-      case 'ArrowLeft':
-      case 'KeyA':
-        direction = 'left';
+      case "ArrowLeft":
+      case "KeyA":
+        direction = "left";
         break;
-      case 'ArrowRight':
-      case 'KeyD':
-        direction = 'right';
+      case "ArrowRight":
+      case "KeyD":
+        direction = "right";
         break;
     }
     if (direction) {

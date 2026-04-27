@@ -1,6 +1,6 @@
-import { ListenerBag } from '../utils/listener-bag.js';
-import { enableKeyboardNav } from '../utils/keyboard-nav.js';
-import { i18n } from '../managers/i18n-manager.js';
+import { ListenerBag } from "../utils/listener-bag.js";
+import { enableKeyboardNav } from "../utils/keyboard-nav.js";
+import { i18n } from "../managers/i18n-manager.js";
 
 /**
  * BaseModal — every DOM modal extends this.
@@ -64,12 +64,12 @@ export class BaseModal {
 
   /** Title shown in the header. Override or pass via options. */
   get title() {
-    return this.options.title ?? '';
+    return this.options.title ?? "";
   }
 
   /** Subclasses return the body HTML string. */
   renderBody() {
-    return '';
+    return "";
   }
 
   /**
@@ -91,7 +91,7 @@ export class BaseModal {
     this.#domElement.setDepth(this.options.depth);
 
     const overlay = /** @type {HTMLElement} */ (this.#domElement.node);
-    this.bag.on(overlay, 'pointerdown', this.#handleClick);
+    this.bag.on(overlay, "pointerdown", this.#handleClick);
 
     if (this.options.keyboardNav) {
       this.#keyNav = enableKeyboardNav(overlay, {
@@ -125,17 +125,21 @@ export class BaseModal {
   refresh() {
     const overlay = this.#domElement?.node;
     if (!overlay) return;
-    const titleEl = overlay.querySelector('.gt-modal-title');
+    const titleEl = overlay.querySelector(".gt-modal-title");
     if (titleEl) titleEl.textContent = this.title;
-    const bodyEl = overlay.querySelector('.gt-modal-body');
+    const bodyEl = overlay.querySelector(".gt-modal-body");
     if (bodyEl) bodyEl.innerHTML = this.renderBody();
   }
 
   // ─── Internals ───────────────────────────────────
 
   #buildHtml() {
-    const cls = ['gt-modal-overlay', this.options.className].filter(Boolean).join(' ');
-    const titleHtml = this.title ? `<div class="gt-modal-title">${this.title}</div>` : '';
+    const cls = ["gt-modal-overlay", this.options.className]
+      .filter(Boolean)
+      .join(" ");
+    const titleHtml = this.title
+      ? `<div class="gt-modal-title">${this.title}</div>`
+      : "";
     return `
       <div class="${cls}">
         <div class="gt-modal" role="dialog" aria-modal="true">
@@ -151,16 +155,16 @@ export class BaseModal {
     const target = /** @type {HTMLElement} */ (event.target);
 
     /* Backdrop click. */
-    if (this.options.closeOnBackdrop && !target.closest('.gt-modal')) {
+    if (this.options.closeOnBackdrop && !target.closest(".gt-modal")) {
       this.close();
       return;
     }
 
     /* Action delegation. */
-    const actionEl = target.closest('[data-action]');
+    const actionEl = target.closest("[data-action]");
     if (actionEl) {
       const action = /** @type {HTMLElement} */ (actionEl).dataset.action;
-      if (action === 'close') {
+      if (action === "close") {
         event.stopPropagation();
         this.close();
         return;

@@ -1,7 +1,7 @@
-import { BaseModal } from './modal-base.js';
-import { buttonHtml } from './ui/button.js';
-import { i18n } from '../managers/i18n-manager.js';
-import { OptionsModal } from './options-modal.js';
+import { BaseModal } from "./modal-base.js";
+import { buttonHtml } from "./ui/button.js";
+import { i18n } from "../managers/i18n-manager.js";
+import { OptionsModal } from "./options-modal.js";
 
 /**
  * Sample top-level menu modal. Demonstrates BaseModal usage and how to open
@@ -16,39 +16,53 @@ export class MenuModal extends BaseModal {
   #options = null;
 
   get title() {
-    return i18n.t('menu.title');
+    return i18n.t("menu.title");
   }
 
   renderBody() {
     const buttons = [];
     if (this.options.showResume) {
-      buttons.push(buttonHtml({ action: 'resume', label: i18n.t('menu.resume') }));
+      buttons.push(
+        buttonHtml({ action: "resume", label: i18n.t("menu.resume") }),
+      );
     } else {
-      buttons.push(buttonHtml({ action: 'start', label: i18n.t('menu.start') }));
+      buttons.push(
+        buttonHtml({ action: "start", label: i18n.t("menu.start") }),
+      );
     }
     buttons.push(
-      buttonHtml({ action: 'options', label: i18n.t('menu.options'), variant: 'secondary' }),
+      buttonHtml({
+        action: "options",
+        label: i18n.t("menu.options"),
+        variant: "secondary",
+      }),
     );
     if (this.options.onExit) {
-      buttons.push(buttonHtml({ action: 'exit', label: i18n.t('menu.exit'), variant: 'ghost' }));
+      buttons.push(
+        buttonHtml({
+          action: "exit",
+          label: i18n.t("menu.exit"),
+          variant: "ghost",
+        }),
+      );
     }
-    return `<div class="gt-stack">${buttons.join('')}</div>`;
+    return `<div class="gt-stack">${buttons.join("")}</div>`;
   }
 
   onAction(action) {
     switch (action) {
-      case 'resume':
+      case "resume":
         this.options.onResume?.();
         this.close();
         break;
-      case 'start':
+      case "start":
         this.options.onStart?.();
         this.close();
         break;
-      case 'options':
+      case "options":
         this.#openOptions();
         break;
-      case 'exit':
+      case "exit":
         this.options.onExit?.();
         break;
     }

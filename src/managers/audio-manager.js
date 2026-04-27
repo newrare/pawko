@@ -1,5 +1,5 @@
-import { AUDIO } from '../configs/constants.js';
-import { optionsManager } from './options-manager.js';
+import { AUDIO } from "../configs/constants.js";
+import { optionsManager } from "./options-manager.js";
 
 /**
  * AudioManager — background music and SFX via HTML5 Audio.
@@ -35,23 +35,26 @@ class AudioManager {
       this.#music = new Audio(AUDIO.MUSIC);
       this.#music.loop = true;
       this.#music.volume = AUDIO.MUSIC_VOLUME;
-      this.#music.preload = 'auto';
+      this.#music.preload = "auto";
     }
 
-    document.addEventListener('visibilitychange', () => {
+    document.addEventListener("visibilitychange", () => {
       if (document.hidden) this.#pauseMusic();
       else if (optionsManager.musicEnabled) this.#resumeMusic();
     });
 
     for (const [key, path] of Object.entries(AUDIO.SFX)) {
       const audio = new Audio(path);
-      audio.preload = 'auto';
-      audio.volume = Math.min(1, AUDIO.SFX_VOLUME * (AUDIO.SFX_VOLUMES?.[key] ?? 1));
+      audio.preload = "auto";
+      audio.volume = Math.min(
+        1,
+        AUDIO.SFX_VOLUME * (AUDIO.SFX_VOLUMES?.[key] ?? 1),
+      );
       this.#sfxPool.set(key, audio);
     }
 
     /* React to music toggle without each caller having to remember to. */
-    this.#unsubMusic = optionsManager.on('change:music', (enabled) => {
+    this.#unsubMusic = optionsManager.on("change:music", (enabled) => {
       if (enabled) this.#resumeMusic();
       else this.#pauseMusic();
     });
@@ -67,12 +70,14 @@ class AudioManager {
     this.#unlocked = true;
     if (optionsManager.musicEnabled) this.#resumeMusic();
 
-    const INTERACTIVE = '.gt-btn, .gt-clickable';
+    const INTERACTIVE = ".gt-btn, .gt-clickable";
     document.addEventListener(
-      'pointerdown',
+      "pointerdown",
       (e) => {
-        const btn = /** @type {HTMLElement | null} */ (e.target)?.closest?.(INTERACTIVE);
-        if (btn && !btn.hasAttribute('data-no-sfx')) this.playSfx('click');
+        const btn = /** @type {HTMLElement | null} */ (e.target)?.closest?.(
+          INTERACTIVE,
+        );
+        if (btn && !btn.hasAttribute("data-no-sfx")) this.playSfx("click");
       },
       true,
     );

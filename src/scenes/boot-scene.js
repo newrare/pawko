@@ -1,6 +1,6 @@
-import Phaser from 'phaser';
-import { SCENE_KEYS } from '../configs/constants.js';
-import { layout } from '../managers/layout-manager.js';
+import Phaser from "phaser";
+import { SCENE_KEYS } from "../configs/constants.js";
+import { layout } from "../managers/layout-manager.js";
 
 /**
  * Boot scene — wires the layout manager to viewport resizes, then hands off
@@ -13,7 +13,9 @@ export class BootScene extends Phaser.Scene {
 
   create() {
     layout.update(window.innerWidth, window.innerHeight);
-    this.scale.on('resize', () => layout.update(window.innerWidth, window.innerHeight));
+    this.scale.on("resize", () =>
+      layout.update(window.innerWidth, window.innerHeight),
+    );
     this.scene.start(SCENE_KEYS.PRELOAD);
   }
 }

@@ -6,8 +6,10 @@
  * @returns {string}
  */
 export function toggleRowHtml({ action, label, checked, disabled }) {
-  const cls = ['gt-toggle', checked ? 'gt-toggle--on' : 'gt-toggle--off'].join(' ');
-  const dis = disabled ? 'data-disabled' : '';
+  const cls = ["gt-toggle", checked ? "gt-toggle--on" : "gt-toggle--off"].join(
+    " ",
+  );
+  const dis = disabled ? "data-disabled" : "";
   return `
     <div class="gt-row gt-clickable" data-action="${action}" role="switch" aria-checked="${checked}" ${dis}>
       <span class="gt-row-label">${label}</span>

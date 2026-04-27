@@ -1,4 +1,4 @@
-import { STORAGE_KEYS, MAX_SAVE_SLOTS } from '../configs/constants.js';
+import { STORAGE_KEYS, MAX_SAVE_SLOTS } from "../configs/constants.js";
 
 /**
  * SaveManager — generic localStorage persistence for game-wide state.

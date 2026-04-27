@@ -1,2 +1,2 @@
-export * from './constants.js';
-export { default as gameConfig } from './game-config.js';
+export * from "./constants.js";
+export { default as gameConfig } from "./game-config.js";
