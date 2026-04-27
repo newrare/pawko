@@ -1,0 +1,40 @@
+/* --- Design tokens. The whole game uses a single visual identity — there is
+       no theme switcher. To rebrand, edit the values here. --- */
+
+:root {
+  /* Colors */
+  --gt-color-bg:        #0e0e1a;
+  --gt-color-surface:   #1d1d2e;
+  --gt-color-surface-2: #262638;
+  --gt-color-text:      #e9e9f1;
+  --gt-color-text-dim:  #9696a8;
+  --gt-color-primary:   #6da9ff;
+  --gt-color-primary-2: #4d8be6;
+  --gt-color-success:   #4ed28b;
+  --gt-color-danger:    #ff6b6b;
+  --gt-color-warning:   #ffc66b;
+  --gt-color-focus:     #ffd166;
+  --gt-color-overlay:   rgba(8, 8, 16, 0.72);
+
+  /* Radii */
+  --gt-radius-sm: 6px;
+  --gt-radius-md: 12px;
+  --gt-radius-lg: 18px;
+
+  /* Shadows */
+  --gt-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.25);
+  --gt-shadow-md: 0 6px 18px rgba(0, 0, 0, 0.35);
+  --gt-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.45);
+
+  /* Spacing scale */
+  --gt-space-1: 4px;
+  --gt-space-2: 8px;
+  --gt-space-3: 12px;
+  --gt-space-4: 16px;
+  --gt-space-5: 24px;
+  --gt-space-6: 32px;
+
+  /* Typography */
+  --gt-font-body:   system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --gt-font-display: var(--gt-font-body);
+}

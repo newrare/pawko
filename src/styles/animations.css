@@ -1,0 +1,26 @@
+/* --- Keyframes only. Component CSS references them via animation-name. --- */
+
+@keyframes gt-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes gt-fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes gt-pop-in {
+  from { transform: scale(0.85); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+@keyframes gt-slide-up {
+  from { transform: translateY(8%); opacity: 0; }
+  to   { transform: translateY(0);  opacity: 1; }
+}
+
+@keyframes gt-pulse {
+  0%, 100% { transform: scale(1);    }
+  50%      { transform: scale(1.05); }
+}

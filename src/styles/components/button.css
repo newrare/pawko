@@ -1,0 +1,50 @@
+/* --- Button component. Variants are class modifiers (--primary, …). --- */
+
+.gt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid transparent;
+  border-radius: var(--gt-radius-md);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: var(--gt-color-primary);
+  color: #ffffff;
+  transition: transform var(--anim-fast, 120ms) ease,
+              filter var(--anim-fast, 120ms) ease;
+}
+
+.gt-btn:hover    { filter: brightness(1.1); }
+.gt-btn:active   { transform: scale(0.97); }
+.gt-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; filter: none; }
+
+.gt-btn--secondary {
+  background: var(--gt-color-surface-2);
+  color: var(--gt-color-text);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.gt-btn--ghost {
+  background: transparent;
+  color: var(--gt-color-text-dim);
+}
+
+.gt-btn--danger {
+  background: var(--gt-color-danger);
+}
+
+.gt-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  width: 1.2em;
+  height: 1.2em;
+}
+
+.gt-btn-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}

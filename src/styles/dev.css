@@ -1,0 +1,81 @@
+/* --- Dev-only overlays. The CSS lives here unconditionally; the markup
+       is only injected by `installDevOverlay()` in DEV builds. --- */
+
+/* --- Safe-zone outline --- */
+
+.gt-dev-safe-zone {
+  position: fixed;
+  left: var(--gt-safe-left, 0);
+  top: var(--gt-safe-top, 0);
+  width: var(--gt-safe-width, 0);
+  height: var(--gt-safe-height, 0);
+  pointer-events: none;
+  z-index: 99998;
+  border: 2px dashed #00ff88;
+  outline: 1px solid rgba(0, 255, 136, 0.2);
+}
+
+.gt-dev-safe-zone-label,
+.gt-dev-safe-zone-dim {
+  position: absolute;
+  background: rgba(0, 255, 136, 0.85);
+  color: #001a0a;
+  font: 700 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  padding: 3px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.gt-dev-safe-zone-label {
+  top: 0;
+  left: 0;
+  transform: translate(0, -100%);
+}
+
+.gt-dev-safe-zone-dim {
+  bottom: 0;
+  right: 0;
+  transform: translate(0, 100%);
+}
+
+/* --- Nav bar (bottom-right, viewport-anchored) ---
+       Sits OUTSIDE Phaser's DOM container so `position: fixed` resolves
+       against the viewport (Phaser's wrapper applies a transform and
+       creates a new containing block, which would break `fixed`). */
+
+.gt-dev-bar {
+  position: fixed;
+  right: 8px;
+  bottom: 8px;
+  z-index: 99999;
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 6px;
+  background: rgba(0, 28, 14, 0.85);
+  border: 1px dashed rgba(0, 255, 136, 0.45);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+}
+
+.gt-dev-bar-btn {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font: 700 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #d4ffe5;
+  background: transparent;
+  transition: background 120ms ease;
+}
+
+.gt-dev-bar-btn:hover {
+  background: rgba(0, 255, 136, 0.15);
+}
+
+.gt-dev-bar-btn:active {
+  background: rgba(0, 255, 136, 0.25);
+}

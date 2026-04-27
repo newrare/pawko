@@ -1,0 +1,36 @@
+/* --- Toggle switch used in gt-row. --- */
+
+.gt-toggle {
+  position: relative;
+  width: 42px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--gt-color-surface-2);
+  transition: background var(--anim-fast, 120ms) ease;
+  flex-shrink: 0;
+}
+
+.gt-toggle--on {
+  background: var(--gt-color-primary);
+}
+
+.gt-toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  transition: transform var(--anim-fast, 120ms) ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.gt-toggle--on .gt-toggle-knob {
+  transform: translateX(18px);
+}
+
+.gt-row[data-disabled] {
+  opacity: 0.5;
+  pointer-events: none;
+}

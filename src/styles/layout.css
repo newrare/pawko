@@ -1,0 +1,63 @@
+/* --- Safe-zone-aware container. LayoutManager pushes the --gt-safe-* vars on
+       :root; CSS only reads them, never recomputes its own values. --- */
+
+.gt-safe {
+  position: absolute;
+  left: var(--gt-safe-left, 0);
+  top: var(--gt-safe-top, 0);
+  width: var(--gt-safe-width, 100%);
+  height: var(--gt-safe-height, 100%);
+  pointer-events: none;
+}
+
+.gt-safe > * {
+  pointer-events: auto;
+}
+
+/* Per-orientation tweaks. Use sparingly; layout values come from JS. */
+:root[data-orientation='portrait'] .gt-orient-only-landscape { display: none; }
+:root[data-orientation='landscape'] .gt-orient-only-portrait { display: none; }
+
+/* Scene root: fills #game-container and flex-centers content. Mount this
+   element directly on #game-container (not via Phaser DOM) so positioning
+   is relative to the real viewport with no transform interference. */
+.gt-scene-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.gt-scene-center > * {
+  pointer-events: auto;
+}
+
+/* Vertical stack helper for modal bodies, menus, … */
+.gt-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gt-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: var(--gt-radius-md);
+  background: var(--gt-color-surface-2);
+  gap: 12px;
+}
+
+.gt-row-label {
+  color: var(--gt-color-text);
+  font-weight: 600;
+}
+
+.gt-row-value {
+  color: var(--gt-color-text-dim);
+  font-size: 0.9em;
+  text-transform: capitalize;
+}

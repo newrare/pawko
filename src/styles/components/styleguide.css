@@ -1,0 +1,107 @@
+/* --- Styleguide scene (dev-only). Pure presentation; never reuse these
+       classes in gameplay code — they're purpose-built for the gallery. --- */
+
+.gt-safe-box {
+  position: absolute;
+  left: var(--gt-safe-left, 0);
+  top: var(--gt-safe-top, 0);
+  width: var(--gt-safe-width, 100%);
+  height: var(--gt-safe-height, 100%);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.gt-sg {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gt-space-5);
+  padding: var(--gt-space-4);
+  color: var(--gt-color-text);
+}
+
+.gt-sg-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gt-space-3);
+  position: sticky;
+  top: 0;
+  background: linear-gradient(
+    to bottom,
+    var(--gt-color-bg) 0%,
+    var(--gt-color-bg) 70%,
+    rgba(0, 0, 0, 0)
+  );
+  padding-bottom: var(--gt-space-3);
+  z-index: 1;
+}
+
+.gt-sg-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.gt-sg-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gt-space-3);
+  padding: var(--gt-space-4);
+  background: var(--gt-color-surface);
+  border-radius: var(--gt-radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.gt-sg-h2 {
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--gt-color-text-dim);
+  font-weight: 700;
+}
+
+/* Color swatches */
+.gt-sg-swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: var(--gt-space-2);
+}
+
+.gt-sg-swatch {
+  position: relative;
+  aspect-ratio: 1.5;
+  border-radius: var(--gt-radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.gt-sg-swatch-name {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  font: 700 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+}
+
+/* Animation gallery */
+.gt-sg-anims {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: var(--gt-space-2);
+}
+
+.gt-sg-anim {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 64px;
+  border-radius: var(--gt-radius-md);
+  background: var(--gt-color-surface-2);
+  font-weight: 600;
+  color: var(--gt-color-text);
+}
+
+.gt-sg-anim--fade-in  { animation: gt-fade-in  1.4s ease-in-out infinite alternate; }
+.gt-sg-anim--pop-in   { animation: gt-pop-in   1.4s ease-in-out infinite alternate; }
+.gt-sg-anim--slide-up { animation: gt-slide-up 1.4s ease-in-out infinite alternate; }
+.gt-sg-anim--pulse    { animation: gt-pulse    1.4s ease-in-out infinite; }

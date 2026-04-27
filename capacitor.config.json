@@ -1,0 +1,14 @@
+{
+  "appId": "com.example.gametemplate",
+  "appName": "Game Template",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false
+  },
+  "ios": {
+    "contentInset": "always"
+  }
+}
