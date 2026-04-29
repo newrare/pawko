@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Pawko — 10 propositions de design</title>
+    <style>
+      /* --- Page shell --- */
+      :root {
+        --page-bg: #f5f1ea;
+        --page-fg: #1f1b2e;
+        --page-dim: #6b6478;
+        --page-card: #ffffff;
+        --page-line: rgba(0, 0, 0, 0.08);
+        --page-shadow: 0 10px 30px rgba(20, 14, 38, 0.08);
+        --radius: 16px;
+        --gap: 22px;
+      }
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        font-family: ui-rounded, "SF Pro Rounded", "Quicksand", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        background: var(--page-bg);
+        color: var(--page-fg);
+        line-height: 1.45;
+        -webkit-font-smoothing: antialiased;
+      }
+      header.page {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 56px 24px 24px;
+      }
+      header.page h1 {
+        font-size: clamp(28px, 4vw, 40px);
+        margin: 0 0 8px;
+        letter-spacing: -0.02em;
+      }
+      header.page p.lede {
+        margin: 0;
+        color: var(--page-dim);
+        max-width: 60ch;
+      }
+      header.page .crumbs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 18px;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--page-dim);
+      }
+      header.page .crumbs span:not(:last-child)::after {
+        content: "·";
+        margin-left: 10px;
+        opacity: 0.5;
+      }
+
+      main.grid {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 24px 24px 80px;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: var(--gap);
+      }
+
+      /* --- Card chrome --- */
+      .card {
+        background: var(--page-card);
+        border-radius: var(--radius);
+        overflow: hidden;
+        box-shadow: var(--page-shadow);
+        display: flex;
+        flex-direction: column;
+        border: 1px solid var(--page-line);
+      }
+      .meta {
+        padding: 14px 16px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .meta h2 {
+        font-size: 16px;
+        margin: 0;
+        letter-spacing: -0.01em;
+      }
+      .meta .tags {
+        margin: 0;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--page-dim);
+      }
+      .meta .blurb {
+        margin: 4px 0 0;
+        font-size: 13px;
+        color: #3b3447;
+      }
+      .palette {
+        list-style: none;
+        margin: 6px 0 0;
+        padding: 0;
+        display: flex;
+        gap: 6px;
+      }
+      .palette li {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--c);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+      }
+
+      /* --- Mini preview (matches prototype layout: 10/70/10/10) --- */
+      .preview {
+        position: relative;
+        aspect-ratio: 9 / 14;
+        background: var(--bg, #eee);
+        color: var(--fg, #222);
+        display: grid;
+        grid-template-rows: 12% 68% 10% 10%;
+        font-family: var(--font, inherit);
+        overflow: hidden;
+        isolation: isolate;
+      }
+
+      .row {
+        display: flex;
+        position: relative;
+      }
+      .row > * {
+        flex: 1 1 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      /* --- Drops row --- */
+      .drop {
+        background: var(--drop-bg, rgba(255, 255, 255, 0.5));
+        color: var(--drop-fg, inherit);
+        border-right: 1px solid var(--divider, rgba(0, 0, 0, 0.08));
+        position: relative;
+      }
+      .drop:last-child { border-right: 0; }
+      .drop.is-open {
+        background: var(--drop-open, rgba(255, 255, 255, 0.85));
+        box-shadow: inset 0 -3px 0 var(--accent, #e0a0a0);
+      }
+      .drop::before {
+        content: var(--drop-icon, "");
+        position: absolute;
+        top: 4px;
+        font-size: 10px;
+        opacity: 0.7;
+      }
+
+      /* --- Arena --- */
+      .arena {
+        position: relative;
+        background: var(--arena-bg, rgba(255, 255, 255, 0.35));
+        overflow: hidden;
+      }
+      .pegs {
+        position: absolute;
+        inset: 12% 8% 12% 8%;
+        display: grid;
+        grid-template-rows: repeat(5, 1fr);
+      }
+      .pegs .peg-row {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+      }
+      .pegs .peg-row.offset {
+        padding: 0 12%;
+      }
+      .peg {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: var(--peg-bg, #fff);
+        box-shadow: var(--peg-shadow, 0 1px 2px rgba(0, 0, 0, 0.15));
+        display: grid;
+        place-items: center;
+        font-size: 10px;
+        line-height: 1;
+        color: var(--peg-fg, #555);
+      }
+
+      .ball {
+        position: absolute;
+        top: 0;
+        left: var(--start-x, 50%);
+        width: 18px;
+        height: 18px;
+        margin-left: -9px;
+        margin-top: -9px;
+        border-radius: 50%;
+        background: var(--ball-bg, #ffe17a);
+        box-shadow: var(--ball-shadow, 0 2px 4px rgba(0, 0, 0, 0.2));
+        display: grid;
+        place-items: center;
+        font-size: 12px;
+        color: var(--ball-fg, #4a3a1a);
+        animation: fall 3.2s linear forwards;
+        will-change: transform;
+      }
+      @keyframes fall {
+        0%   { transform: translate(0, 0) rotate(0); }
+        15%  { transform: translate(8px, 18%) rotate(40deg); }
+        28%  { transform: translate(-6px, 32%) rotate(80deg); }
+        42%  { transform: translate(10px, 48%) rotate(140deg); }
+        58%  { transform: translate(-4px, 64%) rotate(200deg); }
+        75%  { transform: translate(6px, 80%) rotate(260deg); }
+        100% { transform: translate(0, 110%) rotate(340deg); }
+      }
+
+      /* --- Outcomes row --- */
+      .outcomes .out {
+        background: var(--out-bg, rgba(255, 255, 255, 0.5));
+        border-right: 1px solid var(--divider, rgba(0, 0, 0, 0.08));
+        font-size: 14px;
+      }
+      .outcomes .out:last-child { border-right: 0; }
+      .out.score { background: var(--out-score-bg, rgba(120, 200, 140, 0.25)); color: var(--out-score-fg, #2a6a3a); }
+      .out.tp    { background: var(--out-tp-bg,    rgba(120, 160, 230, 0.25)); color: var(--out-tp-fg,    #2a4a8a); }
+      .out.lose  { background: var(--out-lose-bg,  rgba(230, 120, 120, 0.25)); color: var(--out-lose-fg,  #8a2a2a); }
+
+      /* --- Menu row (compressed footer) --- */
+      .menu {
+        background: var(--menu-bg, rgba(0, 0, 0, 0.06));
+        color: var(--menu-fg, var(--fg));
+        font-size: 10px;
+        letter-spacing: 0.05em;
+        gap: 10px;
+      }
+      .menu .score-label, .menu .lost-label {
+        opacity: 0.7;
+      }
+      .menu b {
+        margin-left: 4px;
+      }
+
+      /* --- Optional decorative cat watcher (positioned in arena) --- */
+      .watcher {
+        position: absolute;
+        right: 6px;
+        bottom: 6px;
+        font-size: 28px;
+        opacity: 0.8;
+        pointer-events: none;
+        filter: var(--watcher-filter, none);
+      }
+
+      /* --- Optional star/sparkle layer for some themes --- */
+      .twinkles {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background-image: var(--twinkle-bg, none);
+        background-size: 60px 60px;
+        opacity: 0.5;
+      }
+
+      /* ====================================================== */
+      /* THEMES                                                  */
+      /* ====================================================== */
+
+      /* 01 — Cozy Yarn */
+      .theme-yarn {
+        --bg: linear-gradient(180deg, #fff5e8 0%, #ffe6e1 100%);
+        --fg: #5a3a3a;
+        --divider: rgba(120, 80, 80, 0.12);
+        --drop-bg: #fff;
+        --drop-open: #ffe1d6;
+        --accent: #f3a4a4;
+        --arena-bg: #fff8f0;
+        --peg-bg: #f8d4cf;
+        --peg-fg: #8a4a4a;
+        --peg-shadow: 0 1px 2px rgba(160, 100, 100, 0.3);
+        --ball-bg: #ff9eb1;
+        --ball-fg: #fff;
+        --ball-shadow: 0 2px 4px rgba(200, 100, 130, 0.4), inset -3px -3px 6px rgba(150, 60, 90, 0.25);
+        --out-score-bg: #d8f0d4; --out-score-fg: #3a6a3a;
+        --out-tp-bg: #d4e6f0;    --out-tp-fg: #3a5a7a;
+        --out-lose-bg: #f0d4d4;  --out-lose-fg: #7a3a3a;
+        --menu-bg: #faece5;
+        --menu-fg: #6a4a4a;
+      }
+      .theme-yarn .peg::after { content: "🐾"; font-size: 8px; }
+
+      /* 02 — Sleepy Night */
+      .theme-sleepy {
+        --bg: linear-gradient(180deg, #1f1d3a 0%, #3a2e5a 100%);
+        --fg: #e9e1ff;
+        --divider: rgba(255, 255, 255, 0.1);
+        --drop-bg: rgba(255, 255, 255, 0.06);
+        --drop-open: rgba(255, 230, 180, 0.18);
+        --accent: #ffe18c;
+        --arena-bg: radial-gradient(circle at 50% 30%, rgba(255, 230, 200, 0.08), transparent 60%), #2a2548;
+        --peg-bg: #ffe18c;
+        --peg-fg: #2a2548;
+        --peg-shadow: 0 0 6px rgba(255, 225, 140, 0.7);
+        --ball-bg: #b8a8ff;
+        --ball-fg: #2a2548;
+        --ball-shadow: 0 0 10px rgba(184, 168, 255, 0.6);
+        --out-score-bg: rgba(184, 168, 255, 0.2); --out-score-fg: #c8b8ff;
+        --out-tp-bg: rgba(120, 200, 255, 0.18);   --out-tp-fg: #a0d8ff;
+        --out-lose-bg: rgba(255, 120, 140, 0.18); --out-lose-fg: #ffb0c0;
+        --menu-bg: #181530;
+        --menu-fg: #c0b8d8;
+        --twinkle-bg: radial-gradient(circle at 20% 30%, #fff 0.5px, transparent 1px),
+                      radial-gradient(circle at 80% 60%, #fff 0.5px, transparent 1px),
+                      radial-gradient(circle at 50% 80%, #fff 0.5px, transparent 1px);
+      }
+
+      /* 03 — Sushi Cat */
+      .theme-sushi {
+        --bg: linear-gradient(180deg, #fdf3e7 0%, #f6e0c9 100%);
+        --fg: #4a2a1a;
+        --divider: rgba(120, 60, 30, 0.15);
+        --drop-bg: #fffaf0;
+        --drop-open: #ffd9c0;
+        --accent: #e85a4f;
+        --arena-bg: repeating-linear-gradient(45deg, #fffaf0 0 8px, #fdf3e7 8px 16px);
+        --peg-bg: #6a8a4a;
+        --peg-fg: #fff;
+        --peg-shadow: 0 1px 2px rgba(60, 80, 30, 0.4);
+        --ball-bg: #fff;
+        --ball-fg: #e85a4f;
+        --ball-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        --out-score-bg: #ffd5c7; --out-score-fg: #b03a2a;
+        --out-tp-bg: #d8e8c0;    --out-tp-fg: #4a6a2a;
+        --out-lose-bg: #444;     --out-lose-fg: #fff;
+        --menu-bg: #2a1a0a;
+        --menu-fg: #f6e0c9;
+      }
+
+      /* 04 — Bubble Tank */
+      .theme-bubble {
+        --bg: linear-gradient(180deg, #c8eef5 0%, #6fb3d2 100%);
+        --fg: #0a3a4a;
+        --divider: rgba(0, 60, 80, 0.15);
+        --drop-bg: rgba(255, 255, 255, 0.5);
+        --drop-open: rgba(255, 255, 255, 0.85);
+        --accent: #ff8aa8;
+        --arena-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(120, 200, 220, 0.35) 100%);
+        --peg-bg: rgba(255, 255, 255, 0.7);
+        --peg-fg: #0a3a4a;
+        --peg-shadow: 0 0 6px rgba(255, 255, 255, 0.8), inset 1px 1px 2px rgba(255, 255, 255, 0.9);
+        --ball-bg: #ffaa6a;
+        --ball-fg: #fff;
+        --ball-shadow: 0 2px 4px rgba(0, 60, 80, 0.3);
+        --out-score-bg: rgba(255, 160, 100, 0.4); --out-score-fg: #803a10;
+        --out-tp-bg: rgba(140, 220, 255, 0.5);    --out-tp-fg: #0a3a6a;
+        --out-lose-bg: rgba(50, 50, 80, 0.3);     --out-lose-fg: #1a1a3a;
+        --menu-bg: #0a3a4a;
+        --menu-fg: #c8eef5;
+      }
+
+      /* 05 — Neon Pawcade */
+      .theme-neon {
+        --bg: linear-gradient(180deg, #0a0a1f 0%, #1a0a2a 100%);
+        --fg: #fff;
+        --divider: rgba(255, 100, 200, 0.2);
+        --drop-bg: #150a25;
+        --drop-open: #2a0a40;
+        --accent: #ff4ad8;
+        --arena-bg: radial-gradient(ellipse at 50% 30%, rgba(255, 80, 200, 0.15), transparent 60%), #100820;
+        --peg-bg: #ff4ad8;
+        --peg-fg: #0a0a1f;
+        --peg-shadow: 0 0 8px #ff4ad8, 0 0 14px rgba(255, 74, 216, 0.5);
+        --ball-bg: #4afff1;
+        --ball-fg: #0a0a1f;
+        --ball-shadow: 0 0 10px #4afff1, 0 0 18px rgba(74, 255, 241, 0.6);
+        --out-score-bg: rgba(74, 255, 130, 0.18);  --out-score-fg: #4aff80;
+        --out-tp-bg: rgba(74, 200, 255, 0.18);     --out-tp-fg: #4abfff;
+        --out-lose-bg: rgba(255, 74, 130, 0.18);   --out-lose-fg: #ff6a8a;
+        --menu-bg: #050010;
+        --menu-fg: #ff4ad8;
+      }
+
+      /* 06 — Cardboard Box */
+      .theme-cardboard {
+        --bg: linear-gradient(180deg, #d8b88a 0%, #b8966a 100%);
+        --fg: #4a2a0a;
+        --divider: rgba(60, 30, 0, 0.2);
+        --drop-bg: #e8c89a;
+        --drop-open: #f8e2b8;
+        --accent: #6a3a1a;
+        --arena-bg: repeating-linear-gradient(0deg, #d8b88a 0 6px, #cfae80 6px 7px),
+                    linear-gradient(180deg, transparent, rgba(60, 30, 0, 0.08));
+        --peg-bg: #6a3a1a;
+        --peg-fg: #f8e2b8;
+        --peg-shadow: 0 1px 2px rgba(60, 30, 0, 0.4);
+        --ball-bg: #888;
+        --ball-fg: #fff;
+        --ball-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        --out-score-bg: #c8a878;   --out-score-fg: #4a2a0a;
+        --out-tp-bg: #a8886a;      --out-tp-fg: #fff;
+        --out-lose-bg: #5a3a1a;    --out-lose-fg: #f8e2b8;
+        --menu-bg: #4a2a0a;
+        --menu-fg: #f8e2b8;
+      }
+
+      /* 07 — Tea Time Tabby */
+      .theme-tea {
+        --bg: linear-gradient(180deg, #fcf7f0 0%, #ecdfd0 100%);
+        --fg: #5a3e2a;
+        --divider: rgba(120, 80, 50, 0.15);
+        --drop-bg: #fff;
+        --drop-open: #f5e0c8;
+        --accent: #c89878;
+        --arena-bg: #fcf7f0;
+        --peg-bg: #c89878;
+        --peg-fg: #fff;
+        --peg-shadow: 0 1px 2px rgba(120, 80, 50, 0.3);
+        --ball-bg: #f3a8b8;
+        --ball-fg: #fff;
+        --ball-shadow: 0 2px 4px rgba(180, 100, 120, 0.3);
+        --out-score-bg: #d8e0c0; --out-score-fg: #4a6a2a;
+        --out-tp-bg: #e8d8c0;    --out-tp-fg: #6a4a2a;
+        --out-lose-bg: #e8c0c0;  --out-lose-fg: #6a3a3a;
+        --menu-bg: #5a3e2a;
+        --menu-fg: #fcf7f0;
+        --font: "Georgia", "Cochin", serif;
+      }
+
+      /* 08 — Catnip Garden */
+      .theme-catnip {
+        --bg: linear-gradient(180deg, #e8f5d8 0%, #b8e090 100%);
+        --fg: #2a4a1a;
+        --divider: rgba(40, 80, 20, 0.15);
+        --drop-bg: rgba(255, 255, 255, 0.6);
+        --drop-open: #fff;
+        --accent: #5a9a3a;
+        --arena-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(180, 220, 140, 0.5));
+        --peg-bg: #5a9a3a;
+        --peg-fg: #fff;
+        --peg-shadow: 0 1px 2px rgba(40, 80, 20, 0.3);
+        --ball-bg: #fff;
+        --ball-fg: #5a9a3a;
+        --ball-shadow: 0 2px 4px rgba(40, 80, 20, 0.2);
+        --out-score-bg: rgba(120, 200, 80, 0.4); --out-score-fg: #2a5a1a;
+        --out-tp-bg: rgba(255, 200, 100, 0.4);   --out-tp-fg: #6a4a0a;
+        --out-lose-bg: rgba(180, 80, 80, 0.3);   --out-lose-fg: #6a2a2a;
+        --menu-bg: #3a5a2a;
+        --menu-fg: #e8f5d8;
+      }
+
+      /* 09 — Pixel Cat */
+      .theme-pixel {
+        --bg: #2a2a4a;
+        --fg: #fff;
+        --divider: #1a1a2a;
+        --drop-bg: #4a4a7a;
+        --drop-open: #ffd070;
+        --accent: #ff6a8a;
+        --arena-bg: #1a1a3a;
+        --peg-bg: #ff6a8a;
+        --peg-fg: #fff;
+        --peg-shadow: 2px 2px 0 #1a1a2a;
+        --ball-bg: #ffd070;
+        --ball-fg: #2a2a4a;
+        --ball-shadow: 2px 2px 0 #1a1a2a;
+        --out-score-bg: #4ad898; --out-score-fg: #0a3a1a;
+        --out-tp-bg: #6ad8ff;    --out-tp-fg: #0a2a4a;
+        --out-lose-bg: #ff5a7a;  --out-lose-fg: #4a0a1a;
+        --menu-bg: #0a0a1a;
+        --menu-fg: #ffd070;
+        --font: "Courier New", "Courier", monospace;
+      }
+      .theme-pixel .preview { image-rendering: pixelated; }
+      .theme-pixel .peg { border-radius: 2px; }
+      .theme-pixel .ball { border-radius: 2px; }
+      .theme-pixel .drop, .theme-pixel .out { font-family: "Courier New", monospace; }
+
+      /* 10 — Galaxy Cats */
+      .theme-galaxy {
+        --bg: radial-gradient(ellipse at 50% 30%, #4a2a6a 0%, #1a0a2a 60%, #0a0518 100%);
+        --fg: #f0e8ff;
+        --divider: rgba(255, 255, 255, 0.08);
+        --drop-bg: rgba(255, 255, 255, 0.06);
+        --drop-open: rgba(180, 140, 255, 0.3);
+        --accent: #c898ff;
+        --arena-bg: radial-gradient(ellipse at 60% 40%, rgba(180, 140, 255, 0.2), transparent 60%);
+        --peg-bg: #ffd070;
+        --peg-fg: #4a2a6a;
+        --peg-shadow: 0 0 6px rgba(255, 208, 112, 0.7), 0 0 12px rgba(255, 208, 112, 0.4);
+        --ball-bg: linear-gradient(135deg, #ff9ad8 0%, #6ad8ff 100%);
+        --ball-fg: #fff;
+        --ball-shadow: 0 0 10px rgba(255, 154, 216, 0.6);
+        --out-score-bg: rgba(120, 255, 200, 0.18); --out-score-fg: #80ffc8;
+        --out-tp-bg: rgba(140, 180, 255, 0.18);    --out-tp-fg: #a0c0ff;
+        --out-lose-bg: rgba(255, 120, 180, 0.18);  --out-lose-fg: #ffa0c8;
+        --menu-bg: #0a0518;
+        --menu-fg: #c898ff;
+        --twinkle-bg: radial-gradient(circle at 15% 25%, #fff 0.6px, transparent 1.2px),
+                      radial-gradient(circle at 65% 50%, #fff 0.6px, transparent 1.2px),
+                      radial-gradient(circle at 35% 75%, #fff 0.6px, transparent 1.2px),
+                      radial-gradient(circle at 85% 15%, #fff 0.4px, transparent 1px);
+      }
+
+      /* --- Footer --- */
+      footer.page {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 24px 60px;
+        font-size: 12px;
+        color: var(--page-dim);
+        text-align: center;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .ball { animation: none; opacity: 0.85; transform: translateY(40%); }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="page">
+      <div class="crumbs"><span>Pawko</span><span>Design</span><span>Falling balls × cats</span></div>
+      <h1>10 propositions de direction visuelle</h1>
+      <p class="lede">
+        Variations autour du même prototype « plinko mignon » : trois colonnes de drop,
+        une arène à pegs, trois zones d'issue (score / téléport / défaite).
+        Chaque carte applique des tokens distincts — le squelette HTML est identique.
+      </p>
+    </header>
+
+    <main class="grid">
+      <!-- Cards injected by JS -->
+    </main>
+
+    <footer class="page">
+      Aperçu statique. Le moteur physique réel vit dans <code>src/scenes/prototype-scene.js</code>.
+    </footer>
+
+    <script>
+      const themes = [
+        {
+          id: "yarn",
+          n: "01",
+          name: "Cozy Yarn",
+          tags: "pastel · ronron · doux",
+          blurb: "Pelotes de laine qui rebondissent sur des coussinets de patte. Crème + rose poudré.",
+          palette: ["#fff5e8", "#ffe6e1", "#ff9eb1", "#f3a4a4", "#5a3a3a"],
+          drops: ["🧶", "🧶", "🧶"],
+          ballEmoji: "",
+          pegEmoji: "🐾",
+          outcomes: ["+10", "↻", "✕"],
+          watcher: "🐱",
+        },
+        {
+          id: "sleepy",
+          n: "02",
+          name: "Sleepy Night",
+          tags: "nocturne · onirique · zen",
+          blurb: "Chatons endormis qui glissent dans une nuit étoilée. Bleus profonds, étoiles dorées.",
+          palette: ["#1f1d3a", "#3a2e5a", "#b8a8ff", "#ffe18c", "#e9e1ff"],
+          drops: ["💤", "💤", "💤"],
+          ballEmoji: "😴",
+          pegEmoji: "⭐",
+          outcomes: ["🌙", "↻", "✕"],
+          watcher: "🌙",
+          twinkles: true,
+        },
+        {
+          id: "sushi",
+          n: "03",
+          name: "Sushi Cat",
+          tags: "japonisant · gourmand · graphique",
+          blurb: "Onigiri à oreilles de chat qui ricochent sur des tronçons de bambou.",
+          palette: ["#fdf3e7", "#f6e0c9", "#6a8a4a", "#e85a4f", "#4a2a1a"],
+          drops: ["🍙", "🍙", "🍙"],
+          ballEmoji: "🍣",
+          pegEmoji: "🎋",
+          outcomes: ["🐟", "↻", "🥢"],
+          watcher: "😺",
+        },
+        {
+          id: "bubble",
+          n: "04",
+          name: "Bubble Tank",
+          tags: "aquatique · frais · contemplatif",
+          blurb: "Petits poissons qui tombent dans un aquarium, vu depuis le coussin du chat.",
+          palette: ["#c8eef5", "#6fb3d2", "#ffaa6a", "#ff8aa8", "#0a3a4a"],
+          drops: ["🐟", "🐟", "🐟"],
+          ballEmoji: "🐠",
+          pegEmoji: "○",
+          outcomes: ["💛", "↻", "💔"],
+          watcher: "🐈",
+        },
+        {
+          id: "neon",
+          n: "05",
+          name: "Neon Pawcade",
+          tags: "rétro arcade · électrique · punchy",
+          blurb: "Esthétique borne d'arcade années 90, traînées néon, bumpers fluo.",
+          palette: ["#0a0a1f", "#1a0a2a", "#ff4ad8", "#4afff1", "#fff"],
+          drops: ["▼", "▼", "▼"],
+          ballEmoji: "🐾",
+          pegEmoji: "◆",
+          outcomes: ["+10", "↻", "✕"],
+          watcher: "😼",
+        },
+        {
+          id: "cardboard",
+          n: "06",
+          name: "Cardboard Box",
+          tags: "kraft · doodle · DIY",
+          blurb: "Souris en carton qui dévalent une boîte vue de l'intérieur. Stickers et tampons.",
+          palette: ["#d8b88a", "#b8966a", "#6a3a1a", "#888", "#4a2a0a"],
+          drops: ["🐭", "🐭", "🐭"],
+          ballEmoji: "🐭",
+          pegEmoji: "✱",
+          outcomes: ["★", "↻", "✕"],
+          watcher: "📦",
+        },
+        {
+          id: "tea",
+          n: "07",
+          name: "Tea Time Tabby",
+          tags: "vintage · feutré · cosy",
+          blurb: "Macarons qui dégringolent à travers des théières en porcelaine. Sérif élégante.",
+          palette: ["#fcf7f0", "#ecdfd0", "#c89878", "#f3a8b8", "#5a3e2a"],
+          drops: ["🧁", "🧁", "🧁"],
+          ballEmoji: "🍪",
+          pegEmoji: "♢",
+          outcomes: ["♡", "↻", "✕"],
+          watcher: "🫖",
+        },
+        {
+          id: "catnip",
+          n: "08",
+          name: "Catnip Garden",
+          tags: "végétal · printanier · doux",
+          blurb: "Feuilles d'herbe à chat qui virevoltent au-dessus d'un parterre de trèfles.",
+          palette: ["#e8f5d8", "#b8e090", "#5a9a3a", "#fff", "#2a4a1a"],
+          drops: ["🌿", "🌿", "🌿"],
+          ballEmoji: "🍃",
+          pegEmoji: "🍀",
+          outcomes: ["🌼", "↻", "🥀"],
+          watcher: "😺",
+        },
+        {
+          id: "pixel",
+          n: "09",
+          name: "Pixel Cat",
+          tags: "rétro 8-bit · chiptune · net",
+          blurb: "Pixel art crispy, palette CGA réinventée. Pegs et balles carrées.",
+          palette: ["#2a2a4a", "#ff6a8a", "#ffd070", "#4ad898", "#fff"],
+          drops: ["▼", "▼", "▼"],
+          ballEmoji: ":3",
+          pegEmoji: "■",
+          outcomes: ["+10", "↻", "GG"],
+          watcher: "ʕ•ᴥ•ʔ",
+        },
+        {
+          id: "galaxy",
+          n: "10",
+          name: "Galaxy Cats",
+          tags: "cosmique · onirique · premium",
+          blurb: "Chats-planètes en chute libre dans une nébuleuse violette pleine d'étoiles.",
+          palette: ["#0a0518", "#1a0a2a", "#4a2a6a", "#ff9ad8", "#6ad8ff"],
+          drops: ["🪐", "🪐", "🪐"],
+          ballEmoji: "🐾",
+          pegEmoji: "✦",
+          outcomes: ["✨", "↻", "💫"],
+          watcher: "🐈‍⬛",
+          twinkles: true,
+        },
+      ];
+
+      const grid = document.querySelector("main.grid");
+
+      function buildPegs(rowsCount, cols, emoji) {
+        let html = '<div class="pegs">';
+        for (let r = 0; r < rowsCount; r++) {
+          const offset = r % 2 === 1;
+          html += `<div class="peg-row${offset ? " offset" : ""}">`;
+          const n = offset ? cols - 1 : cols;
+          for (let c = 0; c < n; c++) {
+            html += `<div class="peg">${emoji}</div>`;
+          }
+          html += "</div>";
+        }
+        html += "</div>";
+        return html;
+      }
+
+      function buildCard(t, idx) {
+        const drops = t.drops
+          .map(
+            (d, i) =>
+              `<div class="drop${i === 1 ? " is-open" : ""}"><span>${d}</span></div>`,
+          )
+          .join("");
+        const outs = `
+          <div class="out score">${t.outcomes[0]}</div>
+          <div class="out tp">${t.outcomes[1]}</div>
+          <div class="out lose">${t.outcomes[2]}</div>`;
+        const palette = t.palette
+          .map((c) => `<li style="--c:${c}"></li>`)
+          .join("");
+        const twinkles = t.twinkles ? '<div class="twinkles"></div>' : "";
+        const watcher = t.watcher
+          ? `<div class="watcher" aria-hidden="true">${t.watcher}</div>`
+          : "";
+
+        return `
+        <article class="card theme-${t.id}">
+          <div class="preview" data-card="${idx}">
+            <div class="row drops">${drops}</div>
+            <div class="arena">
+              ${twinkles}
+              ${buildPegs(5, 4, t.pegEmoji)}
+              ${watcher}
+            </div>
+            <div class="row outcomes">${outs}</div>
+            <div class="row menu">
+              <span class="score-label">SCORE<b>0</b></span>
+              <span class="lost-label">LOST<b>0</b></span>
+            </div>
+          </div>
+          <div class="meta">
+            <h2>${t.n} · ${t.name}</h2>
+            <p class="tags">${t.tags}</p>
+            <p class="blurb">${t.blurb}</p>
+            <ul class="palette">${palette}</ul>
+          </div>
+        </article>`;
+      }
+
+      grid.innerHTML = themes.map(buildCard).join("");
+
+      // --- Ball spawner: drops a themed ball every ~2.5s in each card ---
+      const previews = Array.from(grid.querySelectorAll(".preview"));
+
+      function spawnBall(preview) {
+        const arena = preview.querySelector(".arena");
+        if (!arena) return;
+        const themeIdx = Number(preview.dataset.card);
+        const theme = themes[themeIdx];
+
+        const ball = document.createElement("div");
+        ball.className = "ball";
+        ball.textContent = theme.ballEmoji || "";
+        const col = Math.floor(Math.random() * 3);
+        const x = ["18%", "50%", "82%"][col];
+        ball.style.setProperty("--start-x", x);
+        ball.style.animationDuration = (2.6 + Math.random() * 1.2).toFixed(2) + "s";
+        ball.addEventListener("animationend", () => ball.remove(), { once: true });
+        arena.appendChild(ball);
+      }
+
+      previews.forEach((p, i) => {
+        // Stagger the first spawn so cards don't all drop in unison.
+        setTimeout(() => spawnBall(p), i * 180);
+        setInterval(() => spawnBall(p), 2200 + Math.random() * 800);
+      });
+    </script>
+  </body>
+</html>

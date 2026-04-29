@@ -27,7 +27,7 @@ export const ORIENTATIONS = /** @type {const} */ ({
 });
 
 /** Active orientation for the current game. Change this single line to switch. */
-export const ORIENTATION = ORIENTATIONS.LANDSCAPE;
+export const ORIENTATION = ORIENTATIONS.PORTRAIT;
 
 // ─── Scenes ────────────────────────────────────────────────────────────────
 

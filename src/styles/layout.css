@@ -1,3 +1,11 @@
+/* --- Scene wrapper. SceneRouter mounts one of these per active scene
+       inside #game-container. --- */
+
+.gt-scene {
+  position: absolute;
+  inset: 0;
+}
+
 /* --- Safe-zone-aware container. LayoutManager pushes the --gt-safe-* vars on
        :root; CSS only reads them, never recomputes its own values. --- */
 
@@ -22,9 +30,7 @@
   display: none;
 }
 
-/* Scene root: fills #game-container and flex-centers content. Mount this
-   element directly on #game-container (not via Phaser DOM) so positioning
-   is relative to the real viewport with no transform interference. */
+/* Scene root: fills #game-container and flex-centers content. */
 .gt-scene-center {
   position: absolute;
   inset: 0;

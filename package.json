@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Phaser 3 + Vite + Capacitor game template (DOM/CSS rendering, modular managers, unit-testable).",
+  "description": "Vanilla JS + Vite + Capacitor game template (DOM/CSS rendering, modular managers, unit-testable).",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -19,8 +19,7 @@
   },
   "dependencies": {
     "@capacitor/app": "^6.0.2",
-    "@capacitor/core": "^6.2.0",
-    "phaser": "^3.86.0"
+    "@capacitor/core": "^6.2.0"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.3.1",

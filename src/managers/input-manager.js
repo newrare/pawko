@@ -32,7 +32,6 @@ export class InputManager {
     "button, a, input, textarea, .gt-modal-overlay, .gt-clickable, [data-action]";
 
   /**
-   * @param {Phaser.Scene} scene
    * @param {{
    *   onDirection: (direction: 'up'|'down'|'left'|'right') => void,
    *   onMenu?: () => void,
@@ -40,10 +39,12 @@ export class InputManager {
    *   uiSelector?: string,
    * }} callbacks
    */
-  constructor(
-    scene,
-    { onDirection, onMenu = () => {}, isBlocked = () => false, uiSelector },
-  ) {
+  constructor({
+    onDirection,
+    onMenu = () => {},
+    isBlocked = () => false,
+    uiSelector,
+  }) {
     this.#onDirection = onDirection;
     this.#onMenu = onMenu;
     this.#isBlocked = isBlocked;
@@ -51,9 +52,7 @@ export class InputManager {
     const selector = uiSelector ?? InputManager.UI_SELECTOR;
 
     // Keyboard
-    const onKey = this.#handleKey;
-    scene.input.keyboard?.on("keydown", onKey, this);
-    this.#bag.add(() => scene.input.keyboard?.off("keydown", onKey, this));
+    this.#bag.on(window, "keydown", this.#handleKey);
 
     // Touch — delegated to SwipeDetector
     this.#swipe = new SwipeDetector({

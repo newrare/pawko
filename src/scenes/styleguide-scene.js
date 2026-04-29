@@ -1,20 +1,18 @@
-import Phaser from "phaser";
-import { SCENE_KEYS } from "../configs/constants.js";
 import { ListenerBag } from "../utils/listener-bag.js";
 import { i18n } from "../managers/i18n-manager.js";
 import { layout } from "../managers/layout-manager.js";
 import { buttonHtml } from "../components/ui/button.js";
 import { toggleRowHtml } from "../components/ui/toggle-row.js";
 import { OptionsModal } from "../components/options-modal.js";
+import { TitleScene } from "./title-scene.js";
 
 /**
  * StyleguideScene — dev-only visual library for every UI primitive.
- *
- * DOM content is mounted directly on `#game-container` (not via Phaser's
- * DOM element system) so `position: absolute` with `--gt-safe-*` vars
- * resolves against the true viewport with no transform interference.
  */
-export class StyleguideScene extends Phaser.Scene {
+export class StyleguideScene {
+  /** @type {import('./scene-router.js').SceneRouter} */
+  #router;
+
   /** @type {HTMLElement | null} */
   #el = null;
 
@@ -24,21 +22,21 @@ export class StyleguideScene extends Phaser.Scene {
   /** @type {OptionsModal | null} */
   #sampleModal = null;
 
-  constructor() {
-    super({ key: SCENE_KEYS.STYLEGUIDE });
+  /** @param {import('./scene-router.js').SceneRouter} router */
+  constructor(router) {
+    this.#router = router;
   }
 
-  create() {
+  /** @param {HTMLElement} root */
+  mount(root) {
     this.#el = document.createElement("div");
     this.#el.className = "gt-sg gt-safe-box";
     this.#el.innerHTML = this.#renderInner();
-    document.getElementById("game-container").appendChild(this.#el);
+    root.appendChild(this.#el);
 
     this.#bag.on(this.#el, "pointerdown", this.#onClick);
     this.#bag.add(i18n.onChange(() => this.#refresh()));
     this.#bag.add(layout.onChange(() => this.#refresh()));
-
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.#shutdown());
   }
 
   #renderInner() {
@@ -144,11 +142,11 @@ export class StyleguideScene extends Phaser.Scene {
     const action = /** @type {HTMLElement} */ (actionEl).dataset.action;
     switch (action) {
       case "back":
-        this.scene.start(SCENE_KEYS.TITLE);
+        this.#router.start(TitleScene);
         break;
       case "open-modal":
         if (this.#sampleModal) return;
-        this.#sampleModal = new OptionsModal(this, {
+        this.#sampleModal = new OptionsModal({
           onClose: () => {
             this.#sampleModal = null;
           },
@@ -158,7 +156,7 @@ export class StyleguideScene extends Phaser.Scene {
     }
   };
 
-  #shutdown() {
+  destroy() {
     this.#sampleModal?.destroy();
     this.#sampleModal = null;
     this.#bag.dispose();

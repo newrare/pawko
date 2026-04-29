@@ -5,8 +5,7 @@ import { optionsManager } from "./options-manager.js";
  * AudioManager — background music and SFX via HTML5 Audio.
  *
  * User toggles live in `optionsManager`; this class only reacts (pause /
- * resume music, gate SFX). Not a Phaser dependency — tests can run in
- * happy-dom without a Phaser game instance.
+ * resume music, gate SFX).
  */
 class AudioManager {
   /** @type {HTMLAudioElement | null} */

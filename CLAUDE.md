@@ -34,10 +34,15 @@ machine with `npx cap add android` / `npx cap add ios`.
 
 ## Stack
 
-**Phaser 3** + **Vite** + **Capacitor**. Gameplay UI is rendered as **DOM
-elements with CSS animations**, not Phaser sprites — this keeps the UI fully
-testable in happy-dom and avoids WebGL overhead on mobile WebView. Phaser's
-canvas is reserved for specifical element like physical (matter.js)
+**Vanilla JS** + **Vite** + **Capacitor**. The whole UI is **DOM elements
+with CSS animations** — no canvas, no game-engine frame loop. Everything
+lives in CSS pixels, so the safe-zone box (`layout.safe.*`) and the visible
+DOM share one coordinate system.
+
+When a game needs physics, install **`matter-js`** standalone
+(`npm i matter-js`) and run a `requestAnimationFrame` loop inside the scene
+that needs it. The template intentionally does not bundle a renderer or a
+physics engine: pay only for what your game uses.
 
 JavaScript only (no TypeScript). Use JSDoc for types.
 
@@ -82,7 +87,6 @@ export const ORIENTATION = ORIENTATIONS.PORTRAIT;
 
 Change that one line to switch the entire game. The constant drives:
 
-- `game-config.js` — Phaser scale `min` / `max` hints
 - `LayoutManager` — picks the right `SAFE_ZONE.MAX_WIDTH_*` /
   `MAX_HEIGHT_*` caps. The safe-zone box is **always centered on both
   axes** within the available viewport, regardless of orientation.
@@ -116,10 +120,11 @@ production builds:
   keyframes). Use it to develop new components in isolation: build the
   primitive against this scene first; once it looks right here, it will
   look right everywhere because every other view goes through the same
-  primitives. Reach it via the corner button on `TitleScene` (visible
-  only in DEV builds). Implementation in
+  primitives. Reach it via the dev nav bar (visible only in DEV builds).
+  Implementation in
   [src/scenes/styleguide-scene.js](src/scenes/styleguide-scene.js); the
-  scene is registered at runtime in `main.js`, also dynamically imported.
+  scene is dynamically imported from `main.js` so it never enters the
+  production bundle.
 
 ## Architecture
 
@@ -128,24 +133,38 @@ production builds:
 | Layer            | Location              | Rule                                                               |
 | ---------------- | --------------------- | ------------------------------------------------------------------ |
 | **Configs**      | `src/configs/`        | All constants live in `constants.js` — never hardcode magic values |
-| **Entities**     | `src/entities/`       | Pure data/logic, **zero** Phaser or DOM dependency                 |
+| **Entities**     | `src/entities/`       | Pure data/logic, **zero** DOM dependency                           |
 | **Managers**     | `src/managers/`       | Singletons for cross-cutting concerns                              |
 | **Controllers**  | `src/controllers/`    | Orchestrate managers for one play session — keep scenes thin       |
 | **Components**   | `src/components/`     | DOM-based UI overlays (modals, HUD)                                |
-| **Scenes**       | `src/scenes/`         | Thin `Phaser.Scene` subclasses — delegate to controllers/managers  |
+| **Scenes**       | `src/scenes/`         | Plain classes with `mount(root)` / `destroy()` — delegate to controllers |
 | **Utils**        | `src/utils/`          | Pure helpers and small reusable classes                            |
 | **Locales**      | `src/locales/`        | Translation dictionaries — `en.js`, `fr.js`                        |
 | **Styles**       | `src/styles/`         | One CSS file per component — imported from `index.css`             |
 
-### Scene flow
+### Boot + scene flow
 
-`BootScene` → `PreloadScene` → `TitleScene` → `GameScene`
+`main.js` wires `LayoutManager` to `window.resize`, warms the audio pool,
+instantiates a `SceneRouter` on `#game-container`, and starts `TitleScene`.
+The title scene listens for the first user gesture, unlocks audio, and asks
+the router to start `GameScene`. `GameScene` is intentionally a few-line
+shell that delegates everything to `GameController`.
 
-`BootScene` wires `LayoutManager` to viewport resizes, then starts
-`PreloadScene`. `PreloadScene` loads images and warms the audio pool. The
-title scene listens for the first user gesture, unlocks audio, and starts
-`GameScene`. `GameScene` is intentionally a few-line shell that delegates
-everything to `GameController`.
+A scene is a plain JS class with this contract:
+
+```js
+class MyScene {
+  constructor(router, data) { … }
+  mount(rootElement) { … }   // build/append DOM
+  destroy()         { … }   // tear it all down (idempotent)
+}
+```
+
+The router (`src/scenes/scene-router.js`) owns one DOM child of
+`#game-container` per active scene and disposes the previous one before
+mounting the next. There is no shared game loop; if a scene needs
+`requestAnimationFrame` (gameplay, animation, Matter.js), it runs its own
+loop and stops it from `destroy()` via the scene's `ListenerBag`.
 
 ### Managers (singletons)
 
@@ -174,9 +193,9 @@ All managers are imported as lowercase named exports — for example
   `saveSlot`/`loadSlot` (fixed-size slot array), `addRanking`/`getRankings`
   (per-mode top-N), and `resetAll`.
 - **`InputManager`** — non-singleton (one per scene). Handles keyboard
-  (arrows / WASD / Escape) and delegates touch to `SwipeDetector`. Touches
-  on UI elements matching `InputManager.UI_SELECTOR` fall through to the
-  browser.
+  (arrows / WASD / Escape) directly on `window` and delegates touch to
+  `SwipeDetector`. Touches on UI elements matching
+  `InputManager.UI_SELECTOR` fall through to the browser.
 
 ### Input / swipe
 
@@ -191,7 +210,8 @@ The swipe detector uses a **detect-on-move** architecture:
 - A `touchend` fallback covers the case where `touchmove` was throttled.
 
 The implementation lives in `src/utils/swipe-detector.js` and is **fully
-unit-testable** in happy-dom. `InputManager` only adapts it to the scene.
+unit-testable** in happy-dom. `InputManager` only adapts it to keyboard
+input.
 
 ### ListenerBag — the listener-leak rule
 
@@ -212,24 +232,26 @@ Code review checklist: any `addEventListener` that is not routed through a
 Every modal extends `BaseModal` (`src/components/modal-base.js`). It
 provides:
 
-- The `.gt-modal-overlay > .gt-modal` shell + Phaser DOMElement mount
-- Lifecycle (`open`, `close`, `destroy`) and idempotent `dispose`
-- Backdrop / Escape close
-- Keyboard navigation via `enableKeyboardNav`
-- Auto-refresh on locale change
-- A pre-wired `ListenerBag` on `this.bag` for subclasses
+- The `.gt-modal-overlay > .gt-modal` shell, mounted directly on
+  `document.body` (overlay is `position: fixed`).
+- Lifecycle (`open`, `close`, `destroy`) and idempotent `dispose`.
+- Backdrop / Escape close.
+- Keyboard navigation via `enableKeyboardNav`.
+- Auto-refresh on locale change.
+- A pre-wired `ListenerBag` on `this.bag` for subclasses.
 
 Subclasses implement only `renderBody()`, `onAction(name, event)`, and
 optionally `onMount()`. See `MenuModal` and `OptionsModal` for the canonical
-patterns.
+patterns. Modals do not depend on the active scene — `new MyModal(opts)`
+opens directly.
 
 ### Controllers — keeping scenes thin
 
-`GameScene` exists to instantiate `GameController` and pass it the scene.
-All gameplay logic — input wiring, manager subscriptions, sub-modal
-opening, layout reactions — lives on the controller, which owns its own
-`ListenerBag`. **If `GameScene` grows past ~150 lines, push the new
-behaviour into the controller or a new manager.**
+`GameScene` exists to instantiate `GameController` and pass it the DOM
+root + router. All gameplay logic — input wiring, manager subscriptions,
+sub-modal opening, layout reactions — lives on the controller, which owns
+its own `ListenerBag`. **If `GameScene` grows past ~150 lines, push the
+new behaviour into the controller or a new manager.**
 
 ### Styles — one file per concern
 
@@ -290,5 +312,5 @@ always go through `STORAGE_KEYS` (and ideally through `saveManager` /
 | A UI primitive      | `src/components/ui/<name>.js` (HTML-string builder)              |
 | A keyframe          | `src/styles/animations.css`                                      |
 | A locale string     | Add the key to **both** `src/locales/en.js` and `fr.js`          |
-| A new scene         | `src/scenes/<name>-scene.js` + register in `game-config.js`      |
+| A new scene         | `src/scenes/<name>-scene.js` (plain class with `mount/destroy`) — start it via `router.start(MyScene)` |
 | A new UI primitive  | Add it to `src/components/ui/`, then add a sample to `StyleguideScene` so it can be developed in isolation. |

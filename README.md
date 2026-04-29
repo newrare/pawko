@@ -1,9 +1,12 @@
 # Game Template
 
-Phaser 3 + Vite + Capacitor starter template for mobile-first games. Ships
-with modular managers, a thin-scene architecture, a leak-proof listener
-pattern, unit tests under happy-dom, and orientation toggling via a single
-constant.
+Vanilla JS + Vite + Capacitor starter template for mobile-first games.
+Pure DOM/CSS rendering — no canvas, no game-engine bundle. Ships with
+modular managers, a thin-scene architecture, a leak-proof listener pattern,
+unit tests under happy-dom, and orientation toggling via a single constant.
+
+Need physics? `npm i matter-js` and run it standalone inside the scene
+that needs it.
 
 ## Quick start
 
@@ -40,8 +43,8 @@ Edit one line in [src/configs/constants.js](src/configs/constants.js):
 export const ORIENTATION = ORIENTATIONS.PORTRAIT; // or LANDSCAPE
 ```
 
-That single source of truth drives the Phaser scale hints, the safe-zone
-aspect, and the `[data-orientation]` attribute on `<html>`.
+That single source of truth drives the safe-zone aspect and the
+`[data-orientation]` attribute on `<html>`.
 
 ## Folders
 
@@ -62,10 +65,11 @@ See [CLAUDE.md](CLAUDE.md) for the full architectural guide. Short version:
 - **No theme system** — a single token set lives in
   [src/styles/tokens.css](src/styles/tokens.css). Edit once to rebrand.
 - **Dev affordances** — DEV-only safe-zone overlay and a Styleguide
-  scene (corner button on the title screen). Both tree-shaken from prod.
+  scene reachable from the dev nav bar. Both tree-shaken from prod.
 - **Controllers** — orchestrate a play session so scenes stay thin.
 - **Components** — DOM modals/overlays. All extend `BaseModal`.
-- **Scenes** — minimal `Phaser.Scene` shells that delegate.
+- **Scenes** — plain classes with `mount(root)` / `destroy()`, switched by
+  a tiny `SceneRouter`.
 - **Utils** — pure helpers; `ListenerBag` and `SwipeDetector` live here.
 
 ## License

@@ -1,44 +1,41 @@
-import Phaser from "phaser";
 import { Capacitor } from "@capacitor/core";
 import { App } from "@capacitor/app";
-import gameConfig from "./configs/game-config.js";
-import { APP_NAME, SCENE_KEYS } from "./configs/constants.js";
+import { APP_NAME } from "./configs/constants.js";
+import { layout } from "./managers/layout-manager.js";
+import { audioManager } from "./managers/audio-manager.js";
+import { SceneRouter } from "./scenes/scene-router.js";
+import { TitleScene } from "./scenes/title-scene.js";
 
-/* Set the page title from the centralized constant. */
 document.title = APP_NAME;
 
-/* On Capacitor native (Android/iOS), `window.close()` is a no-op. Override it
-   so any "Exit" button can properly terminate the app. */
 if (Capacitor.isNativePlatform()) {
   window.close = () => App.exitApp();
 }
 
-const game = new Phaser.Game(gameConfig);
+const container = document.getElementById("game-container");
 
-/* Dev-only: install the safe-zone overlay + nav bar and register the
-   Styleguide scene. Both branches use dynamic imports so Vite strips them
-   from production. */
+const syncLayout = () => layout.update(window.innerWidth, window.innerHeight);
+syncLayout();
+window.addEventListener("resize", syncLayout);
+
+audioManager.preload();
+
+const router = new SceneRouter(container);
+router.start(TitleScene);
+
 if (import.meta.env.DEV) {
-  import("./scenes/styleguide-scene.js").then(({ StyleguideScene }) => {
-    game.scene.add(SCENE_KEYS.STYLEGUIDE, StyleguideScene);
-  });
-  import("./utils/dev-overlay.js").then(({ installDevOverlay }) => {
-    const switchScene = (key) => {
-      [SCENE_KEYS.TITLE, SCENE_KEYS.STYLEGUIDE, SCENE_KEYS.GAME].forEach(
-        (k) => {
-          if (k !== key) game.scene.stop(k);
-        },
-      );
-      game.scene.start(key);
-    };
+  Promise.all([
+    import("./scenes/styleguide-scene.js"),
+    import("./utils/dev-overlay.js"),
+  ]).then(([{ StyleguideScene }, { installDevOverlay }]) => {
     const install = () =>
       installDevOverlay({
-        onTitle: () => switchScene(SCENE_KEYS.TITLE),
-        onStyleguide: () => switchScene(SCENE_KEYS.STYLEGUIDE),
+        onTitle: () => router.start(TitleScene),
+        onStyleguide: () => router.start(StyleguideScene),
       });
     if (document.body) install();
     else document.addEventListener("DOMContentLoaded", install, { once: true });
   });
 }
 
-export default game;
+export default router;

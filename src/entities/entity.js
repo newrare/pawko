@@ -1,5 +1,5 @@
 /**
- * Base class for pure data/logic entities. Has zero Phaser/DOM dependency on
+ * Base class for pure data/logic entities. Has zero DOM dependency on
  * purpose: entities must remain unit-testable in happy-dom without ever
  * touching the renderer.
  *

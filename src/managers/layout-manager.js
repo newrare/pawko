@@ -25,7 +25,7 @@ import { EventEmitter } from "../utils/event-emitter.js";
  *   --anim-modal-open, --anim-modal-close            animation durations
  */
 class LayoutManager extends EventEmitter {
-  /** Full viewport (matches Phaser.Scale.RESIZE size). */
+  /** Full viewport in CSS px. */
   width = 0;
   height = 0;
 

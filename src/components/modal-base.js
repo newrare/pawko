@@ -7,7 +7,8 @@ import { i18n } from "../managers/i18n-manager.js";
  *
  * What it does for you:
  *  - Builds the `.gt-modal-overlay > .gt-modal` shell.
- *  - Mounts the modal as a Phaser DOMElement at depth 100 by default.
+ *  - Mounts the overlay directly on `document.body` — `position: fixed` then
+ *    resolves against the real viewport with no transform interference.
  *  - Owns a `ListenerBag` so subclasses never leak listeners.
  *  - Wires keyboard navigation + Escape-to-close.
  *  - Closes when the backdrop is clicked.
@@ -19,20 +20,17 @@ import { i18n } from "../managers/i18n-manager.js";
  *  - `onMount()` (optional) for custom DOM wiring after first render.
  *
  * Lifecycle:
- *   const modal = new MyModal(scene, opts);
+ *   const modal = new MyModal(opts);
  *   modal.open();
  *   …
  *   modal.close(); // or modal.destroy()
  */
 export class BaseModal {
-  /** @type {Phaser.Scene} */
-  scene;
-
   /** @type {ListenerBag} */
   bag = new ListenerBag();
 
-  /** @type {Phaser.GameObjects.DOMElement | null} */
-  #domElement = null;
+  /** @type {HTMLElement | null} */
+  #overlay = null;
 
   /** @type {{ destroy: () => void } | null} */
   #keyNav = null;
@@ -41,23 +39,21 @@ export class BaseModal {
   options;
 
   /**
-   * @param {Phaser.Scene} scene
    * @param {{
    *   onClose?: () => void,
    *   className?: string,
-   *   depth?: number,
    *   closeOnBackdrop?: boolean,
    *   closeOnEscape?: boolean,
    *   keyboardNav?: boolean,
+   *   parent?: HTMLElement,
    * }} [options]
    */
-  constructor(scene, options = {}) {
-    this.scene = scene;
+  constructor(options = {}) {
     this.options = {
-      depth: 100,
       closeOnBackdrop: true,
       closeOnEscape: true,
       keyboardNav: true,
+      parent: document.body,
       ...options,
     };
   }
@@ -82,19 +78,18 @@ export class BaseModal {
   /** Hook called once the DOM is mounted. */
   onMount() {}
 
-  /** Mount the modal to the scene. */
+  /** Mount the modal. */
   open() {
-    if (this.#domElement) return;
-    const html = this.#buildHtml();
-    this.#domElement = this.scene.add.dom(0, 0).createFromHTML(html);
-    this.#domElement.setOrigin(0, 0);
-    this.#domElement.setDepth(this.options.depth);
+    if (this.#overlay) return;
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = this.#buildHtml();
+    this.#overlay = /** @type {HTMLElement} */ (wrapper.firstElementChild);
+    this.options.parent.appendChild(this.#overlay);
 
-    const overlay = /** @type {HTMLElement} */ (this.#domElement.node);
-    this.bag.on(overlay, "pointerdown", this.#handleClick);
+    this.bag.on(this.#overlay, "pointerdown", this.#handleClick);
 
     if (this.options.keyboardNav) {
-      this.#keyNav = enableKeyboardNav(overlay, {
+      this.#keyNav = enableKeyboardNav(this.#overlay, {
         onEscape: this.options.closeOnEscape ? () => this.close() : undefined,
       });
       this.bag.add(() => this.#keyNav?.destroy());
@@ -114,21 +109,25 @@ export class BaseModal {
 
   /** Tear everything down without calling `onClose`. Idempotent. */
   destroy() {
-    if (!this.#domElement) return;
+    if (!this.#overlay) return;
     this.bag.dispose();
-    this.#domElement.destroy();
-    this.#domElement = null;
+    this.#overlay.remove();
+    this.#overlay = null;
     this.#keyNav = null;
   }
 
   /** Re-render the body in place (e.g. after locale or state change). */
   refresh() {
-    const overlay = this.#domElement?.node;
-    if (!overlay) return;
-    const titleEl = overlay.querySelector(".gt-modal-title");
+    if (!this.#overlay) return;
+    const titleEl = this.#overlay.querySelector(".gt-modal-title");
     if (titleEl) titleEl.textContent = this.title;
-    const bodyEl = overlay.querySelector(".gt-modal-body");
+    const bodyEl = this.#overlay.querySelector(".gt-modal-body");
     if (bodyEl) bodyEl.innerHTML = this.renderBody();
+  }
+
+  /** @returns {HTMLElement | null} The overlay node. */
+  get root() {
+    return this.#overlay;
   }
 
   // ─── Internals ───────────────────────────────────
@@ -140,14 +139,7 @@ export class BaseModal {
     const titleHtml = this.title
       ? `<div class="gt-modal-title">${this.title}</div>`
       : "";
-    return `
-      <div class="${cls}">
-        <div class="gt-modal" role="dialog" aria-modal="true">
-          ${titleHtml}
-          <div class="gt-modal-body">${this.renderBody()}</div>
-        </div>
-      </div>
-    `;
+    return `<div class="${cls}"><div class="gt-modal" role="dialog" aria-modal="true">${titleHtml}<div class="gt-modal-body">${this.renderBody()}</div></div></div>`;
   }
 
   /** @param {PointerEvent} event */
@@ -173,9 +165,4 @@ export class BaseModal {
       this.onAction(action, event);
     }
   };
-
-  /** @returns {HTMLElement | null} The overlay node. */
-  get root() {
-    return this.#domElement?.node ?? null;
-  }
 }

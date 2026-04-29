@@ -42,10 +42,7 @@
   transform: translate(0, 100%);
 }
 
-/* --- Nav bar (bottom-right, viewport-anchored) ---
-       Sits OUTSIDE Phaser's DOM container so `position: fixed` resolves
-       against the viewport (Phaser's wrapper applies a transform and
-       creates a new containing block, which would break `fixed`). */
+/* --- Nav bar (bottom-right, viewport-anchored). --- */
 
 .gt-dev-bar {
   position: fixed;

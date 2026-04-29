@@ -10,7 +10,7 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'html'],
       include: ['src/**/*.js'],
-      exclude: ['src/main.js', 'src/configs/game-config.js'],
+      exclude: ['src/main.js'],
     },
   },
 });

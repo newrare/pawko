@@ -70,7 +70,7 @@ export class MenuModal extends BaseModal {
 
   #openOptions() {
     if (this.#options) return;
-    this.#options = new OptionsModal(this.scene, {
+    this.#options = new OptionsModal({
       onClose: () => {
         this.#options = null;
       },

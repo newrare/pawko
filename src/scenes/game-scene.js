@@ -1,31 +1,44 @@
-import Phaser from "phaser";
-import { SCENE_KEYS } from "../configs/constants.js";
 import { GameController } from "../controllers/game-controller.js";
 
 /**
- * GameScene — the main gameplay scene. Stays thin on purpose: every piece of
- * gameplay logic lives in `GameController` (managers + entities). The scene
- * itself only owns the controller's lifecycle.
+ * GameScene — main gameplay scene. Stays thin on purpose: every piece of
+ * gameplay logic lives in `GameController`. The scene owns the controller's
+ * lifecycle and gives it a DOM root to attach to.
  *
- * If you find this file growing past ~150 lines, push the new behaviour
- * into a manager or a method on `GameController` instead.
+ * If this file grows past ~150 lines, push the new behaviour into the
+ * controller or a new manager instead.
  */
-export class GameScene extends Phaser.Scene {
+export class GameScene {
+  /** @type {import('./scene-router.js').SceneRouter} */
+  #router;
+
+  /** @type {object} */
+  #data;
+
   /** @type {GameController | null} */
   #controller = null;
 
-  constructor() {
-    super({ key: SCENE_KEYS.GAME });
+  /**
+   * @param {import('./scene-router.js').SceneRouter} router
+   * @param {object} [data] — payload forwarded by `router.start`
+   */
+  constructor(router, data = {}) {
+    this.#router = router;
+    this.#data = data;
   }
 
-  /**
-   * @param {{ mode?: string, slotData?: object }} [data]
-   */
-  create(data = {}) {
-    this.#controller = new GameController(this, data);
+  /** @param {HTMLElement} root */
+  mount(root) {
+    this.#controller = new GameController({
+      root,
+      router: this.#router,
+      data: this.#data,
+    });
     this.#controller.start();
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () =>
-      this.#controller?.destroy(),
-    );
+  }
+
+  destroy() {
+    this.#controller?.destroy();
+    this.#controller = null;
   }
 }

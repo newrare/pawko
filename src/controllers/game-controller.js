@@ -19,8 +19,11 @@ import { MenuModal } from "../components/menu-modal.js";
  * that wires managers together.
  */
 export class GameController {
-  /** @type {Phaser.Scene} */
-  #scene;
+  /** @type {HTMLElement} */
+  #root;
+
+  /** @type {import('../scenes/scene-router.js').SceneRouter | null} */
+  #router;
 
   /** @type {object} */
   #data;
@@ -38,17 +41,21 @@ export class GameController {
   #blocked = false;
 
   /**
-   * @param {Phaser.Scene} scene
-   * @param {object} [data] — payload forwarded by Phaser on scene.start
+   * @param {{
+   *   root: HTMLElement,
+   *   router?: import('../scenes/scene-router.js').SceneRouter,
+   *   data?: object,
+   * }} args
    */
-  constructor(scene, data = {}) {
-    this.#scene = scene;
+  constructor({ root, router = null, data = {} }) {
+    this.#root = root;
+    this.#router = router;
     this.#data = data;
   }
 
   /** Boot the play session. */
   start() {
-    this.#input = new InputManager(this.#scene, {
+    this.#input = new InputManager({
       onDirection: (dir) => this.#handleDirection(dir),
       onMenu: () => this.toggleMenu(),
       isBlocked: () => this.#blocked,
@@ -67,7 +74,7 @@ export class GameController {
       this.#menu.close();
       return;
     }
-    this.#menu = new MenuModal(this.#scene, {
+    this.#menu = new MenuModal({
       showResume: true,
       onResume: () => {
         this.#blocked = false;
@@ -80,6 +87,16 @@ export class GameController {
     this.#blocked = true;
     this.#menu.open();
     this.#bag.add(() => this.#menu?.destroy());
+  }
+
+  /** DOM root supplied by the scene — gameplay code mounts inside this. */
+  get root() {
+    return this.#root;
+  }
+
+  /** Active router, if the controller needs to transition scenes. */
+  get router() {
+    return this.#router;
   }
 
   /**
