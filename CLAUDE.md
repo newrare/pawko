@@ -130,17 +130,17 @@ production builds:
 
 ### Layer separation
 
-| Layer            | Location              | Rule                                                               |
-| ---------------- | --------------------- | ------------------------------------------------------------------ |
-| **Configs**      | `src/configs/`        | All constants live in `constants.js` — never hardcode magic values |
-| **Entities**     | `src/entities/`       | Pure data/logic, **zero** DOM dependency                           |
-| **Managers**     | `src/managers/`       | Singletons for cross-cutting concerns                              |
-| **Controllers**  | `src/controllers/`    | Orchestrate managers for one play session — keep scenes thin       |
-| **Components**   | `src/components/`     | DOM-based UI overlays (modals, HUD)                                |
-| **Scenes**       | `src/scenes/`         | Plain classes with `mount(root)` / `destroy()` — delegate to controllers |
-| **Utils**        | `src/utils/`          | Pure helpers and small reusable classes                            |
-| **Locales**      | `src/locales/`        | Translation dictionaries — `en.js`, `fr.js`                        |
-| **Styles**       | `src/styles/`         | One CSS file per component — imported from `index.css`             |
+| Layer            | Location           | Rule                                                                     |
+| ---------------- | ------------------ | ------------------------------------------------------------------------ |
+| **Configs**      | `src/configs/`     | All constants live in `constants.js` — never hardcode magic values       |
+| **Entities**     | `src/entities/`    | Pure data/logic, **zero** DOM dependency                                 |
+| **Managers**     | `src/managers/`    | Singletons for cross-cutting concerns                                    |
+| **Controllers**  | `src/controllers/` | Orchestrate managers for one play session — keep scenes thin             |
+| **Components**   | `src/components/`  | DOM-based UI overlays (modals, HUD)                                      |
+| **Scenes**       | `src/scenes/`      | Plain classes with `mount(root)` / `destroy()` — delegate to controllers |
+| **Utils**        | `src/utils/`       | Pure helpers and small reusable classes                                  |
+| **Locales**      | `src/locales/`     | Translation dictionaries — `en.js`, `fr.js`                              |
+| **Styles**       | `src/styles/`      | One CSS file per component — imported from `index.css`                   |
 
 ### Boot + scene flow
 
@@ -303,14 +303,14 @@ always go through `STORAGE_KEYS` (and ideally through `saveManager` /
 
 ## Adding new things
 
-| Need                | Where it goes                                                    |
-| ------------------- | ---------------------------------------------------------------- |
-| A constant          | `src/configs/constants.js`                                       |
-| A pure helper       | `src/utils/<name>.js` (+ test in `tests/utils/`)                 |
-| A cross-cutting svc | `src/managers/<name>-manager.js` (singleton, EventEmitter-based) |
-| A modal             | `src/components/<name>-modal.js` extending `BaseModal`           |
-| A UI primitive      | `src/components/ui/<name>.js` (HTML-string builder)              |
-| A keyframe          | `src/styles/animations.css`                                      |
-| A locale string     | Add the key to **both** `src/locales/en.js` and `fr.js`          |
-| A new scene         | `src/scenes/<name>-scene.js` (plain class with `mount/destroy`) — start it via `router.start(MyScene)` |
+| Need                | Where it goes                                                                                               |
+| ------------------- | ----------------------------------------------------------------------------------------------------------- |
+| A constant          | `src/configs/constants.js`                                                                                  |
+| A pure helper       | `src/utils/<name>.js` (+ test in `tests/utils/`)                                                            |
+| A cross-cutting svc | `src/managers/<name>-manager.js` (singleton, EventEmitter-based)                                            |
+| A modal             | `src/components/<name>-modal.js` extending `BaseModal`                                                      |
+| A UI primitive      | `src/components/ui/<name>.js` (HTML-string builder)                                                         |
+| A keyframe          | `src/styles/animations.css`                                                                                 |
+| A locale string     | Add the key to **both** `src/locales/en.js` and `fr.js`                                                     |
+| A new scene         | `src/scenes/<name>-scene.js` (plain class with `mount/destroy`) — start it via `router.start(MyScene)`      |
 | A new UI primitive  | Add it to `src/components/ui/`, then add a sample to `StyleguideScene` so it can be developed in isolation. |

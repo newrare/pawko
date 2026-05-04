@@ -4,3 +4,4 @@ export { optionsManager } from "./options-manager.js";
 export { audioManager } from "./audio-manager.js";
 export { saveManager } from "./save-manager.js";
 export { InputManager } from "./input-manager.js";
+export { bonusManager } from "./bonus-manager.js";

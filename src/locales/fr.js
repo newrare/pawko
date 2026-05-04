@@ -2,10 +2,30 @@
  * French locale strings. Mirror `en.js` key for key.
  */
 export const fr = {
-  "app.name": "Modèle de jeu",
+  "app.name": "Pawko",
+  "app.tagline": "Lâche · rebondit · sauve",
 
   "title.tap_to_start": "Touchez pour commencer",
   "title.styleguide": "Guide de style",
+
+  "game.hits": "Coups",
+  "game.drained": "Perdues",
+  "game.saved": "Sauvées",
+  "game.level": "Niveau",
+  "game.send_up": "Sauvées {n} \u2191",
+  "game.replay": "Rejouer",
+  "game.back": "Retour",
+  "game.gate.save": "SAUVE",
+  "game.gate.recycle": "RECYCLE",
+  "game.gate.shop": "SHOP",
+  "game.gate.drain": "DRAIN",
+  "game.over.title": "Manche terminée",
+  "game.over.body": "Niveau {level} atteint avec {hits} coups.\n{saved} sauvées, {drained} perdues.",
+  "game.over.replay": "Rejouer",
+  "game.over.back": "Retour au titre",
+  "game.victory.title": "Niveau {level} atteint !",
+  "game.victory.body": "La boîte en carton est pleine de chats.",
+  "game.tip": "Touche une cellule de lancement pour lâcher ses billes.",
 
   "menu.title": "Menu",
   "menu.resume": "Reprendre",
@@ -30,10 +50,30 @@ export const fr = {
   "styleguide.toggles": "Bascules",
   "styleguide.modal": "Fenêtre",
   "styleguide.animations": "Animations",
+  "styleguide.plinko": "Primitives Plinko",
   "styleguide.open_modal": "Ouvrir une fenêtre de démo",
 
   "common.yes": "Oui",
   "common.no": "Non",
   "common.cancel": "Annuler",
   "common.ok": "OK",
+
+  "shop.title": "Boutique",
+  "shop.intro": "Choisis une récompense !",
+  "shop.choice.ball": "+1 Bille",
+  "shop.choice.sublaunch": "+1 Lanceur",
+
+  "bonus.unlock.title": "Bonus débloqué !",
+  "bonus.permanent.extra_start_ball": "Bille bonus",
+  "bonus.permanent.extra_start_ball.desc": "Commence chaque manche avec 6 billes par lanceur au lieu de 5.",
+  "bonus.permanent.shop_magnet": "Aimant boutique",
+  "bonus.permanent.shop_magnet.desc": "Les pegs boutique attirent les billes proches.",
+  "bonus.session.bonus_launcher": "Lanceur bonus",
+  "bonus.session.bonus_launcher.desc": "+1 lanceur avec 5 billes pendant 3 niveaux.",
+  "bonus.session.score_x2": "Score x2",
+  "bonus.session.score_x2.desc": "Double le multiplicateur de score pendant 3 niveaux.",
+
+  "shop.skip": "Non merci",
+  "shop.peg.intro": "Peg boutique détruit ! Choisis un bonus gratuit :",
+  "game.coins": "Pièces",
 };

@@ -1,32 +1,45 @@
-/* --- Design tokens. The whole game uses a single visual identity — there is
-       no theme switcher. To rebrand, edit the values here. --- */
+/* --- Pawko design tokens. Single visual identity, no theme switcher.
+       Inspired by the "Cardboard Box" preview: warm kraft paper, doodle
+       browns, soft DIY shadows. To rebrand the game, edit this file. --- */
 
 :root {
-  /* Colors */
-  --gt-color-bg: #0e0e1a;
-  --gt-color-surface: #1d1d2e;
-  --gt-color-surface-2: #262638;
-  --gt-color-text: #e9e9f1;
-  --gt-color-text-dim: #9696a8;
-  --gt-color-primary: #6da9ff;
-  --gt-color-primary-2: #4d8be6;
-  --gt-color-success: #4ed28b;
-  --gt-color-danger: #ff6b6b;
-  --gt-color-warning: #ffc66b;
+  /* Cardboard palette (raw values — internal use only). */
+  --pk-kraft-1: #e6cca0;
+  --pk-kraft-2: #d8b88a;
+  --pk-kraft-3: #c4a07a;
+  --pk-kraft-4: #a87f5a;
+  --pk-cocoa: #6a3a1a;
+  --pk-cocoa-deep: #4a2a0a;
+  --pk-cream: #f8e2b8;
+  --pk-cream-soft: #fff4dd;
+  --pk-yarn-pink: #ff9eb1;
+  --pk-mouse-grey: #8c8678;
+  --pk-mouse-grey-2: #b1ac9d;
+  --pk-mint: #9ed3a4;
+  --pk-tomato: #d96a4a;
+
+  /* --- Generic UI tokens reused by the template. --- */
+  --gt-color-bg: linear-gradient(180deg, var(--pk-kraft-1) 0%, var(--pk-kraft-3) 100%);
+  --gt-color-surface: var(--pk-cream);
+  --gt-color-surface-2: var(--pk-cream-soft);
+  --gt-color-text: var(--pk-cocoa-deep);
+  --gt-color-text-dim: rgba(74, 42, 10, 0.65);
+  --gt-color-primary: var(--pk-cocoa);
+  --gt-color-primary-2: var(--pk-cocoa-deep);
+  --gt-color-success: #5b9a4a;
+  --gt-color-danger: var(--pk-tomato);
+  --gt-color-warning: #e0a050;
   --gt-color-focus: #ffd166;
-  --gt-color-overlay: rgba(8, 8, 16, 0.72);
+  --gt-color-overlay: rgba(74, 42, 10, 0.55);
 
-  /* Radii */
   --gt-radius-sm: 6px;
-  --gt-radius-md: 12px;
-  --gt-radius-lg: 18px;
+  --gt-radius-md: 14px;
+  --gt-radius-lg: 22px;
 
-  /* Shadows */
-  --gt-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.25);
-  --gt-shadow-md: 0 6px 18px rgba(0, 0, 0, 0.35);
-  --gt-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.45);
+  --gt-shadow-sm: 0 1px 2px rgba(74, 42, 10, 0.18);
+  --gt-shadow-md: 0 4px 12px rgba(74, 42, 10, 0.22);
+  --gt-shadow-lg: 0 10px 26px rgba(74, 42, 10, 0.32);
 
-  /* Spacing scale */
   --gt-space-1: 4px;
   --gt-space-2: 8px;
   --gt-space-3: 12px;
@@ -34,7 +47,39 @@
   --gt-space-5: 24px;
   --gt-space-6: 32px;
 
-  /* Typography */
-  --gt-font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --gt-font-body: "Comic Sans MS", "Marker Felt", "Trebuchet MS",
+    system-ui, sans-serif;
   --gt-font-display: var(--gt-font-body);
+
+  /* --- Plinko-specific tokens, consumed by game.css. --- */
+  --pk-arena-bg: repeating-linear-gradient(
+      0deg,
+      var(--pk-kraft-2) 0 6px,
+      #cfae80 6px 7px
+    ),
+    linear-gradient(180deg, transparent, rgba(60, 30, 0, 0.08));
+  --pk-arena-border: 2px dashed rgba(74, 42, 10, 0.45);
+  --pk-launch-bg: var(--pk-cream);
+  --pk-launch-bg-hot: #ffe6a3;
+  --pk-status-bg: rgba(74, 42, 10, 0.92);
+  --pk-status-fg: var(--pk-cream-soft);
+
+  --pk-peg-bg: var(--pk-cocoa);
+  --pk-peg-fg: var(--pk-cream);
+  --pk-peg-shadow: 0 1px 2px rgba(60, 30, 0, 0.4);
+  --pk-bumper-bg: radial-gradient(circle at 30% 30%, #ffd66b, #c08a2a);
+  --pk-bumper-fg: var(--pk-cocoa-deep);
+  --pk-bumper-shadow: 0 0 0 2px rgba(74, 42, 10, 0.35),
+    0 2px 6px rgba(74, 42, 10, 0.4);
+  --pk-ball-bg: radial-gradient(circle at 30% 30%, var(--pk-mouse-grey-2), var(--pk-mouse-grey));
+  --pk-ball-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+
+  --pk-gate-save-bg: rgba(155, 200, 110, 0.65);
+  --pk-gate-save-fg: #2a4a1a;
+  --pk-gate-recycle-bg: rgba(220, 160, 90, 0.7);
+  --pk-gate-recycle-fg: var(--pk-cocoa-deep);
+  --pk-gate-shop-bg: rgba(180, 130, 220, 0.65);
+  --pk-gate-shop-fg: #3a1a5a;
+  --pk-gate-drain-bg: rgba(120, 60, 30, 0.85);
+  --pk-gate-drain-fg: var(--pk-cream-soft);
 }

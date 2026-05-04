@@ -46,7 +46,9 @@ export class TitleScene {
   #renderInner() {
     return `
       <div class="gt-title">
+        <div class="gt-title-art" aria-hidden="true">📦</div>
         <h1 class="gt-title-name">${i18n.t("app.name")}</h1>
+        <p class="gt-title-tag">${i18n.t("app.tagline")}</p>
         <p class="gt-title-hint">${i18n.t("title.tap_to_start")}</p>
       </div>
     `;
@@ -55,8 +57,10 @@ export class TitleScene {
   #refresh() {
     if (!this.#el) return;
     const name = this.#el.querySelector(".gt-title-name");
+    const tag = this.#el.querySelector(".gt-title-tag");
     const hint = this.#el.querySelector(".gt-title-hint");
     if (name) name.textContent = i18n.t("app.name");
+    if (tag) tag.textContent = i18n.t("app.tagline");
     if (hint) hint.textContent = i18n.t("title.tap_to_start");
   }
 

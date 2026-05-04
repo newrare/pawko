@@ -4,21 +4,39 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   text-align: center;
+  padding: 24px 16px;
+  border-radius: var(--gt-radius-lg);
+  background: rgba(255, 244, 221, 0.55);
+  border: 2px dashed rgba(74, 42, 10, 0.45);
+  box-shadow: var(--gt-shadow-md);
   animation: gt-pop-in var(--anim-modal-open, 200ms) ease-out forwards;
 }
 
+.gt-title-art {
+  font-size: clamp(2.5rem, 12vmin, 5rem);
+  line-height: 1;
+  filter: drop-shadow(0 4px 6px rgba(74, 42, 10, 0.25));
+}
+
 .gt-title-name {
-  font-size: clamp(2rem, 9vmin, 4rem);
+  font-size: clamp(2.4rem, 10vmin, 4.5rem);
   font-weight: 900;
   color: var(--gt-color-text);
   letter-spacing: 0.04em;
-  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+  text-shadow: 0 3px 0 rgba(74, 42, 10, 0.18);
+}
+
+.gt-title-tag {
+  font-size: 1rem;
+  color: var(--gt-color-text);
+  opacity: 0.8;
+  font-style: italic;
 }
 
 .gt-title-hint {
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: var(--gt-color-text-dim);
   animation: gt-pulse 1.6s ease-in-out infinite;
 }

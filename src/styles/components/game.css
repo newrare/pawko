@@ -1,0 +1,470 @@
+/* --- Pawko gameplay scene. The scene is split vertically into:
+       launch (8%) · gap (5%) · pinboard (flex 1) · collection (10%) · status (10%).
+       Heights below match section 2 of `drafts/game.txt`. --- */
+
+.gt-game {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--gt-color-bg);
+  color: var(--gt-color-text);
+  font-family: var(--gt-font-body);
+  overflow: hidden;
+}
+
+.gt-game-safe {
+  position: absolute;
+  left: var(--gt-safe-left, 0);
+  top: var(--gt-safe-top, 0);
+  width: var(--gt-safe-width, 100%);
+  height: var(--gt-safe-height, 100%);
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- Launch zone --- */
+
+.pk-launch {
+  flex: 0 0 12%;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: 1fr auto;
+  gap: 4px;
+  padding: 6px;
+}
+
+.pk-launch-savedrow {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  padding: 0 4px 2px;
+}
+
+.pk-launch-savedrow .gt-btn {
+  width: 100%;
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: 0.82rem;
+}
+
+.pk-sublaunch {
+  position: relative;
+  background: var(--pk-launch-bg);
+  border: 2px dashed rgba(74, 42, 10, 0.4);
+  border-radius: var(--gt-radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.4rem;
+  color: var(--pk-cocoa-deep);
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--anim-fast) ease, transform var(--anim-fast) ease;
+}
+
+.pk-sublaunch:hover { background: var(--pk-launch-bg-hot); }
+.pk-sublaunch:active { transform: scale(0.97); }
+.pk-sublaunch[data-empty="true"] {
+  opacity: 0.4;
+  cursor: default;
+  background: transparent;
+}
+.pk-sublaunch[data-firing="true"] {
+  background: var(--pk-launch-bg-hot);
+  animation: pk-launch-pulse 0.4s ease-in-out;
+}
+
+.pk-sublaunch-count {
+  font-size: 1.5rem;
+  letter-spacing: 0.04em;
+}
+.pk-sublaunch-icon { font-size: 1rem; opacity: 0.7; margin-right: 4px; }
+
+/* --- Free zone (visual breathing room between launch + pinboard) --- */
+.pk-freezone { flex: 0 0 5%; }
+
+/* --- Pinboard --- */
+
+.pk-pinboard {
+  flex: 1 1 auto;
+  position: relative;
+  background: var(--pk-arena-bg);
+  border-top: var(--pk-arena-border);
+  border-bottom: var(--pk-arena-border);
+  overflow: hidden;
+}
+
+.pk-level-label {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  background: rgba(74, 42, 10, 0.18);
+  color: var(--pk-cocoa-deep);
+  padding: 4px 10px;
+  border-radius: var(--gt-radius-sm);
+  font-weight: 700;
+  font-size: 0.85rem;
+  pointer-events: none;
+}
+
+.pk-stack {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* --- Level progress bar (inside pinboard, bottom-anchored fill) --- */
+
+.pk-level-bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0%;
+  background: linear-gradient(
+    180deg,
+    rgba(106, 58, 26, 0.08) 0%,
+    rgba(106, 58, 26, 0.28) 100%
+  );
+  border-top: 2px dashed rgba(106, 58, 26, 0.3);
+  transition: height 0.8s ease-out;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* --- Pinboard elements sit above the level bar --- */
+.pk-level-label,
+.pk-stack {
+  z-index: 1;
+}
+
+
+.pk-layer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  transition: top 0.5s ease-out;
+}
+
+.pk-layer-tag {
+  position: absolute;
+  left: 8px;
+  font-size: 0.7rem;
+  color: rgba(74, 42, 10, 0.55);
+  font-weight: 700;
+  transform: translateY(-50%);
+}
+
+.pk-layer-tag--milestone {
+  font-size: 0.95rem;
+  color: var(--pk-cocoa-deep);
+  background: var(--pk-cream);
+  padding: 1px 6px;
+  border-radius: var(--gt-radius-sm);
+  box-shadow: var(--gt-shadow-sm);
+}
+
+.pk-peg {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  border-radius: 50%;
+  background: var(--pk-peg-bg);
+  box-shadow: var(--pk-peg-shadow);
+}
+
+.pk-peg.pk-peg--bumper {
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  background: var(--pk-bumper-bg);
+  box-shadow: var(--pk-bumper-shadow);
+  animation: pk-bumper-idle 2.4s ease-in-out infinite;
+}
+
+.pk-peg.pk-peg--coin {
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  background: radial-gradient(circle at 30% 30%, #ffe066, #c9a030);
+  box-shadow: 0 0 0 2px rgba(74, 42, 10, 0.25), 0 2px 4px rgba(74, 42, 10, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--pk-cocoa-deep);
+  animation: pk-coin-idle 2s ease-in-out infinite;
+}
+
+.pk-peg.pk-flash { animation: pk-peg-flash 0.18s ease-out; }
+.pk-peg--bumper.pk-flash { animation: pk-bumper-flash 0.22s ease-out; }
+.pk-peg--coin.pk-flash { animation: pk-coin-flash 0.25s ease-out; }
+.pk-peg--shop.pk-flash { animation: pk-shop-peg-flash 0.22s ease-out; }
+
+/* --- Shop pegs --- */
+
+.pk-peg--shop {
+  width: 24px;
+  height: 24px;
+  margin: -12px 0 0 -12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pk-shop-peg-idle 2.2s ease-in-out infinite;
+}
+
+.pk-shop-peg-counter {
+  font-size: 0.62rem;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+  pointer-events: none;
+  line-height: 1;
+}
+
+/* Rarity colour variants */
+.pk-peg--shop--common {
+  background: radial-gradient(circle at 35% 30%, #86efac, #16a34a);
+  box-shadow: 0 0 6px rgba(22, 163, 74, 0.55), 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+.pk-peg--shop--rare {
+  background: radial-gradient(circle at 35% 30%, #93c5fd, #2563eb);
+  box-shadow: 0 0 8px rgba(37, 99, 235, 0.65), 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+.pk-peg--shop--epic {
+  background: radial-gradient(circle at 35% 30%, #d8b4fe, #9333ea);
+  box-shadow: 0 0 10px rgba(147, 51, 234, 0.65), 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+.pk-peg--shop--legendary {
+  background: radial-gradient(circle at 35% 30%, #fde68a, #d97706);
+  box-shadow: 0 0 12px rgba(217, 119, 6, 0.75), 0 0 22px rgba(217, 119, 6, 0.35), 0 2px 4px rgba(0, 0, 0, 0.25);
+  animation: pk-shop-peg-legendary-idle 1.8s ease-in-out infinite;
+}
+
+.pk-ball {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  border-radius: 50%;
+  background: var(--pk-ball-bg);
+  box-shadow: var(--pk-ball-shadow);
+  pointer-events: none;
+  will-change: transform;
+}
+
+.pk-popup {
+  position: absolute;
+  font-weight: 800;
+  font-size: 0.8rem;
+  color: var(--pk-cocoa-deep);
+  pointer-events: none;
+  animation: pk-popup-rise 0.6s ease-out forwards;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+.pk-popup--big { font-size: 1.1rem; color: #c08a2a; }
+
+/* --- Collection gates --- */
+
+.pk-collection {
+  flex: 0 0 10%;
+  display: flex;
+  border-top: var(--pk-arena-border);
+}
+
+.pk-gate {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  font-size: 0.9rem;
+  text-align: center;
+  border-right: 1px dashed rgba(74, 42, 10, 0.4);
+}
+.pk-gate:last-child { border-right: 0; }
+
+.pk-gate--save    { background: var(--pk-gate-save-bg);    color: var(--pk-gate-save-fg); }
+.pk-gate--recycle { background: var(--pk-gate-recycle-bg); color: var(--pk-gate-recycle-fg); }
+.pk-gate--shop    { background: var(--pk-gate-shop-bg);    color: var(--pk-gate-shop-fg); flex: 0 0 2%; min-width: 0; overflow: hidden; font-size: 0; }
+.pk-gate--drain   { background: var(--pk-gate-drain-bg);   color: var(--pk-gate-drain-fg); }
+
+.pk-gate.pk-flash { animation: pk-gate-flash 0.35s ease-out; }
+
+/* --- Status bar --- */
+
+.pk-status {
+  flex: 0 0 10%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--pk-status-bg);
+  color: var(--pk-status-fg);
+  font-weight: 700;
+}
+
+.pk-status-readouts {
+  display: flex;
+  gap: 14px;
+  font-size: 0.85rem;
+  flex-wrap: wrap;
+}
+.pk-status-readout span:first-child {
+  opacity: 0.7;
+  margin-right: 4px;
+  font-weight: 500;
+}
+.pk-status-actions { display: flex; gap: 6px; }
+.pk-status-actions .gt-btn { min-height: 36px; padding: 6px 10px; font-size: 0.85rem; }
+
+.pk-saved-up:disabled { opacity: 0.35; }
+
+/* --- Game over modal extras --- */
+
+.gt-gameover { text-align: center; gap: 14px; }
+.gt-gameover-art {
+  font-size: 2.4rem;
+  animation: gt-pop-in 350ms ease-out;
+}
+.gt-gameover-message p { margin: 4px 0; font-size: 0.95rem; }
+.gt-modal-overlay--gameover .gt-modal {
+  animation: gt-pop-in var(--anim-modal-open) ease-out;
+}
+
+/* --- Shop modal --- */
+
+.gt-shop { text-align: center; gap: 12px; }
+.gt-shop-intro { font-size: 0.95rem; opacity: 0.85; margin: 0; }
+.gt-shop-coins { font-size: 0.9rem; font-weight: 700; color: var(--pk-cocoa-deep); margin: 0; }
+.gt-shop-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.gt-shop-choices .gt-btn { width: 100%; font-size: 1rem; }
+.gt-shop-skip { margin-top: var(--gt-space-2, 8px); }
+
+/* --- Chest (coin collector) --- */
+
+.pk-chest {
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: rgba(74, 42, 10, 0.75);
+  border-radius: var(--gt-radius-sm, 8px);
+  color: #fff4dd;
+  font-weight: 700;
+  font-size: 0.8rem;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.pk-chest-icon { font-size: 1rem; }
+.pk-chest.pk-flash { animation: pk-gate-flash 0.35s ease-out; }
+
+/* --- Coin fly animation --- */
+
+.pk-coin-fly {
+  position: absolute;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #ffe066;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  z-index: 10;
+  animation: pk-coin-fly 0.6s ease-in forwards;
+}
+
+/* --- Keyframes --- */
+
+@keyframes pk-launch-pulse {
+  0%   { background: var(--pk-launch-bg); }
+  50%  { background: var(--pk-launch-bg-hot); }
+  100% { background: var(--pk-launch-bg); }
+}
+
+@keyframes pk-layer-fall {
+  from { transform: translateY(-120%); opacity: 0.4; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+
+@keyframes pk-peg-flash {
+  0%   { transform: scale(1); filter: brightness(1); }
+  50%  { transform: scale(1.4); filter: brightness(1.4); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+@keyframes pk-bumper-flash {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.6); filter: brightness(1.4); }
+  100% { transform: scale(1); }
+}
+
+@keyframes pk-bumper-idle {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.06); }
+}
+
+@keyframes pk-popup-rise {
+  0%   { transform: translate(-50%, 0); opacity: 1; }
+  100% { transform: translate(-50%, -28px); opacity: 0; }
+}
+
+@keyframes pk-gate-flash {
+  0%   { filter: brightness(1); }
+  50%  { filter: brightness(1.4); }
+  100% { filter: brightness(1); }
+}
+
+@keyframes pk-coin-idle {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); filter: brightness(1.1); }
+}
+
+@keyframes pk-coin-flash {
+  0%   { transform: scale(1); filter: brightness(1); }
+  50%  { transform: scale(1.5); filter: brightness(1.5); }
+  100% { transform: scale(1); filter: brightness(1); }
+}
+
+@keyframes pk-coin-fly {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(
+      calc(var(--pk-coin-target-x) - 50%),
+      calc(var(--pk-coin-target-y) - 50%)
+    ) scale(0.5);
+    opacity: 0.6;
+  }
+}
+
+@keyframes pk-shop-peg-idle {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50%       { transform: scale(1.07); filter: brightness(1.12); }
+}
+
+@keyframes pk-shop-peg-legendary-idle {
+  0%, 100% { transform: scale(1); filter: brightness(1); }
+  50%       { transform: scale(1.1); filter: brightness(1.25) drop-shadow(0 0 6px #fbbf24); }
+}
+
+@keyframes pk-shop-peg-flash {
+  0%   { transform: scale(1); filter: brightness(1); }
+  50%  { transform: scale(1.55); filter: brightness(1.6); }
+  100% { transform: scale(1); filter: brightness(1); }
+}

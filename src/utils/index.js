@@ -4,3 +4,4 @@ export * from "./swipe-detector.js";
 export * from "./keyboard-nav.js";
 export * from "./math.js";
 export * from "./dom.js";
+export * from "./physics.js";

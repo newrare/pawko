@@ -95,11 +95,6 @@ export class StyleguideScene {
       .join("");
 
     return `
-      <header class="gt-sg-header">
-        <h1 class="gt-sg-title">${i18n.t("styleguide.title")}</h1>
-        ${buttonHtml({ action: "back", label: i18n.t("menu.back"), variant: "ghost" })}
-      </header>
-
       <section class="gt-sg-section">
         <h2 class="gt-sg-h2">${i18n.t("styleguide.colors")}</h2>
         <div class="gt-sg-swatches">${swatches}</div>
@@ -125,6 +120,37 @@ export class StyleguideScene {
       <section class="gt-sg-section">
         <h2 class="gt-sg-h2">${i18n.t("styleguide.animations")}</h2>
         <div class="gt-sg-anims">${animSamples}</div>
+      </section>
+
+      <section class="gt-sg-section">
+        <h2 class="gt-sg-h2">${i18n.t("styleguide.plinko")}</h2>
+        <div class="gt-sg-plinko">
+          <div class="gt-sg-plinko-row">
+            <div class="gt-sg-plinko-cell">
+              <div class="gt-sg-plinko-stage">
+                <div class="pk-peg"></div>
+              </div>
+              <span>peg</span>
+            </div>
+            <div class="gt-sg-plinko-cell">
+              <div class="gt-sg-plinko-stage">
+                <div class="pk-peg pk-peg--bumper"></div>
+              </div>
+              <span>bumper</span>
+            </div>
+            <div class="gt-sg-plinko-cell">
+              <div class="gt-sg-plinko-stage">
+                <div class="pk-ball" style="transform: translate(20px, 20px)"></div>
+              </div>
+              <span>ball</span>
+            </div>
+          </div>
+          <div class="gt-sg-plinko-gates">
+            <div class="pk-gate pk-gate--save">${i18n.t("game.gate.save")}</div>
+            <div class="pk-gate pk-gate--recycle">${i18n.t("game.gate.recycle")}</div>
+            <div class="pk-gate pk-gate--drain">${i18n.t("game.gate.drain")}</div>
+          </div>
+        </div>
       </section>
     `;
   }
