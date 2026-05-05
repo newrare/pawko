@@ -27,6 +27,8 @@
  *   addSaved: (n: number) => void,
  *   addSublaunch: (balls: number) => void,
  *   removeSublaunch: () => void,
+ *   queueIceBall: () => void,
+ *   cleanupIce: () => void,
  * }} BonusContext
  */
 
@@ -103,6 +105,19 @@ export const SESSION_BONUSES = [
     icon: "\u2728",
     durationLevels: 3,
     modifiers: [{ param: "scoreMultiplier", op: "multiply", value: 2 }],
+  },
+  {
+    id: "ice_ball",
+    category: "session",
+    rarity: "rare",
+    shopWeight: 0.5,
+    icon: "\ud83e\uddca",
+    durationLevels: 10,
+    trigger: {
+      event: "bonus:applied",
+      effect: (ctx) => ctx.queueIceBall(),
+    },
+    onExpire: (ctx) => ctx.cleanupIce(),
   },
 ];
 

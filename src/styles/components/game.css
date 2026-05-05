@@ -50,37 +50,38 @@
 
 .pk-sublaunch {
   position: relative;
-  background: var(--pk-launch-bg);
-  border: 2px dashed rgba(74, 42, 10, 0.4);
-  border-radius: var(--gt-radius-md);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--gt-radius-sm) var(--gt-radius-sm) var(--gt-radius-md) var(--gt-radius-md);
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
-  font-weight: 700;
-  font-size: 1.4rem;
-  color: var(--pk-cocoa-deep);
   cursor: pointer;
   user-select: none;
+  overflow: hidden;
   transition: background var(--anim-fast) ease, transform var(--anim-fast) ease;
 }
 
-.pk-sublaunch:hover { background: var(--pk-launch-bg-hot); }
-.pk-sublaunch:active { transform: scale(0.97); }
-.pk-sublaunch[data-empty="true"] {
-  opacity: 0.4;
-  cursor: default;
-  background: transparent;
-}
-.pk-sublaunch[data-firing="true"] {
-  background: var(--pk-launch-bg-hot);
-  animation: pk-launch-pulse 0.4s ease-in-out;
+.pk-sublaunch::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, transparent 40%);
+  pointer-events: none;
 }
 
-.pk-sublaunch-count {
-  font-size: 1.5rem;
-  letter-spacing: 0.04em;
+.pk-sublaunch:hover { background: rgba(255, 255, 255, 0.14); }
+.pk-sublaunch:active { transform: scale(0.97); }
+.pk-sublaunch[data-empty="true"] {
+  opacity: 0.35;
+  cursor: default;
+  background: rgba(255, 255, 255, 0.03);
 }
-.pk-sublaunch-icon { font-size: 1rem; opacity: 0.7; margin-right: 4px; }
+.pk-sublaunch[data-firing="true"] {
+  background: rgba(255, 255, 255, 0.18);
+  animation: pk-launch-pulse 0.4s ease-in-out;
+}
 
 /* --- Free zone (visual breathing room between launch + pinboard) --- */
 .pk-freezone { flex: 0 0 5%; }
@@ -258,6 +259,61 @@
   will-change: transform;
 }
 
+.pk-ball.pk-ball--ice {
+  background: radial-gradient(circle at 35% 28%, #f0f9ff, #7dd3fc 60%, #38bdf8);
+  box-shadow:
+    0 0 10px rgba(125, 211, 252, 0.9),
+    0 0 22px rgba(125, 211, 252, 0.5),
+    inset 0 2px 3px rgba(255, 255, 255, 0.8),
+    0 2px 4px rgba(0, 0, 0, 0.2);
+  animation: pk-ice-ball-idle 1.8s ease-in-out infinite;
+}
+
+/* --- Frozen peg overlay (all peg types) — 3-hit thaw with cracks --- */
+
+.pk-peg.pk-peg--frozen-3,
+.pk-peg.pk-peg--frozen-2,
+.pk-peg.pk-peg--frozen-1 {
+  animation: pk-frozen-peg-idle 2s ease-in-out infinite !important;
+}
+
+.pk-peg.pk-peg--frozen-3::after,
+.pk-peg.pk-peg--frozen-2::after,
+.pk-peg.pk-peg--frozen-1::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 25%, rgba(224, 247, 255, 0.9), rgba(125, 211, 252, 0.7));
+  box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.85), 0 0 10px rgba(125, 211, 252, 0.85);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 2 hits left — first crack */
+.pk-peg.pk-peg--frozen-2::after {
+  background:
+    linear-gradient(135deg, transparent 44%, rgba(255, 255, 255, 0.7) 45%, rgba(255, 255, 255, 0.7) 46%, transparent 47%),
+    radial-gradient(circle at 30% 25%, rgba(224, 247, 255, 0.85), rgba(125, 211, 252, 0.6));
+  box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.85), 0 0 8px rgba(125, 211, 252, 0.7);
+}
+
+/* 1 hit left — two cracks, ice fading */
+.pk-peg.pk-peg--frozen-1::after {
+  background:
+    linear-gradient(135deg, transparent 44%, rgba(255, 255, 255, 0.8) 45%, rgba(255, 255, 255, 0.8) 46%, transparent 47%),
+    linear-gradient(45deg, transparent 38%, rgba(255, 255, 255, 0.7) 39%, rgba(255, 255, 255, 0.7) 40%, transparent 41%),
+    radial-gradient(circle at 30% 25%, rgba(224, 247, 255, 0.65), rgba(125, 211, 252, 0.35));
+  box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.6), 0 0 5px rgba(125, 211, 252, 0.4);
+  opacity: 0.8;
+}
+
+.pk-peg.pk-thaw {
+  animation: pk-thaw-flash 0.35s ease-out forwards !important;
+}
+
+.pk-peg.pk-thaw::after { display: none; }
+
 .pk-popup {
   position: absolute;
   font-weight: 800;
@@ -269,7 +325,7 @@
 }
 .pk-popup--big { font-size: 1.1rem; color: #c08a2a; }
 
-/* --- Collection gates --- */
+/* --- Collection gates (transparent receptacles) --- */
 
 .pk-collection {
   flex: 0 0 10%;
@@ -279,23 +335,125 @@
 
 .pk-gate {
   flex: 1 1 auto;
+  position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  overflow: hidden;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+}
+.pk-gate:last-of-type { border-right: 0; }
+
+.pk-gate::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 0 0 var(--gt-radius-md) var(--gt-radius-md);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.pk-gate--save::before    { background: linear-gradient(180deg, rgba(34, 197, 94, 0.12) 0%, rgba(34, 197, 94, 0.04) 100%); }
+.pk-gate--recycle::before { background: linear-gradient(180deg, rgba(59, 130, 246, 0.12) 0%, rgba(59, 130, 246, 0.04) 100%); }
+.pk-gate--shop::before    { background: linear-gradient(180deg, rgba(234, 179, 8, 0.12) 0%, rgba(234, 179, 8, 0.04) 100%); }
+.pk-gate--drain::before   { background: linear-gradient(180deg, rgba(239, 68, 68, 0.12) 0%, rgba(239, 68, 68, 0.04) 100%); }
+
+.pk-gate--save    { border-left: 1.5px solid rgba(34, 197, 94, 0.25); border-right: 1.5px solid rgba(34, 197, 94, 0.25); }
+.pk-gate--recycle { border-left: 1.5px solid rgba(59, 130, 246, 0.2); border-right: 1.5px solid rgba(59, 130, 246, 0.2); }
+.pk-gate--shop    { border-left: 1.5px solid rgba(234, 179, 8, 0.2); border-right: 1.5px solid rgba(234, 179, 8, 0.2); flex: 0 0 2%; min-width: 0; }
+.pk-gate--drain   { border-left: 1.5px solid rgba(239, 68, 68, 0.25); border-right: 1.5px solid rgba(239, 68, 68, 0.25); }
+
+.pk-gate-label {
+  position: relative;
+  z-index: 2;
   font-weight: 800;
   letter-spacing: 0.08em;
-  font-size: 0.9rem;
-  text-align: center;
-  border-right: 1px dashed rgba(74, 42, 10, 0.4);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  padding-top: 3px;
+  opacity: 0.6;
 }
-.pk-gate:last-child { border-right: 0; }
 
-.pk-gate--save    { background: var(--pk-gate-save-bg);    color: var(--pk-gate-save-fg); }
-.pk-gate--recycle { background: var(--pk-gate-recycle-bg); color: var(--pk-gate-recycle-fg); }
-.pk-gate--shop    { background: var(--pk-gate-shop-bg);    color: var(--pk-gate-shop-fg); flex: 0 0 2%; min-width: 0; overflow: hidden; font-size: 0; }
-.pk-gate--drain   { background: var(--pk-gate-drain-bg);   color: var(--pk-gate-drain-fg); }
+.pk-gate--save    .pk-gate-label { color: var(--pk-gate-save-fg, #22c55e); }
+.pk-gate--recycle .pk-gate-label { color: var(--pk-gate-recycle-fg, #3b82f6); }
+.pk-gate--drain   .pk-gate-label { color: var(--pk-gate-drain-fg, #ef4444); }
 
 .pk-gate.pk-flash { animation: pk-gate-flash 0.35s ease-out; }
+
+/* --- Ball layer (overlays entire safe zone, renders all physics balls) --- */
+
+.pk-ball-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 10;
+}
+
+/* --- Particle burst effect --- */
+
+@keyframes pk-particle-burst {
+  0%   { transform: translate(0, 0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--px), var(--py)) scale(0.3); opacity: 0; }
+}
+
+.pk-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.6);
+  animation: pk-particle-burst 0.4s ease-out forwards;
+  pointer-events: none;
+}
+
+.pk-particle--recycle {
+  background: rgba(99, 179, 255, 0.95);
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.9);
+  width: 7px;
+  height: 7px;
+  animation-duration: 0.38s;
+}
+
+/* --- Recycle teleport beam --- */
+
+.pk-recycle-beam {
+  position: absolute;
+  width: 3px;
+  margin-left: -1px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to top,
+    rgba(59, 130, 246, 0.6) 0%,
+    rgba(147, 197, 253, 0.2) 70%,
+    transparent 100%
+  );
+  box-shadow: 0 0 4px rgba(59, 130, 246, 0.3);
+  animation: pk-recycle-beam 0.35s ease-out forwards;
+  pointer-events: none;
+  z-index: 11;
+  transform-origin: bottom center;
+}
+
+@keyframes pk-recycle-beam {
+  0%   { transform: scaleY(0); opacity: 0; }
+  20%  { transform: scaleY(1); opacity: 0.7; }
+  100% { opacity: 0; transform: scaleY(1); }
+}
+
+/* --- Ball materialize flash at top after teleport --- */
+
+@keyframes pk-recycle-materialize {
+  0%   { filter: brightness(3) saturate(0.3); transform: scale(1.5); }
+  100% { filter: brightness(1) saturate(1); transform: scale(1); }
+}
+
+.pk-ball.pk-recycle-materialize {
+  animation: pk-recycle-materialize 0.35s ease-out forwards;
+}
 
 /* --- Status bar --- */
 
@@ -467,4 +625,19 @@
   0%   { transform: scale(1); filter: brightness(1); }
   50%  { transform: scale(1.55); filter: brightness(1.6); }
   100% { transform: scale(1); filter: brightness(1); }
+}
+
+@keyframes pk-ice-ball-idle {
+  0%, 100% { filter: brightness(1) drop-shadow(0 0 2px #7dd3fc); }
+  50%       { filter: brightness(1.18) drop-shadow(0 0 7px #38bdf8); }
+}
+
+@keyframes pk-frozen-peg-idle {
+  0%, 100% { transform: scale(1); filter: brightness(1.05); }
+  50%       { transform: scale(1.06); filter: brightness(1.2) drop-shadow(0 0 5px #bae6fd); }
+}
+
+@keyframes pk-thaw-flash {
+  0%   { transform: scale(1.4); filter: brightness(1.8) saturate(0.4); }
+  100% { transform: scale(1);   filter: brightness(1)   saturate(1); }
 }

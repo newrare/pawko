@@ -72,6 +72,8 @@ export const en = {
   "bonus.session.bonus_launcher.desc": "+1 launcher with 5 balls for 3 levels.",
   "bonus.session.score_x2": "Score x2",
   "bonus.session.score_x2.desc": "Double your score multiplier for 3 levels.",
+  "bonus.session.ice_ball": "Ice Ball",
+  "bonus.session.ice_ball.desc": "One ball becomes icy for 10 levels. It freezes every peg it touches — frozen pegs give no effect until thawed by another ball.",
 
   "shop.skip": "No thanks",
   "shop.peg.intro": "Shop peg destroyed! Choose a free bonus:",

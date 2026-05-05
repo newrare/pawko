@@ -42,45 +42,75 @@
   transform: translate(0, 100%);
 }
 
-/* --- Nav bar (bottom-right, viewport-anchored). --- */
+/* --- Nav bar (bottom-right, viewport-anchored) — kept for reference but no longer rendered. --- */
 
-.gt-dev-bar {
+/* --- Dev admin panel (right of safe zone) --- */
+
+.pk-dev-admin {
   position: fixed;
-  right: 8px;
-  bottom: 8px;
+  left: calc(var(--gt-safe-left, 0px) + var(--gt-safe-width, 0px) + 12px);
+  top: var(--gt-safe-top, 0px);
+  width: 160px;
+  max-height: var(--gt-safe-height, 80vh);
+  overflow-y: auto;
   z-index: 99999;
-  display: flex;
-  gap: 4px;
-  padding: 4px;
+  padding: 8px;
   border-radius: 6px;
-  background: rgba(0, 28, 14, 0.85);
+  background: rgba(0, 28, 14, 0.9);
   border: 1px dashed rgba(0, 255, 136, 0.45);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   pointer-events: auto;
+  font: 700 11px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: #d4ffe5;
 }
 
-.gt-dev-bar-btn {
+.pk-dev-admin-title {
+  margin: 0 0 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #00ff88;
+  border-bottom: 1px solid rgba(0, 255, 136, 0.3);
+  padding-bottom: 4px;
+}
+
+.pk-dev-admin-section {
+  margin-bottom: 8px;
+}
+
+.pk-dev-admin-section h4 {
+  margin: 0 0 4px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.6;
+}
+
+.pk-dev-admin-btn {
   appearance: none;
+  display: block;
+  width: 100%;
   border: 0;
   cursor: pointer;
-  padding: 6px 10px;
+  padding: 5px 6px;
+  margin-bottom: 3px;
   border-radius: 4px;
-  font:
-    700 11px/1 ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    monospace;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  font: 700 10px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
   color: #d4ffe5;
-  background: transparent;
+  background: rgba(0, 255, 136, 0.08);
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition: background 120ms ease;
 }
 
-.gt-dev-bar-btn:hover {
-  background: rgba(0, 255, 136, 0.15);
-}
+.pk-dev-admin-btn:hover { background: rgba(0, 255, 136, 0.2); }
+.pk-dev-admin-btn:active { background: rgba(0, 255, 136, 0.35); }
 
-.gt-dev-bar-btn:active {
-  background: rgba(0, 255, 136, 0.25);
+.pk-dev-admin-btn--ice {
+  background: rgba(125, 211, 252, 0.15);
+  color: #bae6fd;
 }
+.pk-dev-admin-btn--ice:hover { background: rgba(125, 211, 252, 0.3); }
+.pk-dev-admin-btn--ice:active { background: rgba(125, 211, 252, 0.45); }

@@ -2,6 +2,12 @@
 
 Guidance for Claude Code (claude.ai/code) when working in this repository.
 
+## Acknowledgment rule
+
+When this file is read or used to inform a response, you MUST include the following line at the very start of your response (before any other content):
+
+> **[CLAUDE.md used]**
+
 ## Commands
 
 ```bash

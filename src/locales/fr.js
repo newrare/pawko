@@ -72,6 +72,8 @@ export const fr = {
   "bonus.session.bonus_launcher.desc": "+1 lanceur avec 5 billes pendant 3 niveaux.",
   "bonus.session.score_x2": "Score x2",
   "bonus.session.score_x2.desc": "Double le multiplicateur de score pendant 3 niveaux.",
+  "bonus.session.ice_ball": "Bille de glace",
+  "bonus.session.ice_ball.desc": "Une bille devient glacée pendant 10 niveaux. Elle gèle chaque peg qu'elle touche — les pegs gelés n'ont plus d'effet jusqu'à ce qu'une autre bille brise la glace.",
 
   "shop.skip": "Non merci",
   "shop.peg.intro": "Peg boutique détruit ! Choisis un bonus gratuit :",

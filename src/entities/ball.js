@@ -21,6 +21,14 @@ export class Ball extends Entity {
   recycles = 0;
   /** @type {boolean} */
   alive = true;
+  /** @type {boolean} True when this ball carries the ice-ball bonus effect. */
+  isIce = false;
+  /** @type {'held' | 'active' | 'captured'} */
+  state = "active";
+  /** @type {string | null} Gate that captured this ball. */
+  gateId = null;
+  /** @type {number} Sublaunch index this ball belongs to (for held balls). */
+  sublaunchIdx = -1;
   /** @type {Set<number>} ids of pegs hit during the current contact frame. */
   recentPegs = new Set();
 

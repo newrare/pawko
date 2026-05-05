@@ -159,6 +159,7 @@ export const PLINKO = {
 
   /* Launch zone */
   SUBLAUNCH_COUNT: 3,
+  MAX_SUBLAUNCHES: 10,
   /** Base ball count per sublaunch at round start. */
   STARTING_BALLS_PER_SUBLAUNCH: 5,
   /** Delay between consecutive ball drops from the same sublaunch. */
@@ -200,7 +201,7 @@ export const PLINKO = {
   SHOP_PEG_RADIUS: 12,
   RESTITUTION_SHOP_PEG: 0.65,
   /** Probability that a layer contains a shop peg. */
-  SHOP_PEG_CHANCE: 0.12,
+  SHOP_PEG_CHANCE: 0.40,
   /** Duration of the coin-fly-to-chest animation (ms). */
   COIN_FLY_DURATION_MS: 600,
   /** Shop-peg magnet: attraction force (px/s²) when unlocked. */
@@ -219,6 +220,9 @@ export const PLINKO = {
   /* Collection gates — fractions of pinboard width (sum = 1).
      Shop is intentionally narrow (2%) to make it a rare landing spot. */
   GATE_WIDTHS: { save: 0.25, recycle: 0.48, shop: 0.02, drain: 0.25 },
+
+  /** Number of hits needed to thaw a frozen peg. */
+  ICE_HITS_TO_THAW: 3,
 };
 
 export const PLINKO_RANKING_MODE = "plinko";

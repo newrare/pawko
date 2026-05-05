@@ -15,6 +15,8 @@ export class Peg extends Entity {
   x = 0;
   /** @type {number} */
   y = 0;
+  /** @type {number} Remaining hits to thaw (0 = not frozen). */
+  frozenHits = 0;
 
   /**
    * @param {{ x?: number, y?: number, slot?: number }} [opts]

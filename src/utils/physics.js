@@ -62,3 +62,24 @@ export function clampVelocity(vx, vy, max) {
   const m = Math.sqrt(m2);
   return { vx: (vx / m) * max, vy: (vy / m) * max };
 }
+
+/**
+ * Resolve an elastic collision between two balls of equal mass.
+ * Separates overlapping circles and swaps velocity along the contact normal.
+ * @param {import('../entities/ball.js').Ball} a
+ * @param {import('../entities/ball.js').Ball} b
+ */
+export function collideBalls(a, b) {
+  const c = collideCircles(a.x, a.y, a.radius, b.x, b.y, b.radius);
+  if (!c) return;
+  a.x += c.nx * c.depth * 0.5;
+  a.y += c.ny * c.depth * 0.5;
+  b.x -= c.nx * c.depth * 0.5;
+  b.y -= c.ny * c.depth * 0.5;
+  const relVn = (a.vx - b.vx) * c.nx + (a.vy - b.vy) * c.ny;
+  if (relVn >= 0) return;
+  a.vx -= relVn * c.nx;
+  a.vy -= relVn * c.ny;
+  b.vx += relVn * c.nx;
+  b.vy += relVn * c.ny;
+}

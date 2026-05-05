@@ -5,11 +5,12 @@ import { saveManager } from "../managers/save-manager.js";
 import { audioManager } from "../managers/audio-manager.js";
 import { bonusManager } from "../managers/bonus-manager.js";
 import { gameEvents } from "../utils/event-emitter.js";
-import { collideCircles, reflect, clampVelocity } from "../utils/physics.js";
+import { collideCircles, reflect, clampVelocity, collideBalls } from "../utils/physics.js";
 import { Ball } from "../entities/ball.js";
 import { Layer, bumperChanceForLevel } from "../entities/layer.js";
 import { Slot } from "../entities/slot.js";
 import { PLINKO, PLINKO_RANKING_MODE, STORAGE_KEYS } from "../configs/constants.js";
+import { SESSION_BONUSES, PERMANENT_BONUSES } from "../configs/bonus-defs.js";
 import { buttonHtml } from "../components/ui/button.js";
 import { GameOverModal } from "../components/game-over-modal.js";
 import { TitleScene } from "../scenes/title-scene.js";
@@ -67,6 +68,21 @@ export class GameController {
   /** @type {number | null} */ #rafId = null;
   /** @type {number} */ #lastTs = 0;
 
+  /* --- Ice-ball bonus state --- */
+  /** Sublaunch index whose next spawn should be an ice ball (-1 = none queued). */
+  /** @type {number} */ #iceBallSublaunchQueued = -1;
+  /** Live ice-ball ids (while the ball is in the physics world). */
+  /** @type {Set<number>} */ #iceBallIds = new Set();
+  /** True when an ice ball entered the save/shop gate and is waiting to be re-queued. */
+  /** @type {boolean} */ #iceBallSaved = false;
+
+  /* --- Extended physics (ball layer, gate zones) --- */
+  /** @type {HTMLElement | null} */ #ballLayerEl = null;
+  /** @type {number} */ #pinboardOffsetTop = 0;
+  /** @type {number} */ #gateZoneHeight = 0;
+  /** @type {{ left: number, right: number }[]} */ #gateWalls = [];
+  /** @type {{ left: number, right: number, top: number, bottom: number }[]} */ #launchWalls = [];
+
   /**
    * @param {{ root: HTMLElement,
    *   router?: import('../scenes/scene-router.js').SceneRouter,
@@ -89,6 +105,7 @@ export class GameController {
     this.#refreshLabels();
     this.#refreshSublaunches();
     this.#refreshSavedBtn();
+    this.#spawnHeldBalls();
 
     bonusManager.initSession(this.#makeBonusContext());
     this.#refreshBonusBar();
@@ -100,6 +117,12 @@ export class GameController {
     }, PLINKO.LAYER_FALL_MS);
 
     gameEvents.emit("game:start");
+
+    if (import.meta.env.DEV) {
+      this.#bag.add(gameEvents.on("dev:spawnBall", () => this.#devSpawnBall(false)));
+      this.#bag.add(gameEvents.on("dev:spawnIceBall", () => this.#devSpawnBall(true)));
+      this.#bag.add(gameEvents.on("dev:activateBonus", ({ id }) => this.#devActivateBonus(id)));
+    }
   }
 
   destroy() {
@@ -113,6 +136,9 @@ export class GameController {
     this.#pegEls.clear();
     this.#layerEls.clear();
     this.#layers = [];
+    this.#iceBallIds.clear();
+    this.#iceBallSaved = false;
+    this.#iceBallSublaunchQueued = -1;
     gameEvents.emit("game:end");
   }
 
@@ -129,10 +155,7 @@ export class GameController {
         ${[0, 1, 2]
           .map(
             (i) => `
-          <div class="pk-sublaunch" data-sublaunch="${i}">
-            <span class="pk-sublaunch-icon">🐭</span>
-            <span class="pk-sublaunch-count">0</span>
-          </div>`,
+          <div class="pk-sublaunch" data-sublaunch="${i}"></div>`,
           )
           .join("")}
         <div class="pk-launch-savedrow">
@@ -147,10 +170,10 @@ export class GameController {
         <div class="pk-stack" data-role="stack"></div>
       </div>
       <div class="pk-collection">
-        <div class="pk-gate pk-gate--save"    data-gate="save">${i18n.t("game.gate.save")}</div>
-        <div class="pk-gate pk-gate--recycle" data-gate="recycle">${i18n.t("game.gate.recycle")}</div>
-        <div class="pk-gate pk-gate--shop"    data-gate="shop">${i18n.t("game.gate.shop")}</div>
-        <div class="pk-gate pk-gate--drain"   data-gate="drain">${i18n.t("game.gate.drain")}</div>
+        <div class="pk-gate pk-gate--save"    data-gate="save"><span class="pk-gate-label">${i18n.t("game.gate.save")}</span></div>
+        <div class="pk-gate pk-gate--recycle" data-gate="recycle"><span class="pk-gate-label">${i18n.t("game.gate.recycle")}</span></div>
+        <div class="pk-gate pk-gate--shop"    data-gate="shop"></div>
+        <div class="pk-gate pk-gate--drain"   data-gate="drain"><span class="pk-gate-label">${i18n.t("game.gate.drain")}</span></div>
         <div class="pk-chest" data-role="chest">
           <span class="pk-chest-icon">\uD83E\uDDF0</span>
           <span class="pk-chest-count" data-role="coin-count">0</span>
@@ -169,6 +192,11 @@ export class GameController {
     `;
     this.#root.appendChild(safe);
     this.#safeEl = safe;
+    /* Ball layer — above all zones, overflow visible so balls render everywhere */
+    const ballLayer = document.createElement("div");
+    ballLayer.className = "pk-ball-layer";
+    safe.appendChild(ballLayer);
+    this.#ballLayerEl = ballLayer;
     this.#pinboardEl = safe.querySelector('[data-role="pinboard"]');
     this.#stackEl = safe.querySelector('[data-role="stack"]');
     this.#levelBarEl = safe.querySelector('[data-role="level-bar"]');
@@ -229,10 +257,43 @@ export class GameController {
   }
 
   #measure() {
-    if (!this.#pinboardEl) return;
+    if (!this.#pinboardEl || !this.#safeEl) return;
     const r = this.#pinboardEl.getBoundingClientRect();
+    const sr = this.#safeEl.getBoundingClientRect();
     this.#pinboardWidth = r.width;
     this.#pinboardHeight = r.height;
+    this.#pinboardOffsetTop = r.top - sr.top;
+    const collectionEl = this.#safeEl.querySelector(".pk-collection");
+    this.#gateZoneHeight = collectionEl ? collectionEl.offsetHeight : 0;
+    this.#computeGateWalls();
+    this.#computeLaunchWalls();
+  }
+
+  #computeGateWalls() {
+    const w = this.#pinboardWidth;
+    const { save, recycle, shop } = bonusManager.resolveGateWidths(PLINKO.GATE_WIDTHS);
+    let x = 0;
+    this.#gateWalls = [
+      { left: x, right: (x += save * w) },
+      { left: x, right: (x += recycle * w) },
+      { left: x, right: (x += shop * w) },
+      { left: x, right: w },
+    ];
+  }
+
+  #computeLaunchWalls() {
+    if (!this.#pinboardEl) return;
+    const pr = this.#pinboardEl.getBoundingClientRect();
+    this.#launchWalls = [];
+    for (const el of this.#sublaunchEls) {
+      const r = el.getBoundingClientRect();
+      this.#launchWalls.push({
+        left: r.left - pr.left,
+        right: r.right - pr.left,
+        top: r.top - pr.top,
+        bottom: r.bottom - pr.top,
+      });
+    }
   }
 
   /* ──────────────────────────────────────────────────────────────────────
@@ -398,30 +459,64 @@ export class GameController {
 
   #fireSublaunch(index) {
     if (this.#lockedLaunch || this.#ended) return;
-    const remaining = this.#sublaunchBalls[index] ?? 0;
-    if (remaining <= 0) return;
+    const held = this.#getHeldBalls(index);
+    if (held.length === 0) return;
     const subEl = this.#sublaunchEls[index];
     subEl?.setAttribute("data-firing", "true");
     this.#bag.timeout(() => subEl?.removeAttribute("data-firing"), 400);
-
-    let i = 0;
-    const total = remaining;
-    const tick = () => {
-      if (this.#ended) return;
-      if (i >= total) return;
-      if ((this.#sublaunchBalls[index] ?? 0) <= 0) return;
-      this.#sublaunchBalls[index] -= 1;
-      this.#spawnBall(index);
-      this.#refreshSublaunches();
-      i += 1;
-      this.#bag.timeout(tick, bonusManager.resolve("launchDelayMs", PLINKO.LAUNCH_DELAY_MS));
-    };
-    tick();
+    this.#emitReceptacleParticles(subEl);
+    for (const { ball } of held) {
+      ball.state = "active";
+    }
+    this.#sublaunchBalls[index] = 0;
+    this.#refreshSublaunches();
   }
 
   /** @param {number} subIndex */
-  #spawnBall(subIndex) {
-    if (!this.#stackEl) return;
+  #getHeldBalls(subIndex) {
+    const result = [];
+    for (const entry of this.#balls.values()) {
+      if (entry.ball.state === "held" && entry.ball.sublaunchIdx === subIndex) result.push(entry);
+    }
+    return result;
+  }
+
+  /** Pre-spawn all balls as "held" entities in the launch zone. */
+  #spawnHeldBalls() {
+    if (!this.#ballLayerEl) return;
+    this.#computeLaunchWalls();
+    const count = this.#sublaunchEls.length;
+    for (let i = 0; i < count; i++) {
+      const n = this.#sublaunchBalls[i] ?? 0;
+      const box = this.#launchWalls[i];
+      if (!box) continue;
+      const cx = (box.left + box.right) / 2;
+      const boxW = box.right - box.left;
+      for (let b = 0; b < n; b++) {
+        const jx = (Math.random() - 0.5) * (boxW * 0.5);
+        const ball = new Ball({ x: cx + jx, y: box.top + 4 + b * 4 });
+        ball.state = "held";
+        ball.sublaunchIdx = i;
+        const el = document.createElement("div");
+        el.className = "pk-ball";
+        if (this.#iceBallSublaunchQueued === i && b === n - 1) {
+          this.#iceBallSublaunchQueued = -1;
+          ball.isIce = true;
+          this.#iceBallIds.add(ball.id);
+          el.classList.add("pk-ball--ice");
+        }
+        const oy = this.#pinboardOffsetTop;
+        el.style.transform = `translate(${ball.x}px, ${ball.y + oy}px)`;
+        this.#ballLayerEl.appendChild(el);
+        this.#balls.set(ball.id, { ball, el });
+      }
+    }
+    this.#startLoop();
+  }
+
+  /** Spawn a single active ball (used by dev panel and recycle). */
+  #spawnActiveBall(subIndex, ice = false) {
+    if (!this.#ballLayerEl) return;
     const w = this.#pinboardWidth;
     const count = this.#sublaunchEls.length;
     const sx = (w * (subIndex + 0.5)) / count;
@@ -432,10 +527,17 @@ export class GameController {
       vx: (Math.random() - 0.5) * 60,
       vy: 0,
     });
+    ball.state = "active";
     const el = document.createElement("div");
     el.className = "pk-ball";
-    el.style.transform = `translate(${ball.x}px, ${ball.y}px)`;
-    this.#stackEl.appendChild(el);
+    if (ice) {
+      ball.isIce = true;
+      this.#iceBallIds.add(ball.id);
+      el.classList.add("pk-ball--ice");
+    }
+    const oy = this.#pinboardOffsetTop;
+    el.style.transform = `translate(${ball.x}px, ${ball.y + oy}px)`;
+    this.#ballLayerEl.appendChild(el);
     this.#balls.set(ball.id, { ball, el });
     this.#startLoop();
   }
@@ -443,13 +545,36 @@ export class GameController {
   #refreshSublaunches() {
     for (let i = 0; i < this.#sublaunchEls.length; i++) {
       const el = this.#sublaunchEls[i];
-      const n = this.#sublaunchBalls[i] ?? 0;
-      const countEl = el.querySelector(".pk-sublaunch-count");
-      if (countEl) countEl.textContent = String(n);
-      if (n === 0) el.setAttribute("data-empty", "true");
-      else el.removeAttribute("data-empty");
+      const held = this.#getHeldBalls(i);
+      if (held.length === 0 && (this.#sublaunchBalls[i] ?? 0) === 0) {
+        el.setAttribute("data-empty", "true");
+      } else {
+        el.removeAttribute("data-empty");
+      }
     }
     this.#refreshSavedBtn();
+  }
+
+  /** @param {HTMLElement | null} el */
+  #emitReceptacleParticles(el) {
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const safeRect = this.#safeEl?.getBoundingClientRect();
+    if (!safeRect) return;
+    const cx = rect.left - safeRect.left + rect.width / 2;
+    const cy = rect.top - safeRect.top + rect.height / 2;
+    for (let i = 0; i < 10; i++) {
+      const particle = document.createElement("span");
+      particle.className = "pk-particle";
+      const angle = (Math.PI * 2 * i) / 10 + (Math.random() - 0.5) * 0.5;
+      const dist = 20 + Math.random() * 30;
+      particle.style.left = `${cx}px`;
+      particle.style.top = `${cy}px`;
+      particle.style.setProperty("--px", `${Math.cos(angle) * dist}px`);
+      particle.style.setProperty("--py", `${Math.sin(angle) * dist}px`);
+      this.#ballLayerEl?.appendChild(particle);
+      this.#bag.timeout(() => particle.remove(), 450);
+    }
   }
 
   /* ──────────────────────────────────────────────────────────────────────
@@ -466,6 +591,8 @@ export class GameController {
 
   #savedUp() {
     if (this.#saved <= 0 || this.#level >= PLINKO.MAX_LEVEL) return;
+    /* Remove captured balls from gates. */
+    this.#clearCapturedBalls();
     /* Equitable distribution into the sublaunches. */
     const count = this.#sublaunchEls.length;
     const per = Math.floor(this.#saved / count);
@@ -474,10 +601,17 @@ export class GameController {
       this.#sublaunchBalls[i] = (this.#sublaunchBalls[i] ?? 0) + per + (extra > 0 ? 1 : 0);
       if (extra > 0) extra--;
     }
+    /* Re-queue the ice ball into a random sublaunch if it was saved. */
+    if (this.#iceBallSaved) {
+      this.#iceBallSaved = false;
+      const idx = Math.floor(Math.random() * count);
+      this.#iceBallSublaunchQueued = idx;
+    }
     this.#saved = 0;
     this.#level += 1;
     this.#shopUsedThisLevel = false;
     this.#addLayer();
+    this.#spawnHeldBalls();
     this.#refreshSublaunches();
     this.#refreshLevelLabel();
     this.#refreshLevelBar();
@@ -506,7 +640,7 @@ export class GameController {
       const dt = Math.min((ts - this.#lastTs) / 1000, PLINKO.MAX_STEP);
       this.#lastTs = ts;
       this.#step(dt);
-      if (this.#balls.size === 0) {
+      if (!this.#hasSimulatedBalls()) {
         this.#rafId = null;
         return;
       }
@@ -520,13 +654,25 @@ export class GameController {
     this.#rafId = null;
   }
 
+  #hasSimulatedBalls() {
+    for (const { ball } of this.#balls.values()) {
+      if (!ball.alive) continue;
+      if (ball.state === "active" || ball.state === "held") return true;
+      if (ball.state === "captured") {
+        const speed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
+        if (speed > 5) return true;
+      }
+    }
+    return false;
+  }
+
   #step(dt) {
     if (dt <= 0) return;
     const subDt = dt / PLINKO.SUBSTEPS;
     for (let s = 0; s < PLINKO.SUBSTEPS; s++) this.#substep(subDt);
     this.#renderBalls();
     this.#checkStuckBalls();
-    if (this.#balls.size === 0) this.#checkEndOfRound();
+    if (!this.#hasSimulatedBalls()) this.#checkEndOfRound();
   }
 
   #substep(dt) {
@@ -536,17 +682,17 @@ export class GameController {
     const r = bonusManager.resolve("ballRadius", PLINKO.BALL_RADIUS);
     const gravity = bonusManager.resolve("gravity", PLINKO.GRAVITY);
     const magnetOn = bonusManager.resolve("shopMagnetForce", 0) > 0;
-    /* All positions are in pinboard-absolute coords (origin = top-left).
-       Gates are at the very bottom of the pinboard.                        */
     const bottomY = this.#pinboardHeight;
+    const gateFloor = bottomY + this.#gateZoneHeight - r;
+
+    const activeBalls = [];
 
     for (const entry of [...this.#balls.values()]) {
       const ball = entry.ball;
       if (!ball.alive) continue;
 
       ball.vy += gravity * dt;
-
-      if (magnetOn) this.#applyShopMagnet(ball, dt);
+      if (magnetOn && ball.state === "active") this.#applyShopMagnet(ball, dt);
 
       const v = clampVelocity(ball.vx, ball.vy, maxV);
       ball.vx = v.vx;
@@ -554,17 +700,42 @@ export class GameController {
       ball.x += ball.vx * dt;
       ball.y += ball.vy * dt;
 
-      if (ball.x - r < 0) {
-        ball.x = r;
-        ball.vx = Math.abs(ball.vx) * wallR;
-      } else if (ball.x + r > w) {
-        ball.x = w - r;
-        ball.vx = -Math.abs(ball.vx) * wallR;
+      /* Wall constraints per state */
+      if (ball.state === "held") {
+        const box = this.#launchWalls[ball.sublaunchIdx];
+        if (box) {
+          if (ball.x - r < box.left) { ball.x = box.left + r; ball.vx = Math.abs(ball.vx) * wallR; }
+          else if (ball.x + r > box.right) { ball.x = box.right - r; ball.vx = -Math.abs(ball.vx) * wallR; }
+          if (ball.y + r > box.bottom) { ball.y = box.bottom - r; ball.vy = -Math.abs(ball.vy) * 0.3; }
+          if (ball.y - r < box.top) { ball.y = box.top + r; ball.vy = Math.abs(ball.vy) * wallR; }
+        }
+      } else if (ball.state === "captured") {
+        const gateIdx = ["save", "recycle", "shop", "drain"].indexOf(ball.gateId);
+        const walls = this.#gateWalls[gateIdx];
+        if (walls) {
+          if (ball.x - r < walls.left) { ball.x = walls.left + r; ball.vx = Math.abs(ball.vx) * wallR; }
+          else if (ball.x + r > walls.right) { ball.x = walls.right - r; ball.vx = -Math.abs(ball.vx) * wallR; }
+        }
+        if (ball.y + r > gateFloor) { ball.y = gateFloor - r; ball.vy = -Math.abs(ball.vy) * 0.3; }
+        if (ball.y < bottomY) { ball.y = bottomY; ball.vy = Math.abs(ball.vy) * wallR; }
+      } else {
+        if (ball.x - r < 0) { ball.x = r; ball.vx = Math.abs(ball.vx) * wallR; }
+        else if (ball.x + r > w) { ball.x = w - r; ball.vx = -Math.abs(ball.vx) * wallR; }
       }
 
-      this.#checkPegHits(ball);
+      if (ball.state === "active") {
+        this.#checkPegHits(ball);
+        if (ball.alive && ball.y >= bottomY) this.#handleBottom(ball);
+      }
 
-      if (ball.alive && ball.y >= bottomY) this.#handleBottom(ball);
+      activeBalls.push(ball);
+    }
+
+    /* Ball-ball collisions */
+    for (let i = 0; i < activeBalls.length; i++) {
+      for (let j = i + 1; j < activeBalls.length; j++) {
+        collideBalls(activeBalls[i], activeBalls[j]);
+      }
     }
   }
 
@@ -605,14 +776,49 @@ export class GameController {
         ball.vy = v.vy;
         if (!ball.recentPegs.has(peg.id)) {
           ball.recentPegs.add(peg.id);
-          this.#registerHit(peg);
+          this.#registerHit(peg, ball);
         }
       }
     }
   }
 
-  /** @param {import('../entities/peg-classic.js').Peg} peg */
-  #registerHit(peg) {
+  /** @param {import('../entities/peg-classic.js').Peg} peg @param {Ball} [ball] */
+  #registerHit(peg, ball) {
+    /* Ice ball on already-frozen peg: reset thaw counter. */
+    if (ball?.isIce && peg.frozenHits > 0) {
+      peg.frozenHits = PLINKO.ICE_HITS_TO_THAW;
+      this.#syncFrozenClass(peg);
+      audioManager.playSfx("click");
+      return;
+    }
+
+    /* Frozen peg: chip away the ice — no effect this hit. */
+    if (peg.frozenHits > 0) {
+      peg.frozenHits -= 1;
+      if (peg.frozenHits > 0) {
+        this.#syncFrozenClass(peg);
+      } else {
+        const frozenEl = this.#pegEls.get(peg.id);
+        if (frozenEl) {
+          this.#clearFrozenClasses(frozenEl);
+          frozenEl.classList.remove("pk-thaw");
+          void frozenEl.offsetWidth;
+          frozenEl.classList.add("pk-thaw");
+          this.#bag.timeout(() => frozenEl.classList.remove("pk-thaw"), 350);
+        }
+      }
+      audioManager.playSfx("click");
+      return;
+    }
+
+    /* Ice ball on unfrozen peg: freeze it — no score or effect. */
+    if (ball?.isIce) {
+      peg.frozenHits = PLINKO.ICE_HITS_TO_THAW;
+      this.#syncFrozenClass(peg);
+      audioManager.playSfx("click");
+      return;
+    }
+
     if (peg.type === "shop") {
       this.#registerShopPegHit(/** @type {import('../entities/peg-shop.js').ShopPeg} */ (peg));
       return;
@@ -696,7 +902,7 @@ export class GameController {
   /** @param {'common' | 'rare' | 'epic' | 'legendary'} rarity */
   #openPegShopModal(rarity) {
     import("../components/shop-modal.js").then(({ ShopModal }) => {
-      const choices = bonusManager.buildPegShopChoices(rarity);
+      const choices = bonusManager.buildPegShopChoices(rarity, { sublaunchCount: this.#sublaunchEls.length });
       if (choices.length === 0) return;
       const modal = new ShopModal({
         choices,
@@ -768,21 +974,24 @@ export class GameController {
     this.#flashGate(gate);
 
     if (gate === "save") {
+      if (ball.isIce) { this.#iceBallIds.delete(ball.id); this.#iceBallSaved = true; }
       this.#saved += 1;
       gameEvents.emit("ball:saved", { ball });
       this.#refreshSavedBtn();
-      this.#removeBall(ball);
+      this.#captureBall(ball, gate);
     } else if (gate === "shop") {
-      /* Ball is saved. Shop modal opens only once per level. */
+      if (ball.isIce) { this.#iceBallIds.delete(ball.id); this.#iceBallSaved = true; }
       this.#saved += 1;
       gameEvents.emit("ball:saved", { ball });
       this.#refreshSavedBtn();
-      this.#removeBall(ball);
+      this.#captureBall(ball, gate);
       if (!this.#shopUsedThisLevel) {
         this.#shopUsedThisLevel = true;
         this.#openShopModal();
       }
     } else if (gate === "recycle" && ball.recycles < bonusManager.resolve("maxRecycles", PLINKO.MAX_RECYCLES)) {
+      const oldX = ball.x;
+      const oldY = ball.y;
       ball.recycles += 1;
       const sub = Math.floor(Math.random() * this.#sublaunchEls.length);
       ball.x = (w * (sub + 0.5)) / this.#sublaunchEls.length + (Math.random() - 0.5) * 14;
@@ -790,10 +999,60 @@ export class GameController {
       ball.vx = (Math.random() - 0.5) * 60;
       ball.vy = 0;
       ball.recentPegs.clear();
+      this.#emitRecycleTeleport(oldX, oldY, this.#balls.get(ball.id)?.el ?? null);
     } else {
+      if (ball.isIce) this.#onIceBallLost(ball);
       this.#drained += 1;
       if (this.#readoutDrained) this.#readoutDrained.textContent = String(this.#drained);
-      this.#removeBall(ball);
+      this.#captureBall(ball, gate);
+    }
+  }
+
+  /** @param {Ball} ball @param {string} gate */
+  #captureBall(ball, gate) {
+    ball.state = "captured";
+    ball.gateId = gate;
+    ball.vy = Math.abs(ball.vy) * 0.3;
+    ball.recentPegs.clear();
+  }
+
+  /**
+   * Visual teleport effect for recycled balls: impact burst at the bottom
+   * entry point, then a rising beam up to the top of the safe zone.
+   * @param {number} bx  ball x in pinboard-local coords
+   * @param {number} by  ball y in pinboard-local coords
+   * @param {HTMLElement | null} ballEl
+   */
+  #emitRecycleTeleport(bx, by, ballEl) {
+    if (!this.#ballLayerEl) return;
+    const oy = this.#pinboardOffsetTop;
+    const sx = bx;
+    const sy = by + oy;
+
+    /* Impact particles at entry point. */
+    for (let i = 0; i < 10; i++) {
+      const p = document.createElement("div");
+      p.className = "pk-particle pk-particle--recycle";
+      const angle = (Math.PI * 2 * i) / 10 - Math.PI / 2;
+      const dist = 14 + Math.random() * 16;
+      p.style.cssText = `left:${sx}px;top:${sy}px;--px:${(Math.cos(angle) * dist).toFixed(1)}px;--py:${(Math.sin(angle) * dist).toFixed(1)}px`;
+      this.#ballLayerEl.appendChild(p);
+      this.#bag.timeout(() => p.remove(), 450);
+    }
+
+    /* Rising beam from entry point to top of safe zone. */
+    const beam = document.createElement("div");
+    beam.className = "pk-recycle-beam";
+    beam.style.cssText = `left:${sx}px;top:0;height:${sy}px`;
+    this.#ballLayerEl.appendChild(beam);
+    this.#bag.timeout(() => beam.remove(), 550);
+
+    /* Materialize flash on the ball element at the new (top) position. */
+    if (ballEl) {
+      ballEl.classList.remove("pk-recycle-materialize");
+      void ballEl.offsetWidth;
+      ballEl.classList.add("pk-recycle-materialize");
+      this.#bag.timeout(() => ballEl.classList.remove("pk-recycle-materialize"), 400);
     }
   }
 
@@ -811,7 +1070,7 @@ export class GameController {
 
   #openShopModal() {
     import("../components/shop-modal.js").then(({ ShopModal }) => {
-      const choices = bonusManager.buildShopChoices();
+      const choices = bonusManager.buildShopChoices({ sublaunchCount: this.#sublaunchEls.length });
       const modal = new ShopModal({
         choices,
         coins: this.#coins,
@@ -843,20 +1102,20 @@ export class GameController {
   }
 
   #addSublaunch() {
+    if (this.#sublaunchEls.length >= PLINKO.MAX_SUBLAUNCHES) return;
     const launchEl = this.#safeEl?.querySelector(".pk-launch");
     if (!launchEl) return;
     const idx = this.#sublaunchEls.length;
     const el = document.createElement("div");
     el.className = "pk-sublaunch";
     el.dataset.sublaunch = String(idx);
-    el.innerHTML = `<span class="pk-sublaunch-icon">🐭</span><span class="pk-sublaunch-count">0</span>`;
-    /* Insert before the savedrow. */
+    el.innerHTML = "";
     const savedRow = launchEl.querySelector(".pk-launch-savedrow");
     launchEl.insertBefore(el, savedRow);
     this.#sublaunchEls.push(el);
     this.#sublaunchBalls.push(0);
-    /* Update grid columns. */
     launchEl.style.gridTemplateColumns = `repeat(${this.#sublaunchEls.length}, 1fr)`;
+    this.#redistributeHeldBalls();
     this.#refreshSublaunches();
   }
 
@@ -868,7 +1127,35 @@ export class GameController {
     el?.remove();
     this.#sublaunchBalls.pop();
     launchEl.style.gridTemplateColumns = `repeat(${this.#sublaunchEls.length}, 1fr)`;
+    this.#redistributeHeldBalls();
     this.#refreshSublaunches();
+  }
+
+  #redistributeHeldBalls() {
+    this.#computeLaunchWalls();
+    const count = this.#sublaunchEls.length;
+    if (count === 0) return;
+    const heldBalls = [];
+    for (const entry of this.#balls.values()) {
+      if (entry.ball.state === "held") heldBalls.push(entry.ball);
+    }
+    const perSlot = Math.floor(heldBalls.length / count);
+    let extra = heldBalls.length - perSlot * count;
+    let bi = 0;
+    for (let i = 0; i < count; i++) {
+      const n = perSlot + (extra > 0 ? 1 : 0);
+      if (extra > 0) extra--;
+      this.#sublaunchBalls[i] = n;
+      const box = this.#launchWalls[i];
+      for (let j = 0; j < n; j++) {
+        const ball = heldBalls[bi++];
+        ball.sublaunchIdx = i;
+        if (box) {
+          ball.x = (box.left + box.right) / 2 + (Math.random() - 0.5) * (box.right - box.left) * 0.5;
+          ball.y = box.top + 4 + j * 4;
+        }
+      }
+    }
   }
 
   /**
@@ -883,7 +1170,7 @@ export class GameController {
 
     for (const [id, entry] of this.#balls) {
       const { ball } = entry;
-      if (!ball.alive) continue;
+      if (!ball.alive || ball.state !== "active") continue;
       let tracker = this.#ballIdleTracker.get(id);
       if (!tracker) {
         tracker = { x: ball.x, y: ball.y, since: now };
@@ -971,17 +1258,22 @@ export class GameController {
   }
 
   /** @param {Ball} ball */
-  #removeBall(ball) {
-    ball.alive = false;
-    const entry = this.#balls.get(ball.id);
-    entry?.el.remove();
-    this.#balls.delete(ball.id);
-    this.#ballIdleTracker.delete(ball.id);
+
+  #clearCapturedBalls() {
+    for (const [id, { ball, el }] of this.#balls) {
+      if (ball.state === "captured") {
+        ball.alive = false;
+        el.remove();
+        this.#balls.delete(id);
+        this.#ballIdleTracker.delete(id);
+      }
+    }
   }
 
   #renderBalls() {
+    const oy = this.#pinboardOffsetTop;
     for (const { ball, el } of this.#balls.values()) {
-      el.style.transform = `translate(${ball.x}px, ${ball.y}px)`;
+      el.style.transform = `translate(${ball.x}px, ${ball.y + oy}px)`;
     }
   }
 
@@ -1050,7 +1342,7 @@ export class GameController {
     return {
       spawnBonusBall: () => {
         const idx = Math.floor(Math.random() * this.#sublaunchEls.length);
-        this.#spawnBall(idx);
+        this.#spawnActiveBall(idx);
       },
       getLevel: () => this.#level,
       getHits: () => this.#hits,
@@ -1067,7 +1359,61 @@ export class GameController {
       removeSublaunch: () => {
         this.#removeSublaunch();
       },
+      queueIceBall: () => {
+        const idx = Math.floor(Math.random() * this.#sublaunchEls.length);
+        this.#iceBallSublaunchQueued = idx;
+        /* Add 1 extra ball to that sublaunch — the ice ball. */
+        this.#sublaunchBalls[idx] = (this.#sublaunchBalls[idx] ?? 0) + 1;
+        this.#refreshSublaunches();
+      },
+      cleanupIce: () => {
+        this.#cleanupIceBallState();
+      },
     };
+  }
+
+  /** Remove all ice-ball state: unmark live balls, unfreeze all pegs. */
+  #cleanupIceBallState() {
+    this.#iceBallSublaunchQueued = -1;
+    this.#iceBallSaved = false;
+    for (const id of this.#iceBallIds) {
+      const entry = this.#balls.get(id);
+      if (entry) {
+        entry.ball.isIce = false;
+        entry.el.classList.remove("pk-ball--ice");
+      }
+    }
+    this.#iceBallIds.clear();
+    for (const layer of this.#layers) {
+      for (const peg of layer.pegs) {
+        if (peg.frozenHits > 0) {
+          peg.frozenHits = 0;
+          const el = this.#pegEls.get(peg.id);
+          if (el) this.#clearFrozenClasses(el);
+        }
+      }
+    }
+  }
+
+  /** @param {import('../entities/peg-classic.js').Peg} peg */
+  #syncFrozenClass(peg) {
+    const el = this.#pegEls.get(peg.id);
+    if (!el) return;
+    this.#clearFrozenClasses(el);
+    if (peg.frozenHits > 0) el.classList.add(`pk-peg--frozen-${peg.frozenHits}`);
+  }
+
+  /** @param {HTMLElement} el */
+  #clearFrozenClasses(el) {
+    el.classList.remove("pk-peg--frozen-3", "pk-peg--frozen-2", "pk-peg--frozen-1");
+  }
+
+  /** Called when the ice ball is drained before the bonus duration ends. */
+  #onIceBallLost(ball) {
+    this.#iceBallIds.delete(ball.id);
+    this.#cleanupIceBallState();
+    bonusManager.removeSessionBonus("ice_ball");
+    this.#refreshBonusBar();
   }
 
   /** @param {import('../configs/bonus-defs.js').BonusDef[]} unlocked */
@@ -1104,5 +1450,34 @@ export class GameController {
   }
   get router() {
     return this.#router;
+  }
+
+  /* ──────────────────────────────────────────────────────────────────────
+     Dev-only helpers (tree-shaken from prod)
+     ────────────────────────────────────────────────────────────────────── */
+
+  /** @param {boolean} ice */
+  #devSpawnBall(ice) {
+    const idx = Math.floor(Math.random() * this.#sublaunchEls.length);
+    this.#spawnActiveBall(idx, ice);
+  }
+
+  /** @param {string} id */
+  #devActivateBonus(id) {
+    if (id === "bonus_launcher" && this.#sublaunchEls.length >= PLINKO.MAX_SUBLAUNCHES) return;
+    const sessionDef = SESSION_BONUSES.find((b) => b.id === id);
+    if (sessionDef) {
+      bonusManager.addSessionBonus(sessionDef);
+      this.#refreshBonusBar();
+      return;
+    }
+    const permDef = PERMANENT_BONUSES.find((b) => b.id === id);
+    if (permDef) {
+      if (!bonusManager.isUnlocked(id)) {
+        bonusManager._devForceUnlock?.(id);
+      }
+      bonusManager.activateBonus(id);
+      this.#refreshBonusBar();
+    }
   }
 }

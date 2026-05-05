@@ -1,5 +1,5 @@
 import { gameEvents } from "../utils/event-emitter.js";
-import { STORAGE_KEYS, SESSION_BONUS_DEFAULT_DURATION, SHOP_PRICES } from "../configs/constants.js";
+import { STORAGE_KEYS, SESSION_BONUS_DEFAULT_DURATION, SHOP_PRICES, PLINKO } from "../configs/constants.js";
 import {
   PERMANENT_BONUSES,
   SESSION_BONUSES,
@@ -176,6 +176,18 @@ class BonusManager {
      ────────────────────────────────────────────────────────────────────── */
 
   /**
+   * Remove a session bonus early (e.g. ice ball lost to drain).
+   * Does not call onExpire — caller handles its own cleanup.
+   * @param {string} id
+   */
+  removeSessionBonus(id) {
+    const idx = this.#sessionBonuses.findIndex((e) => e.def.id === id);
+    if (idx === -1) return;
+    this.#sessionBonuses.splice(idx, 1);
+    this.#rebindTriggers();
+  }
+
+  /**
    * Add a session bonus (selected in shop).
    * @param {import('../configs/bonus-defs.js').BonusDef} def
    */
@@ -194,17 +206,24 @@ class BonusManager {
    * Higher rarity unlocks progressively better bonus pools:
    *   common → common only · rare → common + rare · epic → + epic · legendary → all
    * @param {'common' | 'rare' | 'epic' | 'legendary'} rarity
+   * @param {{ sublaunchCount?: number }} [opts]
    * @returns {Array<{ id: string, action: string, label: string, icon: string, bonusDef?: import('../configs/bonus-defs.js').BonusDef }>}
    */
-  buildPegShopChoices(rarity) {
+  buildPegShopChoices(rarity, { sublaunchCount = 0 } = {}) {
     const RARITY_ORDER = ["common", "rare", "epic", "legendary"];
     const maxIdx = RARITY_ORDER.indexOf(rarity);
     const activeIds = new Set(this.#sessionBonuses.map((e) => e.def.id));
-    const available = SESSION_BONUSES.filter((b) => {
+    const atMaxLaunchers = sublaunchCount >= PLINKO.MAX_SUBLAUNCHES;
+    let available = SESSION_BONUSES.filter((b) => {
       if (activeIds.has(b.id)) return false;
+      if (atMaxLaunchers && b.id === "bonus_launcher") return false;
       const bIdx = RARITY_ORDER.indexOf(b.rarity ?? "common");
       return bIdx <= maxIdx;
     });
+    /* Fallback: if rarity filter yields nothing, show all unowned bonuses. */
+    if (available.length === 0) {
+      available = SESSION_BONUSES.filter((b) => !activeIds.has(b.id));
+    }
     const shuffled = this.#weightedShuffle(available);
     return shuffled.slice(0, 3).map((b) => ({
       id: b.id,
@@ -219,27 +238,32 @@ class BonusManager {
   /**
    * Build shop choices: 3 items mixing original choices with session bonuses.
    * Always guarantees at least one "ball" option.
+   * @param {{ sublaunchCount?: number }} [opts]
    * @returns {Array<{ id: string, action: string, label: string, icon: string, bonusDef?: import('../configs/bonus-defs.js').BonusDef }>}
    */
-  buildShopChoices() {
+  buildShopChoices({ sublaunchCount = 0 } = {}) {
     /* Filter out session bonuses already active (no duplicates). */
     const activeIds = new Set(this.#sessionBonuses.map((e) => e.def.id));
     const available = SESSION_BONUSES.filter((b) => !activeIds.has(b.id) && b.shopWeight > 0);
+
+    const atMaxLaunchers = sublaunchCount >= PLINKO.MAX_SUBLAUNCHES;
 
     /* Always include ball as guaranteed slot 0. */
     const choices = [{ id: "ball", action: "ball", label: "shop.choice.ball", icon: "\uD83C\uDFB1", price: SHOP_PRICES.BALL }];
 
     /* Build pool: sublaunch + available session bonuses. */
     const pool = [
-      { id: "sublaunch", action: "sublaunch", label: "shop.choice.sublaunch", icon: "\uD83D\uDE80", price: SHOP_PRICES.SUBLAUNCH },
-      ...available.map((b) => ({
-        id: b.id,
-        action: "bonus",
-        label: `bonus.session.${b.id}`,
-        icon: b.icon,
-        bonusDef: b,
-        price: SHOP_PRICES.SESSION_BONUS,
-      })),
+      ...(!atMaxLaunchers ? [{ id: "sublaunch", action: "sublaunch", label: "shop.choice.sublaunch", icon: "\uD83D\uDE80", price: SHOP_PRICES.SUBLAUNCH }] : []),
+      ...available
+        .filter((b) => !(atMaxLaunchers && b.id === "bonus_launcher"))
+        .map((b) => ({
+          id: b.id,
+          action: "bonus",
+          label: `bonus.session.${b.id}`,
+          icon: b.icon,
+          bonusDef: b,
+          price: SHOP_PRICES.SESSION_BONUS,
+        })),
     ];
 
     /* Weighted random pick of 2 from pool. */
@@ -382,6 +406,13 @@ class BonusManager {
     this.#sessionBonuses = [];
     this.#unbindTriggers();
     localStorage.removeItem(STORAGE_KEYS.BONUSES);
+  }
+
+  /** Dev-only: force-unlock a permanent bonus by id. */
+  _devForceUnlock(id) {
+    this.#unlockedIds.add(id);
+    this.#rebindTriggers();
+    this.save();
   }
 
   /* ──────────────────────────────────────────────────────────────────────
