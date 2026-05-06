@@ -4,9 +4,9 @@ import { PLINKO } from "../configs/constants.js";
 /**
  * Ball — the physical bead that falls through the pinboard.
  *
- * Pure data: position, velocity, recycle counter, alive flag. The
- * controller mutates these fields each physics step and pushes the result
- * to a paired DOM node via `transform: translate(...)`. See `docs/BALL.md`.
+ * Pure data: position, velocity, recycle counter, alive flag, per-ball score.
+ * The controller mutates these fields each physics step and pushes the result
+ * to a paired DOM node via `transform: translate(...)`.
  */
 export class Ball extends Entity {
   /** @type {number} */
@@ -21,12 +21,8 @@ export class Ball extends Entity {
   recycles = 0;
   /** @type {boolean} */
   alive = true;
-  /** @type {boolean} True when this ball carries the ice-ball bonus effect. */
-  isIce = false;
-  /** @type {boolean} True when this ball carries the glass-ball bonus effect. */
-  isGlass = false;
-  /** @type {number} Number of peg hits accumulated (glass ball shatters at GLASS_BALL_MAX_HITS). */
-  glassHits = 0;
+  /** @type {number} Points accumulated by this ball during its path. */
+  score = 0;
   /** @type {'held' | 'active' | 'captured'} */
   state = "active";
   /** @type {string | null} Gate that captured this ball. */

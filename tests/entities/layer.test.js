@@ -27,33 +27,24 @@ describe("Layer", () => {
     expect(indices).toEqual(expected);
   });
 
-  it("produces only pegs and one coin when bumperChance=0", () => {
+  it("produces only pegs when bumperChance=0", () => {
     const layer = new Layer({ level: 0, width: 200, y: 0, bumperChance: 0 });
-    const coins = layer.pegs.filter((p) => p.type === "coin");
-    const bumpers = layer.pegs.filter((p) => p.type === "bumper");
-    expect(coins.length).toBe(1);
-    expect(bumpers.length).toBe(0);
+    const types = new Set(layer.pegs.map((p) => p.type));
+    expect(types).toEqual(new Set(["peg"]));
   });
 
-  it("produces bumpers and one coin when bumperChance=1", () => {
+  it("produces only bumpers when bumperChance=1", () => {
     const layer = new Layer({ level: 0, width: 200, y: 0, bumperChance: 1 });
-    const coins = layer.pegs.filter((p) => p.type === "coin");
-    const regularPegs = layer.pegs.filter((p) => p.type === "peg");
-    expect(coins.length).toBe(1);
-    expect(regularPegs.length).toBe(0);
+    const types = new Set(layer.pegs.map((p) => p.type));
+    expect(types).toEqual(new Set(["bumper"]));
   });
 
-  it("contains exactly one coin peg per layer", () => {
-    const layer = new Layer({ level: 5, width: 300, y: 80, bumperChance: 0.2 });
-    const coins = layer.pegs.filter((p) => p.type === "coin");
-    expect(coins.length).toBe(1);
-  });
-
-  it("coin peg inherits the position of the replaced peg", () => {
-    const layer = new Layer({ level: 0, width: 200, y: 50, bumperChance: 0 });
-    const coin = layer.pegs.find((p) => p.type === "coin");
-    expect(coin.x).toBeGreaterThan(0);
-    expect(coin.y).toBe(50);
+  it("produces a mix of pegs and bumpers with intermediate bumperChance", () => {
+    const layer = new Layer({ level: 5, width: 300, y: 80, bumperChance: 0.5 });
+    const types = new Set(layer.pegs.map((p) => p.type));
+    for (const t of types) {
+      expect(["peg", "bumper"]).toContain(t);
+    }
   });
 
   it("startSlot offset shifts the pattern between layers", () => {

@@ -293,6 +293,19 @@ Storage keys are namespaced with `APP_ID` via the `STORAGE_KEYS` map in
 always go through `STORAGE_KEYS` (and ideally through `saveManager` /
 `optionsManager`).
 
+## Opus workflow
+
+When **Claude Opus** is selected for a task, follow this checklist for each request:
+
+1. **Re-read the project documentation** — review relevant sections of this CLAUDE.md and understand the existing patterns
+2. **Reflect on the request** — think deeply about the best approach and architecture before starting
+3. **Create unit tests** — write comprehensive tests first to define expected behavior
+4. **Create the code** — implement based on the test specifications
+5. **Validate with tests** — ensure all tests pass and code is correct
+6. **Update documentation** — modify md files and/or code comments as needed
+
+This workflow ensures quality, maintainability, and alignment with project standards.
+
 ## Code conventions
 
 - **JavaScript only** — no TypeScript. Use JSDoc for types.

@@ -103,11 +103,28 @@ class SaveManager {
     this.#write(STORAGE_KEYS.RANKINGS, all);
   }
 
-  /** Wipe every save key (rankings, slots, autosave). */
+  /** Wipe every save key (rankings, slots, autosave, level progress). */
   resetAll() {
     localStorage.removeItem(STORAGE_KEYS.AUTOSAVE);
     localStorage.removeItem(STORAGE_KEYS.SAVE_SLOTS);
     localStorage.removeItem(STORAGE_KEYS.RANKINGS);
+    localStorage.removeItem(STORAGE_KEYS.LEVEL_PROGRESS);
+  }
+
+  // ─── Level progress ───────────────────────────────
+
+  /** @returns {{ completed: number[], globalScore: number } | null} */
+  loadLevelProgress() {
+    return this.#read(STORAGE_KEYS.LEVEL_PROGRESS);
+  }
+
+  /** @param {{ completed: number[], globalScore: number }} data */
+  saveLevelProgress(data) {
+    this.#write(STORAGE_KEYS.LEVEL_PROGRESS, data);
+  }
+
+  clearLevelProgress() {
+    localStorage.removeItem(STORAGE_KEYS.LEVEL_PROGRESS);
   }
 
   // ─── Internals ────────────────────────────────────

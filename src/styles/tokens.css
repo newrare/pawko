@@ -75,12 +75,14 @@
   --pk-ball-bg: radial-gradient(circle at 30% 30%, #c4a0b0, #9a7080);
   --pk-ball-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 
-  --pk-gate-save-bg: linear-gradient(180deg, rgba(34, 197, 94, 0.14) 0%, rgba(34, 197, 94, 0.05) 100%);
-  --pk-gate-save-fg: #22c55e;
   --pk-gate-recycle-bg: linear-gradient(180deg, rgba(59, 130, 246, 0.14) 0%, rgba(59, 130, 246, 0.05) 100%);
   --pk-gate-recycle-fg: #60a5fa;
-  --pk-gate-shop-bg: linear-gradient(180deg, rgba(234, 179, 8, 0.14) 0%, rgba(234, 179, 8, 0.05) 100%);
-  --pk-gate-shop-fg: var(--pk-gold);
-  --pk-gate-drain-bg: linear-gradient(180deg, rgba(239, 68, 68, 0.14) 0%, rgba(239, 68, 68, 0.05) 100%);
-  --pk-gate-drain-fg: #ef4444;
+  --pk-gate-x2-bg: linear-gradient(180deg, rgba(34, 197, 94, 0.14) 0%, rgba(34, 197, 94, 0.05) 100%);
+  --pk-gate-x2-fg: #22c55e;
+  --pk-gate-x10-bg: linear-gradient(180deg, rgba(234, 179, 8, 0.14) 0%, rgba(234, 179, 8, 0.05) 100%);
+  --pk-gate-x10-fg: var(--pk-gold);
+  --pk-gate-x5-bg: linear-gradient(180deg, rgba(168, 85, 247, 0.14) 0%, rgba(168, 85, 247, 0.05) 100%);
+  --pk-gate-x5-fg: #a855f7;
+  --pk-gate-malus-bg: linear-gradient(180deg, rgba(239, 68, 68, 0.14) 0%, rgba(239, 68, 68, 0.05) 100%);
+  --pk-gate-malus-fg: #ef4444;
 }

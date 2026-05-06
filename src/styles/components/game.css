@@ -1,5 +1,5 @@
 /* --- Pawko gameplay scene. The scene is split vertically into:
-       launch (12%) · gap (5%) · pinboard (flex 1) · collection (10%) · status (10%).
+       launch (12%) · pinboard (flex 1) · collection (10%) · status (10%).
        Velvet Rouge × Classic Gold theme. --- */
 
 .gt-game {
@@ -38,23 +38,8 @@
   flex: 0 0 12%;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: 1fr auto;
   gap: 4px;
   padding: 6px;
-}
-
-.pk-launch-savedrow {
-  grid-column: 1 / -1;
-  display: flex;
-  justify-content: center;
-  padding: 0 4px 2px;
-}
-
-.pk-launch-savedrow .gt-btn {
-  width: 100%;
-  min-height: 32px;
-  padding: 4px 10px;
-  font-size: 0.7rem;
 }
 
 .pk-sublaunch {
@@ -94,18 +79,6 @@
   animation: pk-launch-pulse 0.4s ease-in-out;
 }
 
-.pk-sublaunch-lbl {
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--pk-gold);
-  letter-spacing: 1px;
-  position: relative;
-  padding-bottom: 6px;
-}
-
-/* --- Free zone (visual breathing room between launch + pinboard) --- */
-.pk-freezone { flex: 0 0 5%; }
-
 /* --- Pinboard --- */
 
 .pk-pinboard {
@@ -117,30 +90,16 @@
   overflow: hidden;
 }
 
-.pk-level-label {
-  position: absolute;
-  top: 6px;
-  right: 10px;
-  background: rgba(212, 175, 55, 0.1);
-  color: var(--pk-gold);
-  border: 1px solid rgba(212, 175, 55, 0.2);
-  padding: 3px 8px;
-  border-radius: 2px;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 2px;
-  pointer-events: none;
-}
-
 .pk-stack {
   position: absolute;
   inset: 0;
   overflow: hidden;
+  z-index: 1;
 }
 
-/* --- Level progress bar (inside pinboard, bottom-anchored fill) --- */
+/* --- Score gauge (fills bottom to top based on score/target) --- */
 
-.pk-level-bar {
+.pk-score-gauge {
   position: absolute;
   left: 0;
   right: 0;
@@ -157,36 +116,27 @@
   z-index: 0;
 }
 
-/* --- Pinboard elements sit above the level bar --- */
-.pk-level-label,
-.pk-stack {
-  z-index: 1;
+.pk-score-label {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  background: rgba(212, 175, 55, 0.1);
+  color: var(--pk-gold);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  padding: 3px 8px;
+  border-radius: 2px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  pointer-events: none;
+  z-index: 2;
 }
-
 
 .pk-layer {
   position: absolute;
   left: 0;
   right: 0;
   height: 0;
-  transition: top 0.5s ease-out;
-}
-
-.pk-layer-tag {
-  position: absolute;
-  left: 8px;
-  font-size: 0.7rem;
-  color: rgba(212, 175, 55, 0.35);
-  font-weight: 700;
-  transform: translateY(-50%);
-}
-
-.pk-layer-tag--milestone {
-  color: var(--pk-gold);
-  background: rgba(212, 175, 55, 0.1);
-  border: 1px solid rgba(212, 175, 55, 0.2);
-  padding: 1px 6px;
-  border-radius: 2px;
 }
 
 .pk-peg {
@@ -208,65 +158,8 @@
   animation: pk-bumper-idle 2.4s ease-in-out infinite;
 }
 
-.pk-peg.pk-peg--coin {
-  width: 18px;
-  height: 18px;
-  margin: -9px 0 0 -9px;
-  background: radial-gradient(circle at 30% 30%, #ffe066, #c9a030);
-  box-shadow: 0 0 0 2px rgba(74, 42, 10, 0.25), 0 2px 4px rgba(74, 42, 10, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.55rem;
-  font-weight: 800;
-  color: #3a1a00;
-  animation: pk-coin-idle 2s ease-in-out infinite;
-}
-
 .pk-peg.pk-flash { animation: pk-peg-flash 0.18s ease-out; }
 .pk-peg--bumper.pk-flash { animation: pk-bumper-flash 0.22s ease-out; }
-.pk-peg--coin.pk-flash { animation: pk-coin-flash 0.25s ease-out; }
-.pk-peg--shop.pk-flash { animation: pk-shop-peg-flash 0.22s ease-out; }
-
-/* --- Shop pegs --- */
-
-.pk-peg--shop {
-  width: 24px;
-  height: 24px;
-  margin: -12px 0 0 -12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: pk-shop-peg-idle 2.2s ease-in-out infinite;
-}
-
-.pk-shop-peg-counter {
-  font-size: 0.55rem;
-  font-weight: 900;
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
-  pointer-events: none;
-  line-height: 1;
-}
-
-/* Rarity colour variants */
-.pk-peg--shop--common {
-  background: radial-gradient(circle at 35% 30%, #86efac, #16a34a);
-  box-shadow: 0 0 6px rgba(22, 163, 74, 0.55), 0 2px 4px rgba(0, 0, 0, 0.25);
-}
-.pk-peg--shop--rare {
-  background: radial-gradient(circle at 35% 30%, #93c5fd, #2563eb);
-  box-shadow: 0 0 8px rgba(37, 99, 235, 0.65), 0 2px 4px rgba(0, 0, 0, 0.25);
-}
-.pk-peg--shop--epic {
-  background: radial-gradient(circle at 35% 30%, #d8b4fe, #9333ea);
-  box-shadow: 0 0 10px rgba(147, 51, 234, 0.65), 0 2px 4px rgba(0, 0, 0, 0.25);
-}
-.pk-peg--shop--legendary {
-  background: radial-gradient(circle at 35% 30%, #fde68a, #d97706);
-  box-shadow: 0 0 12px rgba(217, 119, 6, 0.75), 0 0 22px rgba(217, 119, 6, 0.35), 0 2px 4px rgba(0, 0, 0, 0.25);
-  animation: pk-shop-peg-legendary-idle 1.8s ease-in-out infinite;
-}
 
 .pk-ball {
   position: absolute;
@@ -279,213 +172,6 @@
   pointer-events: none;
   will-change: transform;
 }
-
-.pk-ball.pk-ball--ice {
-  background: radial-gradient(circle at 35% 28%, #f0f9ff, #7dd3fc 60%, #38bdf8);
-  box-shadow:
-    0 0 10px rgba(125, 211, 252, 0.9),
-    0 0 22px rgba(125, 211, 252, 0.5),
-    inset 0 2px 3px rgba(255, 255, 255, 0.8),
-    0 2px 4px rgba(0, 0, 0, 0.2);
-  animation: pk-ice-ball-idle 1.8s ease-in-out infinite;
-}
-
-/* --- Glass ball — transparent bead that shatters after 20 hits --- */
-
-.pk-ball.pk-ball--glass {
-  background:
-    radial-gradient(circle at 28% 22%, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.0) 38%),
-    radial-gradient(circle at 65% 72%, rgba(220, 220, 220, 0.18) 0%, transparent 45%),
-    radial-gradient(circle at 50% 50%, rgba(240, 240, 240, 0.12) 0%, rgba(180, 180, 180, 0.04) 100%);
-  border: 1.5px solid rgba(200, 200, 200, 0.55);
-  box-shadow:
-    inset 0 2px 4px rgba(255, 255, 255, 0.9),
-    inset 0 -1px 2px rgba(150, 150, 150, 0.15),
-    0 2px 5px rgba(0, 0, 0, 0.35),
-    0 0 0 1px rgba(255, 255, 255, 0.12);
-  animation: pk-glass-ball-idle 3s ease-in-out infinite;
-}
-
-/* Shared crack overlay base */
-.pk-ball--glass-crack-1::after,
-.pk-ball--glass-crack-2::after,
-.pk-ball--glass-crack-3::after,
-.pk-ball--glass-crack-4::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-/* crack 1 — 2 bold fractures */
-.pk-ball--glass-crack-1 {
-  border: 1.5px solid rgba(160, 160, 180, 0.7);
-}
-.pk-ball--glass-crack-1::after {
-  background:
-    linear-gradient(52deg,
-      transparent 40%, rgba(0,0,20,0.55) 42%, rgba(255,255,255,0.95) 45%, rgba(0,0,20,0.55) 48%, transparent 50%),
-    linear-gradient(155deg,
-      transparent 55%, rgba(0,0,20,0.45) 57%, rgba(255,255,255,0.85) 60%, rgba(0,0,20,0.45) 63%, transparent 65%);
-}
-
-/* crack 2 — 4 fractures + milky wash */
-.pk-ball--glass-crack-2 {
-  border: 1.5px solid rgba(140, 140, 160, 0.75);
-  background:
-    radial-gradient(circle at 28% 22%, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.0) 38%),
-    radial-gradient(circle at 50% 50%, rgba(220,222,228,0.25) 0%, rgba(200,202,212,0.1) 100%) !important;
-}
-.pk-ball--glass-crack-2::after {
-  background:
-    linear-gradient(52deg,
-      transparent 38%, rgba(0,0,20,0.6) 40%, rgba(255,255,255,0.95) 43%, rgba(0,0,20,0.6) 46%, transparent 48%),
-    linear-gradient(135deg,
-      transparent 44%, rgba(0,0,20,0.55) 46%, rgba(255,255,255,0.9) 49%, rgba(0,0,20,0.55) 52%, transparent 54%),
-    linear-gradient(200deg,
-      transparent 30%, rgba(0,0,20,0.45) 32%, rgba(255,255,255,0.8) 35%, rgba(0,0,20,0.45) 38%, transparent 40%),
-    linear-gradient(85deg,
-      transparent 60%, rgba(0,0,20,0.4) 62%, rgba(255,255,255,0.75) 65%, rgba(0,0,20,0.4) 68%, transparent 70%);
-}
-
-/* crack 3 — 6 fractures + clearly cloudy */
-.pk-ball--glass-crack-3 {
-  border: 1.5px solid rgba(120, 120, 140, 0.8);
-  background:
-    radial-gradient(circle at 28% 22%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.0) 35%),
-    radial-gradient(circle at 50% 50%, rgba(210,212,222,0.55) 0%, rgba(190,192,205,0.3) 100%) !important;
-}
-.pk-ball--glass-crack-3::after {
-  background:
-    linear-gradient(52deg,
-      transparent 36%, rgba(0,0,20,0.65) 38%, rgba(255,255,255,1) 41%, rgba(0,0,20,0.65) 44%, transparent 46%),
-    linear-gradient(135deg,
-      transparent 42%, rgba(0,0,20,0.6) 44%, rgba(255,255,255,0.95) 47%, rgba(0,0,20,0.6) 50%, transparent 52%),
-    linear-gradient(200deg,
-      transparent 28%, rgba(0,0,20,0.55) 30%, rgba(255,255,255,0.88) 33%, rgba(0,0,20,0.55) 36%, transparent 38%),
-    linear-gradient(85deg,
-      transparent 58%, rgba(0,0,20,0.5) 60%, rgba(255,255,255,0.85) 63%, rgba(0,0,20,0.5) 66%, transparent 68%),
-    linear-gradient(22deg,
-      transparent 50%, rgba(0,0,20,0.5) 52%, rgba(255,255,255,0.82) 55%, rgba(0,0,20,0.5) 58%, transparent 60%),
-    linear-gradient(168deg,
-      transparent 22%, rgba(0,0,20,0.45) 24%, rgba(255,255,255,0.78) 27%, rgba(0,0,20,0.45) 30%, transparent 32%);
-}
-
-/* crack 4 — 8 heavy fractures, nearly shattered */
-.pk-ball--glass-crack-4 {
-  border: 2px solid rgba(100, 100, 120, 0.85);
-  background:
-    radial-gradient(circle at 28% 22%, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.0) 30%),
-    radial-gradient(circle at 50% 50%, rgba(200,202,215,0.75) 0%, rgba(175,178,195,0.55) 100%) !important;
-}
-.pk-ball--glass-crack-4::after {
-  background:
-    linear-gradient(52deg,
-      transparent 34%, rgba(0,0,20,0.7) 36%, rgba(255,255,255,1) 40%, rgba(0,0,20,0.7) 44%, transparent 46%),
-    linear-gradient(135deg,
-      transparent 40%, rgba(0,0,20,0.65) 42%, rgba(255,255,255,0.95) 46%, rgba(0,0,20,0.65) 50%, transparent 52%),
-    linear-gradient(200deg,
-      transparent 26%, rgba(0,0,20,0.6) 28%, rgba(255,255,255,0.92) 32%, rgba(0,0,20,0.6) 36%, transparent 38%),
-    linear-gradient(85deg,
-      transparent 56%, rgba(0,0,20,0.58) 58%, rgba(255,255,255,0.88) 62%, rgba(0,0,20,0.58) 66%, transparent 68%),
-    linear-gradient(22deg,
-      transparent 48%, rgba(0,0,20,0.55) 50%, rgba(255,255,255,0.85) 54%, rgba(0,0,20,0.55) 58%, transparent 60%),
-    linear-gradient(168deg,
-      transparent 20%, rgba(0,0,20,0.5) 22%, rgba(255,255,255,0.82) 26%, rgba(0,0,20,0.5) 30%, transparent 32%),
-    linear-gradient(245deg,
-      transparent 44%, rgba(0,0,20,0.5) 46%, rgba(255,255,255,0.8) 50%, rgba(0,0,20,0.5) 54%, transparent 56%),
-    linear-gradient(108deg,
-      transparent 62%, rgba(0,0,20,0.45) 64%, rgba(255,255,255,0.75) 68%, rgba(0,0,20,0.45) 72%, transparent 74%);
-  opacity: 0.9;
-}
-
-/* --- Glass shatter burst --- */
-
-.pk-glass-burst {
-  position: absolute;
-  width: 18px;
-  height: 18px;
-  margin: -9px 0 0 -9px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.95) 0%, rgba(200, 235, 255, 0.5) 50%, transparent 70%);
-  pointer-events: none;
-  animation: pk-glass-burst 0.35s ease-out forwards;
-  z-index: 12;
-}
-
-.pk-ball--glass.pk-glass-hit {
-  animation: pk-glass-ball-hit 0.2s ease-out;
-}
-
-/* Glass shard particles */
-.pk-particle--glass {
-  background: rgba(210, 240, 255, 0.92);
-  box-shadow: 0 0 5px rgba(160, 220, 255, 0.8);
-  width: 5px;
-  height: 5px;
-  border-radius: 2px;
-  animation-duration: 0.42s;
-}
-
-/* --- Frozen peg overlay (all peg types) — 3-hit thaw with cracks --- */
-
-.pk-peg.pk-peg--frozen-3 {
-  background: radial-gradient(circle at 28% 22%, #e8f8ff, #7dd3fc 55%, #38bdf8) !important;
-  box-shadow: 0 0 10px rgba(125, 211, 252, 0.9), 0 1px 2px rgba(0, 0, 0, 0.25) !important;
-  animation: pk-frozen-peg-idle 2s ease-in-out infinite !important;
-}
-
-.pk-peg.pk-peg--frozen-2 {
-  background: radial-gradient(circle at 28% 22%, #c8e8f4, #82b8d4 55%, #5a90b0) !important;
-  box-shadow: 0 0 7px rgba(100, 175, 220, 0.75), 0 1px 2px rgba(0, 0, 0, 0.28) !important;
-  animation: pk-frozen-peg-idle 2s ease-in-out infinite !important;
-}
-
-.pk-peg.pk-peg--frozen-1 {
-  background: radial-gradient(circle at 28% 22%, #b0bec5, #78909c 55%, #546e7a) !important;
-  box-shadow: 0 0 4px rgba(84, 110, 122, 0.55), 0 1px 2px rgba(0, 0, 0, 0.3) !important;
-  animation: pk-frozen-peg-idle 2s ease-in-out infinite !important;
-}
-
-/* shared ::after overlay */
-.pk-peg.pk-peg--frozen-3::after,
-.pk-peg.pk-peg--frozen-2::after,
-.pk-peg.pk-peg--frozen-1::after {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 1;
-}
-
-.pk-peg.pk-peg--frozen-3::after {
-  background: radial-gradient(circle at 28% 22%, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0.0) 55%);
-  box-shadow: inset 0 1px 3px rgba(255, 255, 255, 0.9), 0 0 10px rgba(125, 211, 252, 0.85);
-}
-
-.pk-peg.pk-peg--frozen-2::after {
-  background:
-    linear-gradient(130deg, transparent 44%, rgba(255,255,255,0.85) 44.5%, rgba(200,230,245,0.9) 45.5%, rgba(255,255,255,0.85) 46%, transparent 46.5%),
-    radial-gradient(circle at 28% 22%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.0) 55%);
-  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.7), 0 0 6px rgba(100, 175, 220, 0.6);
-}
-
-.pk-peg.pk-peg--frozen-1::after {
-  background:
-    linear-gradient(130deg, transparent 42%, rgba(255,255,255,0.88) 42.5%, rgba(180,200,210,0.9) 44%, rgba(255,255,255,0.88) 44.5%, transparent 45%),
-    linear-gradient(55deg,  transparent 50%, rgba(255,255,255,0.75) 50.5%, rgba(180,200,210,0.8) 52%, rgba(255,255,255,0.75) 52.5%, transparent 53%),
-    radial-gradient(circle at 28% 22%, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.0) 55%);
-  box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.4), 0 0 3px rgba(84, 110, 122, 0.4);
-  opacity: 0.88;
-}
-
-.pk-peg.pk-thaw {
-  animation: pk-thaw-flash 0.35s ease-out forwards !important;
-}
-
-.pk-peg.pk-thaw::after { display: none; }
 
 .pk-popup {
   position: absolute;
@@ -507,7 +193,7 @@
 }
 
 .pk-gate {
-  flex: 1 1 auto;
+  flex: 1 1 20%;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -516,7 +202,6 @@
   padding-top: 8px;
   gap: 4px;
 }
-.pk-gate:last-of-type { border-right: 0; }
 
 .pk-gate::before {
   content: '';
@@ -526,15 +211,16 @@
   z-index: 1;
 }
 
-.pk-gate--save::before    { background: var(--pk-gate-save-bg); }
 .pk-gate--recycle::before { background: var(--pk-gate-recycle-bg); }
-.pk-gate--shop::before    { background: var(--pk-gate-shop-bg); }
-.pk-gate--drain::before   { background: var(--pk-gate-drain-bg); }
+.pk-gate--x2::before      { background: var(--pk-gate-x2-bg); }
+.pk-gate--x10::before     { background: var(--pk-gate-x10-bg); }
+.pk-gate--x5::before      { background: var(--pk-gate-x5-bg); }
+.pk-gate--malus::before   { background: var(--pk-gate-malus-bg); }
 
-.pk-gate--save    { border-right: 1px solid rgba(34, 197, 94, 0.2); }
 .pk-gate--recycle { border-right: 1px solid rgba(59, 130, 246, 0.18); }
-.pk-gate--shop    { border-right: 1px solid rgba(234, 179, 8, 0.18); flex: 0 0 2%; min-width: 0; }
-.pk-gate--drain   { }
+.pk-gate--x2      { border-right: 1px solid rgba(34, 197, 94, 0.18); }
+.pk-gate--x10     { border-right: 1px solid rgba(234, 179, 8, 0.18); }
+.pk-gate--x5      { border-right: 1px solid rgba(168, 85, 247, 0.18); }
 
 .pk-gate-label {
   position: relative;
@@ -545,10 +231,11 @@
   text-transform: uppercase;
 }
 
-.pk-gate--save    .pk-gate-label { color: #22c55e; }
-.pk-gate--recycle .pk-gate-label { color: #60a5fa; }
-.pk-gate--shop    .pk-gate-label { color: var(--pk-gold); font-size: 0.38rem; writing-mode: vertical-lr; letter-spacing: 1px; margin-top: 4px; }
-.pk-gate--drain   .pk-gate-label { color: #ef4444; }
+.pk-gate--recycle .pk-gate-label { color: var(--pk-gate-recycle-fg); }
+.pk-gate--x2      .pk-gate-label { color: var(--pk-gate-x2-fg); }
+.pk-gate--x10     .pk-gate-label { color: var(--pk-gate-x10-fg); }
+.pk-gate--x5      .pk-gate-label { color: var(--pk-gate-x5-fg); }
+.pk-gate--malus   .pk-gate-label { color: var(--pk-gate-malus-fg); }
 
 .pk-gate.pk-flash { animation: pk-gate-flash 0.35s ease-out; }
 
@@ -640,84 +327,52 @@
   font-weight: 700;
 }
 
-.pk-status-readouts {
-  display: flex;
-  gap: 16px;
+.pk-status-score {
   font-size: 0.82rem;
-  flex-wrap: wrap;
 }
-.pk-status-readout span:first-child {
-  font-size: 0.65rem;
-  font-weight: 500;
-  color: var(--gt-color-text-sec);
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  margin-right: 3px;
-}
+
 .pk-status-actions { display: flex; gap: 6px; }
 .pk-status-actions .gt-btn { min-height: 34px; padding: 4px 10px; font-size: 0.8rem; }
 
-.pk-saved-up:disabled { opacity: 0.35; }
+/* --- Level end modal --- */
 
-/* --- Game over modal extras --- */
-
-.gt-gameover { text-align: center; gap: 14px; }
-.gt-gameover-art {
-  font-size: 2.2rem;
-  animation: gt-pop-in 350ms ease-out;
-}
-.gt-gameover-message p { margin: 4px 0; font-size: 0.78rem; color: var(--gt-color-text-sec); }
-.gt-modal-overlay--gameover .gt-modal {
+.gt-modal-overlay--level-end .gt-modal {
   animation: gt-pop-in var(--anim-modal-open) ease-out;
 }
 
-/* --- Shop modal --- */
+.pk-level-end-score {
+  text-align: center;
+  padding: var(--gt-space-3) 0;
+}
 
-.gt-shop { text-align: center; gap: 12px; }
-.gt-shop-intro { font-size: 0.78rem; opacity: 0.85; margin: 0; color: var(--gt-color-text-sec); }
-.gt-shop-coins { font-size: 0.8rem; font-weight: 700; color: var(--pk-gold); margin: 0; }
-.gt-shop-choices {
+.pk-level-end-score-value {
+  font-size: 2rem;
+  font-weight: 900;
+  color: var(--pk-gold);
+}
+
+.pk-level-end-score-target {
+  font-size: 1rem;
+  color: var(--pk-rose-dim);
+  margin-left: var(--gt-space-2);
+}
+
+.pk-level-end-body {
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--gt-color-text-sec);
+  margin: var(--gt-space-2) 0;
+}
+
+.pk-level-end-actions {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-}
-.gt-shop-choices .gt-btn { width: 100%; font-size: 0.9rem; padding: 0.55rem; }
-.gt-shop-skip { margin-top: var(--gt-space-2, 8px); }
-
-/* --- Chest (coin collector) --- */
-
-.pk-chest {
-  position: absolute;
-  right: 8px;
-  bottom: 6px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 3px 8px;
-  background: rgba(212, 175, 55, 0.1);
-  border: 1px solid rgba(212, 175, 55, 0.22);
-  border-radius: 2px;
-  color: var(--pk-gold-light);
-  font-weight: 700;
-  font-size: 0.78rem;
-  z-index: 2;
-  pointer-events: none;
+  gap: var(--gt-space-2);
+  margin-top: var(--gt-space-3);
 }
 
-.pk-chest-icon { font-size: 1rem; }
-.pk-chest.pk-flash { animation: pk-gate-flash 0.35s ease-out; }
-
-/* --- Coin fly animation --- */
-
-.pk-coin-fly {
-  position: absolute;
-  font-size: 1rem;
-  font-weight: 800;
-  color: #ffe066;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-  pointer-events: none;
-  z-index: 10;
-  animation: pk-coin-fly 0.6s ease-in forwards;
+.pk-level-end-actions .gt-btn {
+  width: 100%;
 }
 
 /* --- Keyframes --- */
@@ -726,11 +381,6 @@
   0%   { background: rgba(212, 175, 55, 0.06); }
   50%  { background: rgba(212, 175, 55, 0.2); }
   100% { background: rgba(212, 175, 55, 0.06); }
-}
-
-@keyframes pk-layer-fall {
-  from { transform: translateY(-120%); opacity: 0.4; }
-  to   { transform: translateY(0);     opacity: 1; }
 }
 
 @keyframes pk-peg-flash {
@@ -759,76 +409,4 @@
   0%   { filter: brightness(1); }
   50%  { filter: brightness(1.4); }
   100% { filter: brightness(1); }
-}
-
-@keyframes pk-coin-idle {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.08); filter: brightness(1.12); }
-}
-
-@keyframes pk-coin-flash {
-  0%   { transform: scale(1); filter: brightness(1); }
-  50%  { transform: scale(1.5); filter: brightness(1.5); }
-  100% { transform: scale(1); filter: brightness(1); }
-}
-
-@keyframes pk-coin-fly {
-  0% {
-    transform: translate(-50%, -50%) scale(1);
-    opacity: 1;
-  }
-  100% {
-    transform: translate(
-      calc(var(--pk-coin-target-x) - 50%),
-      calc(var(--pk-coin-target-y) - 50%)
-    ) scale(0.5);
-    opacity: 0.6;
-  }
-}
-
-@keyframes pk-shop-peg-idle {
-  0%, 100% { transform: scale(1); filter: brightness(1); }
-  50%       { transform: scale(1.07); filter: brightness(1.12); }
-}
-
-@keyframes pk-shop-peg-legendary-idle {
-  0%, 100% { transform: scale(1); filter: brightness(1); }
-  50%       { transform: scale(1.1); filter: brightness(1.25) drop-shadow(0 0 6px #fbbf24); }
-}
-
-@keyframes pk-shop-peg-flash {
-  0%   { transform: scale(1); filter: brightness(1); }
-  50%  { transform: scale(1.55); filter: brightness(1.6); }
-  100% { transform: scale(1); filter: brightness(1); }
-}
-
-@keyframes pk-ice-ball-idle {
-  0%, 100% { filter: brightness(1) drop-shadow(0 0 2px #7dd3fc); }
-  50%       { filter: brightness(1.18) drop-shadow(0 0 7px #38bdf8); }
-}
-
-@keyframes pk-frozen-peg-idle {
-  0%, 100% { transform: scale(1); filter: brightness(1.05); }
-  50%       { transform: scale(1.06); filter: brightness(1.2) drop-shadow(0 0 5px #bae6fd); }
-}
-
-@keyframes pk-thaw-flash {
-  0%   { transform: scale(1.4); filter: brightness(1.8) saturate(0.4); }
-  100% { transform: scale(1);   filter: brightness(1)   saturate(1); }
-}
-
-@keyframes pk-glass-ball-hit {
-  0%   { filter: brightness(2.8) drop-shadow(0 0 8px rgba(255, 255, 255, 0.95)); }
-  100% { filter: brightness(1)   drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3)); }
-}
-
-@keyframes pk-glass-ball-idle {
-  0%, 100% { filter: brightness(1) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3)); }
-  50%       { filter: brightness(1.08) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2)); }
-}
-
-@keyframes pk-glass-burst {
-  0%   { transform: scale(1);   opacity: 1; }
-  50%  { transform: scale(2);   opacity: 0.7; }
-  100% { transform: scale(3.2); opacity: 0; }
 }

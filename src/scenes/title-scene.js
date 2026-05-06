@@ -1,11 +1,11 @@
 import { audioManager } from "../managers/audio-manager.js";
 import { i18n } from "../managers/i18n-manager.js";
 import { ListenerBag } from "../utils/listener-bag.js";
-import { GameScene } from "./game-scene.js";
+import { LevelSelectorScene } from "./level-selector-scene.js";
 
 /**
- * Title scene — renders the game name and a "tap to start" prompt. The
- * first user gesture unlocks audio and transitions to GameScene.
+ * Title scene — renders the game name for 3 seconds then auto-transitions
+ * to the level selector.
  */
 export class TitleScene {
   /** @type {import('./scene-router.js').SceneRouter} */
@@ -32,24 +32,25 @@ export class TitleScene {
     this.#el.innerHTML = this.#renderInner();
     root.appendChild(this.#el);
 
-    const onStart = () => {
+    this.#bag.on(this.#el, "pointerdown", () => audioManager.unlock(), {
+      once: true,
+    });
+
+    this.#bag.timeout(() => {
       if (this.#transitioning) return;
       this.#transitioning = true;
       audioManager.unlock();
-      this.#router.start(GameScene);
-    };
-    this.#bag.on(window, "keydown", onStart, { once: true });
-    this.#bag.on(this.#el, "pointerdown", onStart, { once: true });
+      this.#router.start(LevelSelectorScene);
+    }, 3000);
+
     this.#bag.add(i18n.onChange(() => this.#refresh()));
   }
 
   #renderInner() {
     return `
       <div class="gt-title">
-        <div class="gt-title-art" aria-hidden="true">Style Guide · Velvet Rouge × Classic Gold</div>
         <h1 class="gt-title-name">${i18n.t("app.name")}</h1>
         <p class="gt-title-tag">${i18n.t("app.tagline")}</p>
-        <p class="gt-title-hint">${i18n.t("title.tap_to_start")}</p>
       </div>
     `;
   }
@@ -58,10 +59,8 @@ export class TitleScene {
     if (!this.#el) return;
     const name = this.#el.querySelector(".gt-title-name");
     const tag = this.#el.querySelector(".gt-title-tag");
-    const hint = this.#el.querySelector(".gt-title-hint");
     if (name) name.textContent = i18n.t("app.name");
     if (tag) tag.textContent = i18n.t("app.tagline");
-    if (hint) hint.textContent = i18n.t("title.tap_to_start");
   }
 
   destroy() {

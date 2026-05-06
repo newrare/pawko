@@ -61,7 +61,7 @@ npm run cap:ios
 
 ### Zone vocabulary
 
-| Zone                 | Description |
+| Zone                 | Description                                                                                                                                        |
 | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **HUD**              | Persistent overlay: hit counter, level, saved-balls count, and the `Saved ↑` trigger button                                                        |
 | **Launch zone**      | Row of **sublaunches** (3 by default) at the top of the pinboard; each holds a queue of balls to drop                                              |

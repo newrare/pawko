@@ -97,8 +97,7 @@ export const STORAGE_KEYS = {
   SAVE_SLOTS: `${NS}.save_slots`,
   AUTOSAVE: `${NS}.autosave`,
   RANKINGS: `${NS}.rankings`,
-  BONUSES: `${NS}.bonuses`,
-  COINS: `${NS}.coins`,
+  LEVEL_PROGRESS: `${NS}.level_progress`,
 };
 
 export const MAX_SAVE_SLOTS = 8;
@@ -152,14 +151,11 @@ export const PLINKO = {
   BUMPER_CHANCE_PER_LEVEL: 0.005,
   BUMPER_CHANCE_MAX: 0.35,
 
-  /* Round limits */
-  MAX_LEVEL: 200,
-  /** Layers visible on screen at once; older ones scroll off the bottom. */
-  VISIBLE_LAYERS: 10,
+  /** Number of layers loaded at once at the start of a level. */
+  INITIAL_LAYERS: 10,
 
   /* Launch zone */
   SUBLAUNCH_COUNT: 3,
-  MAX_SUBLAUNCHES: 10,
   /** Base ball count per sublaunch at round start. */
   STARTING_BALLS_PER_SUBLAUNCH: 5,
   /** Delay between consecutive ball drops from the same sublaunch. */
@@ -176,10 +172,6 @@ export const PLINKO = {
   LAYER_HEIGHT: 56,
   /** Top padding inside the pinboard before the first layer. */
   LAYER_TOP_PADDING: 30,
-  /** Time before camera rises after a new layer is added. */
-  CAMERA_RISE_DELAY_MS: 600,
-  /** Visual fall animation for a freshly added layer (also lock-out time). */
-  LAYER_FALL_MS: 500,
 
   /* Physics */
   GRAVITY: 1400,
@@ -192,70 +184,42 @@ export const PLINKO = {
   /** Sub-steps per frame for collision stability. */
   SUBSTEPS: 3,
 
-  /* Coin peg */
-  COIN_PEG_RADIUS: 9,
-  RESTITUTION_COIN: 0.55,
-  SCORE_COIN: 0,
-
-  /* Shop peg */
-  SHOP_PEG_RADIUS: 12,
-  RESTITUTION_SHOP_PEG: 0.65,
-  /** Probability that a layer contains a shop peg. */
-  SHOP_PEG_CHANCE: 0.40,
-  /** Duration of the coin-fly-to-chest animation (ms). */
-  COIN_FLY_DURATION_MS: 600,
-  /** Shop-peg magnet: attraction force (px/s²) when unlocked. */
-  SHOP_MAGNET_FORCE: 800,
-  /** Shop-peg magnet: range in CSS px. */
-  SHOP_MAGNET_RANGE: 80,
-
   /* Scoring */
   SCORE_PEG: 1,
   SCORE_BUMPER: 10,
-  /** Bonus points when a stuck peg is auto-destroyed to free a ball. */
-  SCORE_STUCK_DESTROY: 50,
   /** How long (ms) a ball must be stationary before its blocker is removed. */
   STUCK_TIMEOUT_MS: 3000,
 
-  /* Collection gates — fractions of pinboard width (sum = 1).
-     Shop is intentionally narrow (2%) to make it a rare landing spot. */
-  GATE_WIDTHS: { save: 0.25, recycle: 0.48, shop: 0.02, drain: 0.25 },
+  /** Points deducted when a ball lands in the malus gate. */
+  MALUS_POINTS: 10,
 
-  /** Number of hits needed to thaw a frozen peg. */
-  ICE_HITS_TO_THAW: 3,
-
-  /* Glass ball */
-  /** Total peg hits before a glass ball shatters. */
-  GLASS_BALL_MAX_HITS: 10,
-  /** How many hits before the end show visible cracks (last N hits). */
-  GLASS_BALL_CRACK_THRESHOLD: 5,
+  /* Collection gates — 5 equal-width zones (sum = 1). */
+  GATE_WIDTHS: { recycle: 0.20, x2: 0.20, x10: 0.20, x5: 0.20, malus: 0.20 },
+  GATE_ORDER: ["recycle", "x2", "x10", "x5", "malus"],
 };
 
-export const PLINKO_RANKING_MODE = "plinko";
+// ─── Level definitions ────────────────────────────────────────────────────
 
-// ─── Shop peg rarities ─────────────────────────────────────────────────────
-
-/**
- * Each rarity defines how many hits are needed to destroy the peg and its
- * spawn weight (relative probability when a shop peg is generated).
- * Higher rarity = more hits required, rarer spawn, better bonus pool.
- *
- * @type {Record<string, { hitsRequired: number, weight: number }>}
- */
-export const SHOP_PEG_RARITIES = {
-  common:    { hitsRequired: 2,  weight: 60 },
-  rare:      { hitsRequired: 4,  weight: 28 },
-  epic:      { hitsRequired: 7,  weight: 10 },
-  legendary: { hitsRequired: 12, weight: 2  },
-};
-
-// ─── Shop prices (coins) ──────────────────────────────────────────────────
-
-export const SHOP_PRICES = {
-  BALL: 10,
-  SUBLAUNCH: 20,
-  SESSION_BONUS: 12,
-};
-
-/** Default duration (in levels) for session bonuses without an explicit value. */
-export const SESSION_BONUS_DEFAULT_DURATION = 5;
+/** @type {Array<{ id: number, target: number }>} */
+export const LEVELS = [
+  { id: 1, target: 100 },
+  { id: 2, target: 300 },
+  { id: 3, target: 600 },
+  { id: 4, target: 1000 },
+  { id: 5, target: 1500 },
+  { id: 6, target: 2200 },
+  { id: 7, target: 3000 },
+  { id: 8, target: 4000 },
+  { id: 9, target: 5200 },
+  { id: 10, target: 6500 },
+  { id: 11, target: 8000 },
+  { id: 12, target: 10000 },
+  { id: 13, target: 12500 },
+  { id: 14, target: 15500 },
+  { id: 15, target: 19000 },
+  { id: 16, target: 23000 },
+  { id: 17, target: 28000 },
+  { id: 18, target: 34000 },
+  { id: 19, target: 41000 },
+  { id: 20, target: 50000 },
+];
