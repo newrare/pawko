@@ -12,6 +12,9 @@ export const fr = {
   "game.drained": "Perdues",
   "game.saved": "Sauvées",
   "game.level": "Niveau",
+  "game.balls": "Billes",
+  "game.balls_ice": "Glace",
+  "game.balls_glass": "Verre",
   "game.send_up": "Sauvées {n} \u2191",
   "game.replay": "Rejouer",
   "game.back": "Retour",
@@ -74,6 +77,8 @@ export const fr = {
   "bonus.session.score_x2.desc": "Double le multiplicateur de score pendant 3 niveaux.",
   "bonus.session.ice_ball": "Bille de glace",
   "bonus.session.ice_ball.desc": "Une bille devient glacée pendant 10 niveaux. Elle gèle chaque peg qu'elle touche — les pegs gelés n'ont plus d'effet jusqu'à ce qu'une autre bille brise la glace.",
+  "bonus.session.glass_ball": "Bille de verre",
+  "bonus.session.glass_ball.desc": "Une bille devient une bille de verre. Transparente et fragile — elle se brise en éclats après 20 coups. Des fissures apparaissent lors des 5 derniers coups.",
 
   "shop.skip": "Non merci",
   "shop.peg.intro": "Peg boutique détruit ! Choisis un bonus gratuit :",

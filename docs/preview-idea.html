@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Style Variants — Grand Casino & Magna Core (Plinko Rogue-lite)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0c0c0c;
+    font-family: sans-serif;
+    padding: 2rem;
+  }
+
+  h2 {
+    color: #888;
+    font-family: monospace;
+    font-size: 0.75rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    padding: 2rem 0 1rem;
+    border-top: 1px solid #222;
+    margin-bottom: 1rem;
+  }
+  h2:first-of-type { border-top: none; padding-top: 0; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .card {
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .label {
+    position: absolute;
+    top: 8px; right: 8px;
+    background: rgba(0,0,0,0.65);
+    color: #fff;
+    font-size: 9px;
+    padding: 3px 8px;
+    border-radius: 99px;
+    font-family: monospace;
+    z-index: 10;
+    letter-spacing: 1px;
+  }
+
+  .ui {
+    padding: 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    height: 240px;
+    justify-content: space-between;
+  }
+
+  .ui-title   { font-size: 1.5rem; font-weight: bold; }
+  .ui-mult    { display: inline-flex; align-items: center; gap: 0.4rem; }
+  .ui-mult-val{ font-size: 1.6rem; font-weight: bold; line-height: 1; }
+  .ui-mult-lbl{ font-size: 0.65rem; text-transform: uppercase; letter-spacing: 2px; opacity: 0.7; }
+  .ui-row     { display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; }
+  .ui-bar-wrap{ border-radius: 99px; height: 8px; width: 100%; overflow: hidden; }
+  .ui-bar     { height: 100%; border-radius: 99px; width: 68%; }
+  .ui-btns    { display: flex; gap: 0.5rem; }
+  .ui-btn     { padding: 0.4rem 1rem; border: none; cursor: pointer; border-radius: 6px; font-size: 0.75rem; font-weight: bold; flex: 1; }
+
+  /* ══════════════════════════════════════════════════════════════
+     GRAND CASINO — 10 VARIANTS
+  ══════════════════════════════════════════════════════════════ */
+
+  /* GC-01  Classic Gold — the original Art Déco anchor */
+  .gc01 {
+    background: #1a1206;
+    background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(212,175,55,0.03) 10px, rgba(212,175,55,0.03) 20px);
+  }
+  .gc01 .ui-title { color: #d4af37; font-family: Georgia, serif; letter-spacing: 6px; text-transform: uppercase; font-size: 1.2rem; border-bottom: 1px solid #d4af3750; padding-bottom: 0.3rem; }
+  .gc01 .ui-mult-val { color: #f5d77a; font-family: Georgia, serif; }
+  .gc01 .ui-mult-lbl { color: #b8966a; }
+  .gc01 .ui-row { color: #b8966a; font-family: Georgia, serif; letter-spacing: 2px; text-transform: uppercase; }
+  .gc01 .ui-bar-wrap { background: #2a1f0a; border: 1px solid #d4af37; border-radius: 0; }
+  .gc01 .ui-bar { background: linear-gradient(90deg, #8b6914, #d4af37, #f5d77a, #d4af37); border-radius: 0; }
+  .gc01 .ui-btn { background: transparent; color: #d4af37; border: 1px solid #d4af37; font-family: Georgia, serif; letter-spacing: 3px; text-transform: uppercase; font-size: 0.68rem; border-radius: 0; }
+  .gc01 .ui-btn:first-child { background: #d4af37; color: #1a1206; }
+
+  /* GC-02  Emerald Felt — casino green cloth */
+  .gc02 {
+    background: #0a150d;
+    background-image: radial-gradient(ellipse at 50% 0%, #15280d 0%, #0a150d 70%);
+  }
+  .gc02 .ui-title { color: #d4af37; font-family: Georgia, serif; letter-spacing: 5px; text-transform: uppercase; font-size: 1.15rem; }
+  .gc02 .ui-mult-val { color: #5ddc80; font-family: Georgia, serif; }
+  .gc02 .ui-mult-lbl { color: #4a9e60; }
+  .gc02 .ui-row { color: #4a9e60; font-family: Georgia, serif; letter-spacing: 2px; text-transform: uppercase; font-size: 0.72rem; }
+  .gc02 .ui-bar-wrap { background: #071008; border: 1px solid #2a6a35; border-radius: 2px; }
+  .gc02 .ui-bar { background: linear-gradient(90deg, #2a6a35, #4caf50, #d4af37); border-radius: 2px; }
+  .gc02 .ui-btn { background: #0f2012; color: #d4af37; border: 1px solid #2a6a35; font-family: Georgia, serif; letter-spacing: 2px; text-transform: uppercase; font-size: 0.68rem; border-radius: 3px; }
+  .gc02 .ui-btn:first-child { background: linear-gradient(135deg, #1e5a28, #2a8a38); border-color: #d4af37; }
+
+  /* GC-03  Silver Palace — platinum luxury */
+  .gc03 {
+    background: #090c11;
+    background-image: repeating-linear-gradient(-45deg, transparent, transparent 14px, rgba(192,200,220,0.025) 14px, rgba(192,200,220,0.025) 28px);
+  }
+  .gc03 .ui-title { color: #c8d4e8; font-family: Georgia, serif; letter-spacing: 5px; text-transform: uppercase; font-size: 1.1rem; text-shadow: 0 0 20px rgba(200,212,232,0.3); }
+  .gc03 .ui-mult-val { color: #e8eef8; font-family: Georgia, serif; text-shadow: 0 0 12px rgba(200,212,232,0.5); }
+  .gc03 .ui-mult-lbl { color: #7a8aaa; }
+  .gc03 .ui-row { color: #7a8aaa; font-family: Georgia, serif; letter-spacing: 2px; text-transform: uppercase; font-size: 0.72rem; }
+  .gc03 .ui-bar-wrap { background: #12181f; border: 1px solid #3a4a60; border-radius: 0; }
+  .gc03 .ui-bar { background: linear-gradient(90deg, #3a4a60, #8090b0, #c8d4e8, #8090b0); border-radius: 0; }
+  .gc03 .ui-btn { background: transparent; color: #c8d4e8; border: 1px solid #3a4a60; font-family: Georgia, serif; letter-spacing: 3px; text-transform: uppercase; font-size: 0.65rem; border-radius: 0; }
+  .gc03 .ui-btn:first-child { background: linear-gradient(135deg, #2a3a50, #3a4a65); border-color: #8090b0; }
+
+  /* GC-04  Midnight Royale — deep navy + gold, most opulent */
+  .gc04 {
+    background: #03071a;
+    background-image: radial-gradient(ellipse at 30% 50%, #080f2a 0%, #03071a 60%), repeating-linear-gradient(45deg, transparent, transparent 18px, rgba(212,175,55,0.02) 18px, rgba(212,175,55,0.02) 36px);
+  }
+  .gc04 .ui-title { color: #d4af37; font-family: Georgia, serif; letter-spacing: 8px; text-transform: uppercase; font-size: 1rem; text-shadow: 0 0 30px rgba(212,175,55,0.4); }
+  .gc04 .ui-mult-val { color: #f5d77a; font-family: Georgia, serif; text-shadow: 0 0 15px rgba(212,175,55,0.5); }
+  .gc04 .ui-mult-lbl { color: #8a7040; }
+  .gc04 .ui-row { color: #6a80b0; font-family: Georgia, serif; letter-spacing: 2px; text-transform: uppercase; font-size: 0.7rem; }
+  .gc04 .ui-bar-wrap { background: #08102a; border: 1px solid #d4af3740; height: 6px; border-radius: 0; }
+  .gc04 .ui-bar { background: linear-gradient(90deg, #5a3a08, #d4af37, #f5d77a); border-radius: 0; box-shadow: 0 0 8px rgba(212,175,55,0.4); }
+  .gc04 .ui-btn { background: transparent; color: #d4af37; border: 1px solid #d4af3750; font-family: Georgia, serif; letter-spacing: 3px; text-transform: uppercase; font-size: 0.65rem; border-radius: 0; }
+  .gc04 .ui-btn:first-child { background: rgba(212,175,55,0.12); border-color: #d4af37; box-shadow: inset 0 0 15px rgba(212,175,55,0.1); }
+
+  /* GC-05  Velvet Rouge — burgundy casino luxury */
+  .gc05 {
+    background: #14040a;
+    background-image: radial-gradient(ellipse at 50% 100%, #2a0814 0%, #14040a 60%);
+  }
+  .gc05 .ui-title { color: #d4af37; font-family: Georgia, serif; letter-spacing: 5px; text-transform: uppercase; font-size: 1.1rem; }
+  .gc05 .ui-mult-val { color: #f28090; font-family: Georgia, serif; }
+  .gc05 .ui-mult-lbl { color: #8a4050; }
+  .gc05 .ui-row { color: #a05868; font-family: Georgia, serif; letter-spacing: 2px; text-transform: uppercase; font-size: 0.7rem; }
+  .gc05 .ui-bar-wrap { background: #200610; border: 1px solid #6a1828; border-radius: 0; }
+  .gc05 .ui-bar { background: linear-gradient(90deg, #6a1828, #cc2840, #d4af37); border-radius: 0; }
+  .gc05 .ui-btn { background: #200610; color: #d4af37; border: 1px solid #6a1828; font-family: Georgia, serif; letter-spacing: 2px; text-transform: uppercase; font-size: 0.68rem; border-radius: 0; }
+  .gc05 .ui-btn:first-child { background: #6a1828; color: #f5d77a; border-color: #d4af37; }
+
+  /* GC-06  Champagne Salon — light background luxury, rare bright variant */
+  .gc06 {
+    background: #faf5e8;
+    background-image: repeating-linear-gradient(45deg, transparent, transparent 12px, rgba(180,140,40,0.04) 12px, rgba(180,140,40,0.04) 24px);
+    border: 1px solid #d4af3760;
+  }
+  .gc06 .ui-title { color: #5a3a08; font-family: Georgia, serif; letter-spacing: 5px; text-transform: uppercase; font-size: 1.1rem; border-bottom: 1px solid #d4af3780; padding-bottom: 0.3rem; }
+  .gc06 .ui-mult-val { color: #8a5a10; font-family: Georgia, serif; }
+  .gc06 .ui-mult-lbl { color: #b8966a; }
+  .gc06 .ui-row { color: #8a7050; font-family: Georgia, serif; letter-spacing: 2px; text-transform: uppercase; font-size: 0.7rem; }
+  .gc06 .ui-bar-wrap { background: #e8d8b0; border: 1px solid #c8a030; border-radius: 0; }
+  .gc06 .ui-bar { background: linear-gradient(90deg, #a07828, #d4af37, #f0cc60); border-radius: 0; }
+  .gc06 .ui-btn { background: transparent; color: #5a3a08; border: 1px solid #c8a030; font-family: Georgia, serif; letter-spacing: 2px; text-transform: uppercase; font-size: 0.68rem; border-radius: 0; }
+  .gc06 .ui-btn:first-child { background: #5a3a08; color: #f5d77a; }
+
+  /* GC-07  Tiffany Club — teal Art Déco */
+  .gc07 {
+    background: #04141a;
+    background-image: repeating-linear-gradient(45deg, transparent, transparent 12px, rgba(160,210,200,0.025) 12px, rgba(160,210,200,0.025) 24px);
+  }
+  .gc07 .ui-title { color: #a0d4cc; font-family: Georgia, serif; letter-spacing: 5px; text-transform: uppercase; font-size: 1.1rem; border-bottom: 1px solid #a0d4cc40; padding-bottom: 0.3rem; }
+  .gc07 .ui-mult-val { color: #d4af37; font-family: Georgia, serif; }
+  .gc07 .ui-mult-lbl { color: #5a9090; }
+  .gc07 .ui-row { color: #5a9090; font-family: Georgia, serif; letter-spacing: 2px; text-transform: uppercase; font-size: 0.7rem; }
+  .gc07 .ui-bar-wrap { background: #081820; border: 1px solid #2a6068; border-radius: 0; }
+  .gc07 .ui-bar { background: linear-gradient(90deg, #2a6068, #4ab0a8, #d4af37); border-radius: 0; }
+  .gc07 .ui-btn { background: transparent; color: #a0d4cc; border: 1px solid #2a6068; font-family: Georgia, serif; letter-spacing: 2px; text-transform: uppercase; font-size: 0.68rem; border-radius: 0; }
+  .gc07 .ui-btn:first-child { background: #2a6068; color: #e0f8f4; border-color: #a0d4cc; }
+
+  /* GC-08  Rose Gold Gala — pink-gold ultra feminine luxury */
+  .gc08 {
+    background: #160a0d;
+    background-image: radial-gradient(ellipse at 70% 30%, #2a1018 0%, #160a0d 60%);
+  }
+  .gc08 .ui-title { color: #e8a898; font-family: Georgia, serif; letter-spacing: 5px; text-transform: uppercase; font-size: 1.1rem; text-shadow: 0 0 20px rgba(232,168,152,0.3); }
+  .gc08 .ui-mult-val { color: #f0c8a8; font-family: Georgia, serif; }
+  .gc08 .ui-mult-lbl { color: #906858; }
+  .gc08 .ui-row { color: #906858; font-family: Georgia, serif; letter-spacing: 2px; text-transform: uppercase; font-size: 0.7rem; }
+  .gc08 .ui-bar-wrap { background: #200c10; border: 1px solid #7a4840; border-radius: 0; }
+  .gc08 .ui-bar { background: linear-gradient(90deg, #7a4840, #c07868, #e8b898, #f0c8a8); border-radius: 0; }
+  .gc08 .ui-btn { background: transparent; color: #e8a898; border: 1px solid #7a4840; font-family: Georgia, serif; letter-spacing: 2px; text-transform: uppercase; font-size: 0.68rem; border-radius: 0; }
+  .gc08 .ui-btn:first-child { background: linear-gradient(135deg, #7a4840, #c07868); color: #fae8e0; border-color: #e8a898; }
+
+  /* GC-09  Onyx Vault — ultra-dark premium, minimal gold */
+  .gc09 {
+    background: #040404;
+    border: 1px solid #2a2218;
+  }
+  .gc09 .ui-title { color: #d4af37; font-family: Georgia, serif; letter-spacing: 8px; text-transform: uppercase; font-size: 1rem; }
+  .gc09 .ui-mult-val { color: #c8a030; font-family: Georgia, serif; }
+  .gc09 .ui-mult-lbl { color: #5a4820; }
+  .gc09 .ui-row { color: #5a4820; font-family: Georgia, serif; letter-spacing: 3px; text-transform: uppercase; font-size: 0.68rem; }
+  .gc09 .ui-bar-wrap { background: #0c0a06; border: 1px solid #3a2e10; border-radius: 0; height: 6px; }
+  .gc09 .ui-bar { background: linear-gradient(90deg, #3a2e10, #c8a030, #f5d77a); border-radius: 0; box-shadow: 0 0 12px rgba(212,175,55,0.6); }
+  .gc09 .ui-btn { background: #0c0a06; color: #d4af37; border: 1px solid #3a2e10; font-family: Georgia, serif; letter-spacing: 3px; text-transform: uppercase; font-size: 0.65rem; border-radius: 0; }
+  .gc09 .ui-btn:first-child { border-color: #d4af37; box-shadow: 0 0 8px rgba(212,175,55,0.3); }
+
+  /* GC-10  Neo Deco — art déco meets modern geometric minimalism */
+  .gc10 {
+    background: #f0ece0;
+    border-left: 4px solid #d4af37;
+    border-bottom: 4px solid #d4af37;
+  }
+  .gc10 .ui-title { color: #1a1206; font-family: Georgia, serif; letter-spacing: 6px; text-transform: uppercase; font-size: 1rem; font-weight: normal; }
+  .gc10 .ui-mult-val { color: #8b6914; font-family: Georgia, serif; font-weight: normal; }
+  .gc10 .ui-mult-lbl { color: #b8966a; }
+  .gc10 .ui-row { color: #6a5030; font-family: Georgia, serif; letter-spacing: 2px; text-transform: uppercase; font-size: 0.68rem; }
+  .gc10 .ui-bar-wrap { background: #ddd5c0; border-radius: 0; height: 6px; }
+  .gc10 .ui-bar { background: linear-gradient(90deg, #8b6914, #d4af37, #f5d77a); border-radius: 0; }
+  .gc10 .ui-btn { background: transparent; color: #1a1206; border: 1.5px solid #1a1206; font-family: Georgia, serif; letter-spacing: 3px; text-transform: uppercase; font-size: 0.65rem; border-radius: 0; }
+  .gc10 .ui-btn:first-child { background: #1a1206; color: #d4af37; }
+
+
+  /* ══════════════════════════════════════════════════════════════
+     MAGNA CORE — 10 VARIANTS
+  ══════════════════════════════════════════════════════════════ */
+
+  /* MC-01  Original Magma — the lava/volcanic anchor */
+  .mc01 {
+    background: #0a0500;
+    background-image: radial-gradient(ellipse at 50% 100%, #3a1000 0%, #0a0500 60%);
+    overflow: hidden; position: relative;
+  }
+  .mc01::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(255,60,0,0.025) 40px, rgba(255,60,0,0.025) 41px), repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(255,60,0,0.025) 40px, rgba(255,60,0,0.025) 41px); pointer-events: none; }
+  .mc01 .ui { position: relative; z-index: 1; }
+  .mc01 .ui-title { color: #ff6020; font-family: 'Arial Black', sans-serif; font-size: 1.3rem; text-transform: uppercase; text-shadow: 0 0 20px #ff4000, 0 0 40px #ff200060; letter-spacing: 3px; }
+  .mc01 .ui-mult-val { color: #ffb060; font-family: 'Arial Black', sans-serif; text-shadow: 0 0 15px #ff6020; }
+  .mc01 .ui-mult-lbl { color: #c84010; }
+  .mc01 .ui-row { color: #c84010; font-family: 'Courier New', monospace; font-size: 0.75rem; letter-spacing: 1px; }
+  .mc01 .ui-bar-wrap { background: #1a0800; border: 1px solid #5a1a00; border-radius: 3px; height: 10px; }
+  .mc01 .ui-bar { background: linear-gradient(90deg, #5a0000, #cc2000, #ff6020, #ffb060); box-shadow: 0 0 10px #ff400060; border-radius: 2px; }
+  .mc01 .ui-btn { background: linear-gradient(180deg, #3a1000, #1a0500); color: #ff6020; border: 1px solid #5a1a00; font-family: 'Arial Black', sans-serif; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; }
+  .mc01 .ui-btn:first-child { background: linear-gradient(180deg, #cc2000, #7a0a00); color: #ffb060; border-color: #cc2000; box-shadow: 0 0 12px #ff400050; }
+
+  /* MC-02  Obsidian — dark purple volcanic glass */
+  .mc02 {
+    background: #050008;
+    background-image: radial-gradient(ellipse at 50% 80%, #200835 0%, #050008 60%);
+    overflow: hidden; position: relative;
+  }
+  .mc02::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(135deg, transparent, transparent 20px, rgba(180,60,255,0.02) 20px, rgba(180,60,255,0.02) 40px); pointer-events: none; }
+  .mc02 .ui { position: relative; z-index: 1; }
+  .mc02 .ui-title { color: #c060ff; font-family: 'Arial Black', sans-serif; font-size: 1.2rem; text-transform: uppercase; text-shadow: 0 0 20px #8020cc, 0 0 40px #40008060; letter-spacing: 3px; }
+  .mc02 .ui-mult-val { color: #e0a0ff; font-family: 'Arial Black', sans-serif; text-shadow: 0 0 15px #8020cc; }
+  .mc02 .ui-mult-lbl { color: #6030a0; }
+  .mc02 .ui-row { color: #6030a0; font-family: 'Courier New', monospace; font-size: 0.75rem; letter-spacing: 1px; }
+  .mc02 .ui-bar-wrap { background: #0a0015; border: 1px solid #5010a0; border-radius: 3px; height: 10px; }
+  .mc02 .ui-bar { background: linear-gradient(90deg, #2a0060, #7030cc, #c060ff, #e0a0ff); box-shadow: 0 0 10px #8020cc60; border-radius: 2px; }
+  .mc02 .ui-btn { background: linear-gradient(180deg, #200840, #100020); color: #c060ff; border: 1px solid #5010a0; font-family: 'Arial Black', sans-serif; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; }
+  .mc02 .ui-btn:first-child { background: linear-gradient(180deg, #6020cc, #3a0880); color: #e8c0ff; border-color: #8030cc; box-shadow: 0 0 10px #7020cc50; }
+
+  /* MC-03  Solar Flare — blinding yellow-white nuclear heat */
+  .mc03 {
+    background: #080600;
+    background-image: radial-gradient(ellipse at 50% 0%, #2a1e00 0%, #080600 70%);
+    overflow: hidden; position: relative;
+  }
+  .mc03::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% -20%, rgba(255,240,80,0.08) 0%, transparent 60%); pointer-events: none; }
+  .mc03 .ui { position: relative; z-index: 1; }
+  .mc03 .ui-title { color: #ffe040; font-family: 'Arial Black', sans-serif; font-size: 1.2rem; text-transform: uppercase; text-shadow: 0 0 20px #ffc000, 0 0 50px #ff800060; letter-spacing: 3px; }
+  .mc03 .ui-mult-val { color: #fff8a0; font-family: 'Arial Black', sans-serif; text-shadow: 0 0 20px #ffcc00, 0 0 40px #ffa00060; }
+  .mc03 .ui-mult-lbl { color: #a07800; }
+  .mc03 .ui-row { color: #a07800; font-family: 'Courier New', monospace; font-size: 0.75rem; letter-spacing: 1px; }
+  .mc03 .ui-bar-wrap { background: #120e00; border: 1px solid #805a00; border-radius: 3px; height: 10px; }
+  .mc03 .ui-bar { background: linear-gradient(90deg, #805a00, #ffa800, #ffe040, #ffffc0); box-shadow: 0 0 12px #ffc00060; border-radius: 2px; }
+  .mc03 .ui-btn { background: linear-gradient(180deg, #2a1e00, #120e00); color: #ffe040; border: 1px solid #805a00; font-family: 'Arial Black', sans-serif; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; }
+  .mc03 .ui-btn:first-child { background: linear-gradient(180deg, #cc8800, #805a00); color: #fff8a0; border-color: #ffa800; box-shadow: 0 0 12px #ffc00050; }
+
+  /* MC-04  Glacial Core — polar inversion of magma, ice blue */
+  .mc04 {
+    background: #000d1a;
+    background-image: radial-gradient(ellipse at 50% 100%, #002040 0%, #000d1a 60%);
+    overflow: hidden; position: relative;
+  }
+  .mc04::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(80,200,255,0.02) 30px, rgba(80,200,255,0.02) 31px); pointer-events: none; }
+  .mc04 .ui { position: relative; z-index: 1; }
+  .mc04 .ui-title { color: #60d8ff; font-family: 'Arial Black', sans-serif; font-size: 1.2rem; text-transform: uppercase; text-shadow: 0 0 20px #0090c0, 0 0 40px #00608060; letter-spacing: 3px; }
+  .mc04 .ui-mult-val { color: #c0f0ff; font-family: 'Arial Black', sans-serif; text-shadow: 0 0 15px #40b8e0; }
+  .mc04 .ui-mult-lbl { color: #206080; }
+  .mc04 .ui-row { color: #206080; font-family: 'Courier New', monospace; font-size: 0.75rem; letter-spacing: 1px; }
+  .mc04 .ui-bar-wrap { background: #001525; border: 1px solid #0a4870; border-radius: 3px; height: 10px; }
+  .mc04 .ui-bar { background: linear-gradient(90deg, #0a3060, #0080c0, #40c8f0, #c0f0ff); box-shadow: 0 0 10px #0090c060; border-radius: 2px; }
+  .mc04 .ui-btn { background: linear-gradient(180deg, #002040, #001020); color: #60d8ff; border: 1px solid #0a4870; font-family: 'Arial Black', sans-serif; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; }
+  .mc04 .ui-btn:first-child { background: linear-gradient(180deg, #0070a0, #004060); color: #c0f0ff; border-color: #0090c0; box-shadow: 0 0 10px #0090c050; }
+
+  /* MC-05  Acid Forge — toxic neon green, radioactive */
+  .mc05 {
+    background: #010a02;
+    background-image: radial-gradient(ellipse at 50% 50%, #04180a 0%, #010a02 60%);
+    overflow: hidden; position: relative;
+  }
+  .mc05::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,255,60,0.015) 3px, rgba(0,255,60,0.015) 6px); pointer-events: none; }
+  .mc05 .ui { position: relative; z-index: 1; }
+  .mc05 .ui-title { color: #39ff14; font-family: 'Arial Black', sans-serif; font-size: 1.2rem; text-transform: uppercase; text-shadow: 0 0 15px #00cc30, 0 0 30px #00aa2060; letter-spacing: 3px; }
+  .mc05 .ui-mult-val { color: #aaff60; font-family: 'Arial Black', sans-serif; text-shadow: 0 0 12px #50cc20; }
+  .mc05 .ui-mult-lbl { color: #208030; }
+  .mc05 .ui-row { color: #208030; font-family: 'Courier New', monospace; font-size: 0.75rem; letter-spacing: 1px; }
+  .mc05 .ui-bar-wrap { background: #020e04; border: 1px solid #0a5018; border-radius: 3px; height: 10px; }
+  .mc05 .ui-bar { background: linear-gradient(90deg, #0a5018, #20aa40, #39ff14, #aaff60); box-shadow: 0 0 10px #00cc3060; border-radius: 2px; }
+  .mc05 .ui-btn { background: linear-gradient(180deg, #051808, #020e04); color: #39ff14; border: 1px solid #0a5018; font-family: 'Arial Black', sans-serif; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; }
+  .mc05 .ui-btn:first-child { background: linear-gradient(180deg, #15a030, #0a5018); color: #aaff60; border-color: #39ff14; box-shadow: 0 0 10px #00cc3050; }
+
+  /* MC-06  Cosmic Fire — nebula collision, purple meets deep orange */
+  .mc06 {
+    background: #05020f;
+    background-image: radial-gradient(ellipse at 20% 50%, #200840 0%, transparent 50%), radial-gradient(ellipse at 80% 50%, #2a0c00 0%, transparent 50%);
+    overflow: hidden; position: relative;
+  }
+  .mc06::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 50% 50%, rgba(120,30,200,0.05) 0%, transparent 70%); pointer-events: none; }
+  .mc06 .ui { position: relative; z-index: 1; }
+  .mc06 .ui-title { color: #ff8060; font-family: 'Arial Black', sans-serif; font-size: 1.2rem; text-transform: uppercase; text-shadow: 0 0 15px #ff4020, 2px 0 0 #8020ff60; letter-spacing: 3px; }
+  .mc06 .ui-mult-val { color: #e0b0ff; font-family: 'Arial Black', sans-serif; text-shadow: 0 0 15px #8020ff; }
+  .mc06 .ui-mult-lbl { color: #704080; }
+  .mc06 .ui-row { color: #704080; font-family: 'Courier New', monospace; font-size: 0.75rem; letter-spacing: 1px; }
+  .mc06 .ui-bar-wrap { background: #0a050f; border: 1px solid #5010a0; border-radius: 3px; height: 10px; }
+  .mc06 .ui-bar { background: linear-gradient(90deg, #5010a0, #8040c0, #ff6040, #ffa080); box-shadow: 0 0 10px rgba(150,40,200,0.4); border-radius: 2px; }
+  .mc06 .ui-btn { background: linear-gradient(135deg, #200840, #2a0c00); color: #ff8060; border: 1px solid #5010a0; font-family: 'Arial Black', sans-serif; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; }
+  .mc06 .ui-btn:first-child { background: linear-gradient(135deg, #7820e0, #cc4010); color: #ffd0c0; border-color: #cc4010; box-shadow: 0 0 12px rgba(200,60,20,0.4); }
+
+  /* MC-07  Bronze Forge — molten bronze, hammered metal */
+  .mc07 {
+    background: #0a0700;
+    background-image: radial-gradient(ellipse at 50% 100%, #2a1800 0%, #0a0700 60%);
+    overflow: hidden; position: relative;
+  }
+  .mc07::before { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(70deg, transparent, transparent 8px, rgba(180,100,20,0.025) 8px, rgba(180,100,20,0.025) 16px); pointer-events: none; }
+  .mc07 .ui { position: relative; z-index: 1; }
+  .mc07 .ui-title { color: #cd7f32; font-family: 'Arial Black', sans-serif; font-size: 1.2rem; text-transform: uppercase; text-shadow: 0 0 15px #8a5010, 0 2px 4px #000; letter-spacing: 3px; }
+  .mc07 .ui-mult-val { color: #e8b060; font-family: 'Arial Black', sans-serif; text-shadow: 0 0 10px #cd7f32; }
+  .mc07 .ui-mult-lbl { color: #7a4810; }
+  .mc07 .ui-row { color: #7a4810; font-family: 'Courier New', monospace; font-size: 0.75rem; letter-spacing: 1px; }
+  .mc07 .ui-bar-wrap { background: #120a00; border: 1px solid #5a3010; border-radius: 3px; height: 10px; }
+  .mc07 .ui-bar { background: repeating-linear-gradient(90deg, #4a2808 0, #4a2808 8px, #cd7f32 8px, #cd7f32 16px); border-radius: 2px; box-shadow: 0 0 8px #cd7f3240; }
+  .mc07 .ui-btn { background: linear-gradient(180deg, #4a2808, #1e1000); color: #cd7f32; border: 2px solid #5a3010; font-family: 'Arial Black', sans-serif; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; box-shadow: inset 0 1px 0 #8a5010, 2px 2px 0 #000; }
+  .mc07 .ui-btn:first-child { background: linear-gradient(180deg, #9a5820, #5a3010); color: #ffe0a0; border-color: #cd7f32; }
+
+  /* MC-08  Ember Dusk — dark near-black with smoldering red embers */
+  .mc08 {
+    background: #060102;
+    background-image: radial-gradient(ellipse at 30% 80%, #200408 0%, #060102 55%);
+    overflow: hidden; position: relative;
+  }
+  .mc08::before { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 30px; background: radial-gradient(ellipse at 50% 100%, rgba(255,60,20,0.15) 0%, transparent 70%); pointer-events: none; }
+  .mc08 .ui { position: relative; z-index: 1; }
+  .mc08 .ui-title { color: #ff3820; font-family: 'Arial Black', sans-serif; font-size: 1.2rem; text-transform: uppercase; text-shadow: 0 0 12px #cc1800, 0 0 30px #aa100050; letter-spacing: 3px; }
+  .mc08 .ui-mult-val { color: #ff7058; font-family: 'Arial Black', sans-serif; text-shadow: 0 0 10px #cc2010; }
+  .mc08 .ui-mult-lbl { color: #7a2018; }
+  .mc08 .ui-row { color: #7a2018; font-family: 'Courier New', monospace; font-size: 0.75rem; letter-spacing: 1px; }
+  .mc08 .ui-bar-wrap { background: #0e0204; border: 1px solid #4a0e0a; border-radius: 3px; height: 10px; }
+  .mc08 .ui-bar { background: linear-gradient(90deg, #4a0e0a, #aa2010, #ff3820); box-shadow: 0 0 8px #cc180060; border-radius: 2px; }
+  .mc08 .ui-btn { background: linear-gradient(180deg, #1c0806, #0c0204); color: #ff3820; border: 1px solid #4a0e0a; font-family: 'Arial Black', sans-serif; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; }
+  .mc08 .ui-btn:first-child { background: linear-gradient(180deg, #9a1a10, #4a0e0a); color: #ffa090; border-color: #cc2010; box-shadow: 0 0 10px #cc180050; }
+
+  /* MC-09  Chromatic Surge — full RGB energy overload, rogue jackpot feel */
+  .mc09 {
+    background: #030308;
+    overflow: hidden; position: relative;
+  }
+  .mc09::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 20% 50%, rgba(255,0,80,0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 50%, rgba(0,80,255,0.08) 0%, transparent 50%), radial-gradient(ellipse at 50% 80%, rgba(0,255,80,0.06) 0%, transparent 50%); pointer-events: none; }
+  .mc09 .ui { position: relative; z-index: 1; }
+  .mc09 .ui-title { color: #fff; font-family: 'Arial Black', sans-serif; font-size: 1.2rem; text-transform: uppercase; text-shadow: 3px 0 #ff0050, -3px 0 #0050ff, 0 0 20px #fff; letter-spacing: 3px; }
+  .mc09 .ui-mult-val { color: #fff; font-family: 'Arial Black', sans-serif; text-shadow: 2px 0 #ff0050, -2px 0 #0050ff; }
+  .mc09 .ui-mult-lbl { color: #6060a0; }
+  .mc09 .ui-row { color: #6060a0; font-family: 'Courier New', monospace; font-size: 0.75rem; letter-spacing: 1px; }
+  .mc09 .ui-bar-wrap { background: #08080f; border: 1px solid #303080; border-radius: 3px; height: 10px; }
+  .mc09 .ui-bar { background: linear-gradient(90deg, #ff0050, #ff8000, #ffff00, #00ff80, #0080ff, #8000ff); box-shadow: 0 0 12px rgba(200,150,255,0.5); border-radius: 2px; }
+  .mc09 .ui-btn { background: linear-gradient(135deg, #100830, #080820); color: #c0c0ff; border: 1px solid #303080; font-family: 'Arial Black', sans-serif; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; }
+  .mc09 .ui-btn:first-child { background: linear-gradient(135deg, #4000c0, #c00040); color: #fff; border-color: #8040ff; box-shadow: 0 0 15px rgba(120,40,255,0.5); }
+
+  /* MC-10  Void Breach — pure black with crack-like fire veins, rogue endgame */
+  .mc10 {
+    background: #000000;
+    overflow: hidden; position: relative;
+  }
+  .mc10::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(135deg, transparent 30%, rgba(255,20,0,0.06) 35%, transparent 40%),
+      linear-gradient(220deg, transparent 40%, rgba(255,40,0,0.04) 45%, transparent 50%),
+      linear-gradient(80deg, transparent 20%, rgba(200,0,0,0.05) 25%, transparent 30%);
+    pointer-events: none;
+  }
+  .mc10 .ui { position: relative; z-index: 1; }
+  .mc10 .ui-title { color: #ff1400; font-family: 'Arial Black', sans-serif; font-size: 1.2rem; text-transform: uppercase; text-shadow: 0 0 10px #cc0000, 0 0 30px #ff000060, 0 0 60px #80000030; letter-spacing: 4px; }
+  .mc10 .ui-mult-val { color: #ff4030; font-family: 'Arial Black', sans-serif; text-shadow: 0 0 12px #cc0000; }
+  .mc10 .ui-mult-lbl { color: #500000; }
+  .mc10 .ui-row { color: #500000; font-family: 'Courier New', monospace; font-size: 0.75rem; letter-spacing: 1px; }
+  .mc10 .ui-bar-wrap { background: #080000; border: 1px solid #3a0000; border-radius: 0; height: 8px; }
+  .mc10 .ui-bar { background: linear-gradient(90deg, #3a0000, #880000, #cc0000, #ff1400); box-shadow: 0 0 15px #cc000080, 0 0 30px #ff000040; border-radius: 0; }
+  .mc10 .ui-btn { background: #000; color: #ff1400; border: 1px solid #3a0000; font-family: 'Arial Black', sans-serif; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; border-radius: 0; text-shadow: 0 0 8px #cc0000; }
+  .mc10 .ui-btn:first-child { background: #1a0000; border-color: #880000; box-shadow: inset 0 0 15px rgba(200,0,0,0.2), 0 0 10px rgba(200,0,0,0.3); }
+
+</style>
+</head>
+<body>
+
+<h2>Grand Casino — 10 Variants &nbsp;·&nbsp; Art Déco × Plinko Rogue-lite</h2>
+<div class="grid">
+
+  <!-- GC-01 -->
+  <div class="card gc01"><span class="label">GC-01 · Classic Gold</span>
+    <div class="ui">
+      <div class="ui-title">GRAND PLINKO</div>
+      <div class="ui-mult"><span class="ui-mult-val">×4.5</span><span class="ui-mult-lbl">&nbsp;MULTIPLIER</span></div>
+      <div class="ui-row"><span>GOLD</span><span>12 840</span></div>
+      <div class="ui-bar-wrap"><div class="ui-bar"></div></div>
+      <div class="ui-btns">
+        <button class="ui-btn">DROP</button>
+        <button class="ui-btn">UPGRADE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GC-02 -->
+  <div class="card gc02"><span class="label">GC-02 · Emerald Felt</span>
+    <div class="ui">
+      <div class="ui-title">CASINO ROYALE</div>
+      <div class="ui-mult"><span class="ui-mult-val">×3.0</span><span class="ui-mult-lbl">&nbsp;MULTIPLIER</span></div>
+      <div class="ui-row"><span>CHIPS</span><span>8 500</span></div>
+      <div class="ui-bar-wrap"><div class="ui-bar"></div></div>
+      <div class="ui-btns">
+        <button class="ui-btn">DROP</button>
+        <button class="ui-btn">REROLL</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GC-03 -->
+  <div class="card gc03"><span class="label">GC-03 · Silver Palace</span>
+    <div class="ui">
+      <div class="ui-title">PLATINUM DROP</div>
+      <div class="ui-mult"><span class="ui-mult-val">×2.8</span><span class="ui-mult-lbl">&nbsp;MULTIPLIER</span></div>
+      <div class="ui-row"><span>SILVER</span><span>6 210</span></div>
+      <div class="ui-bar-wrap"><div class="ui-bar"></div></div>
+      <div class="ui-btns">
+        <button class="ui-btn">DROP</button>
+        <button class="ui-btn">SHOP</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GC-04 -->
+  <div class="card gc04"><span class="label">GC-04 · Midnight Royale</span>
+    <div class="ui">
+      <div class="ui-title">MIDNIGHT VAULT</div>
+      <div class="ui-mult"><span class="ui-mult-val">×7.2</span><span class="ui-mult-lbl">&nbsp;MULTIPLIER</span></div>
+      <div class="ui-row"><span>OPULENCE</span><span>44 000</span></div>
+      <div class="ui-bar-wrap"><div class="ui-bar"></div></div>
+      <div class="ui-btns">
+        <button class="ui-btn">RELEASE</button>
+        <button class="ui-btn">HOLD</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GC-05 -->
+  <div class="card gc05"><span class="label">GC-05 · Velvet Rouge</span>
+    <div class="ui">
+      <div class="ui-title">ROUGE FORTUNE</div>
+      <div class="ui-mult"><span class="ui-mult-val">×5.5</span><span class="ui-mult-lbl">&nbsp;MULTIPLIER</span></div>
+      <div class="ui-row"><span>FORTUNE</span><span>21 650</span></div>
+      <div class="ui-bar-wrap"><div class="ui-bar"></div></div>
+      <div class="ui-btns">
+        <button class="ui-btn">DROP</button>
+        <button class="ui-btn">UPGRADE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GC-06 -->
+  <div class="card gc06"><span class="label">GC-06 · Champagne Salon</span>
+    <div class="ui">
+      <div class="ui-title">SALON DORÉ</div>
+      <div class="ui-mult"><span class="ui-mult-val">×2.2</span><span class="ui-mult-lbl">&nbsp;MULTIPLIER</span></div>
+      <div class="ui-row"><span>WEALTH</span><span>3 740</span></div>
+      <div class="ui-bar-wrap"><div class="ui-bar"></div></div>
+      <div class="ui-btns">
+        <button class="ui-btn">PLAY</button>
+        <button class="ui-btn">PASS</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GC-07 -->
+  <div class="card gc07"><span class="label">GC-07 · Tiffany Club</span>
+    <div class="ui">
+      <div class="ui-title">TIFFANY FALLS</div>
+      <div class="ui-mult"><span class="ui-mult-val">×3.8</span><span class="ui-mult-lbl">&nbsp;MULTIPLIER</span></div>
+      <div class="ui-row"><span>GEMS</span><span>9 120</span></div>
+      <div class="ui-bar-wrap"><div class="ui-bar"></div></div>
+      <div class="ui-btns">
+        <button class="ui-btn">DROP</button>
+        <button class="ui-btn">SHOP</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GC-08 -->
+  <div class="card gc08"><span class="label">GC-08 · Rose Gold Gala</span>
+    <div class="ui">
+      <div class="ui-title">ROSE CASCADE</div>
+      <div class="ui-mult"><span class="ui-mult-val">×4.0</span><span class="ui-mult-lbl">&nbsp;MULTIPLIER</span></div>
+      <div class="ui-row"><span>PETALS</span><span>15 300</span></div>
+      <div class="ui-bar-wrap"><div class="ui-bar"></div></div>
+      <div class="ui-btns">
+        <button class="ui-btn">RELEASE</button>
+        <button class="ui-btn">UPGRADE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GC-09 -->
+  <div class="card gc09"><span class="label">GC-09 · Onyx Vault</span>
+    <div class="ui">
+      <div class="ui-title">ONYX DESCENT</div>
+      <div class="ui-mult"><span class="ui-mult-val">×9.9</span><span class="ui-mult-lbl">&nbsp;MULTIPLIER</span></div>
+      <div class="ui-row"><span>PRESTIGE</span><span>99 000</span></div>
+      <div class="ui-bar-wrap"><div class="ui-bar"></div></div>
+      <div class="ui-btns">
+        <button class="ui-btn">DROP</button>
+        <button class="ui-btn">REROLL</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GC-10 -->
+  <div class="card gc10"><span class="label">GC-10 · Neo Deco</span>
+    <div class="ui">
+      <div class="ui-title">DECO PLINKO</div>
+      <div class="ui-mult"><span class="ui-mult-val">×1.5</span><span class="ui-mult-lbl">&nbsp;MULTIPLIER</span></div>
+      <div class="ui-row"><span>SCORE</span><span>2 080</span></div>
+      <div class="ui-bar-wrap"><div class="ui-bar"></div></div>
+      <div class="ui-btns">
+        <button class="ui-btn">BEGIN</button>
+        <button class="ui-btn">PAUSE</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<h2>Magna Core — 10 Variants &nbsp;·&nbsp; Lava / Volcanic × Plinko Rogue-lite</h2>
+<div class="grid">
+
+  <!-- MC-01 -->
+  <div class="card mc01"><span class="label">MC-01 · Original Magma</span>
+    <div class="ui">
+      <div class="ui-title">MAGMA CORE</div>
+      <div class="ui-mult"><span class="ui-mult-val">×6.0</span><span class="ui-mult-lbl">&nbsp;HEAT</span></div>
+      <div class="ui-row"><span>LOOT</span><span>18 440</span></div>
+      <div class="ui-bar-wrap"><div class="ui-bar"></div></div>
+      <div class="ui-btns">
+        <button class="ui-btn">ERUPT</button>
+        <button class="ui-btn">FORGE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MC-02 -->
+  <div class="card mc02"><span class="label">MC-02 · Obsidian</span>
+    <div class="ui">
+      <div class="ui-title">OBSIDIAN FALL</div>
+      <div class="ui-mult"><span class="ui-mult-val">×5.5</span><span class="ui-mult-lbl">&nbsp;CHAOS</span></div>
+      <div class="ui-row"><span>SOULS</span><span>22 700</span></div>
+      <div class="ui-bar-wrap"><div class="ui-bar"></div></div>
+      <div class="ui-btns">
+        <button class="ui-btn">SHATTER</button>
+        <button class="ui-btn">EVOLVE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MC-03 -->
+  <div class="card mc03"><span class="label">MC-03 · Solar Flare</span>
+    <div class="ui">
+      <div class="ui-title">SOLAR BURST</div>
+      <div class="ui-mult"><span class="ui-mult-val">×8.0</span><span class="ui-mult-lbl">&nbsp;FLARE</span></div>
+      <div class="ui-row"><span>ENERGY</span><span>55 200</span></div>
+      <div class="ui-bar-wrap"><div class="ui-bar"></div></div>
+      <div class="ui-btns">
+        <button class="ui-btn">IGNITE</button>
+        <button class="ui-btn">UPGRADE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MC-04 -->
+  <div class="card mc04"><span class="label">MC-04 · Glacial Core</span>
+    <div class="ui">
+      <div class="ui-title">FROST DESCENT</div>
+      <div class="ui-mult"><span class="ui-mult-val">×4.2</span><span class="ui-mult-lbl">&nbsp;CRYO</span></div>
+      <div class="ui-row"><span>SHARDS</span><span>14 080</span></div>
+      <div class="ui-bar-wrap"><div class="ui-bar"></div></div>
+      <div class="ui-btns">
+        <button class="ui-btn">FREEZE</button>
+        <button class="ui-btn">DRIFT</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MC-05 -->
+  <div class="card mc05"><span class="label">MC-05 · Acid Forge</span>
+    <div class="ui">
+      <div class="ui-title">ACID RAIN</div>
+      <div class="ui-mult"><span class="ui-mult-val">×7.7</span><span class="ui-mult-lbl">&nbsp;TOXIN</span></div>
+      <div class="ui-row"><span>VENOM</span><span>38 910</span></div>
+      <div class="ui-bar-wrap"><div class="ui-bar"></div></div>
+      <div class="ui-btns">
+        <button class="ui-btn">INJECT</button>
+        <button class="ui-btn">MUTATE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MC-06 -->
+  <div class="card mc06"><span class="label">MC-06 · Cosmic Fire</span>
+    <div class="ui">
+      <div class="ui-title">NOVA STRIKE</div>
+      <div class="ui-mult"><span class="ui-mult-val">×6.6</span><span class="ui-mult-lbl">&nbsp;NEBULA</span></div>
+      <div class="ui-row"><span>STARDUST</span><span>31 500</span></div>
+      <div class="ui-bar-wrap"><div class="ui-bar"></div></div>
+      <div class="ui-btns">
+        <button class="ui-btn">COLLIDE</button>
+        <button class="ui-btn">WARP</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MC-07 -->
+  <div class="card mc07"><span class="label">MC-07 · Bronze Forge</span>
+    <div class="ui">
+      <div class="ui-title">IRON PLINKO</div>
+      <div class="ui-mult"><span class="ui-mult-val">×3.5</span><span class="ui-mult-lbl">&nbsp;TEMPER</span></div>
+      <div class="ui-row"><span>METAL</span><span>9 670</span></div>
+      <div class="ui-bar-wrap"><div class="ui-bar"></div></div>
+      <div class="ui-btns">
+        <button class="ui-btn">STRIKE</button>
+        <button class="ui-btn">SMELT</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MC-08 -->
+  <div class="card mc08"><span class="label">MC-08 · Ember Dusk</span>
+    <div class="ui">
+      <div class="ui-title">DYING EMBER</div>
+      <div class="ui-mult"><span class="ui-mult-val">×5.1</span><span class="ui-mult-lbl">&nbsp;EMBERS</span></div>
+      <div class="ui-row"><span>ASH</span><span>17 330</span></div>
+      <div class="ui-bar-wrap"><div class="ui-bar"></div></div>
+      <div class="ui-btns">
+        <button class="ui-btn">KINDLE</button>
+        <button class="ui-btn">SMOLDER</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MC-09 -->
+  <div class="card mc09"><span class="label">MC-09 · Chromatic Surge</span>
+    <div class="ui">
+      <div class="ui-title">PRISM BREAK</div>
+      <div class="ui-mult"><span class="ui-mult-val">×9.9</span><span class="ui-mult-lbl">&nbsp;SURGE</span></div>
+      <div class="ui-row"><span>FLUX</span><span>77 777</span></div>
+      <div class="ui-bar-wrap"><div class="ui-bar"></div></div>
+      <div class="ui-btns">
+        <button class="ui-btn">OVERLOAD</button>
+        <button class="ui-btn">RESET</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MC-10 -->
+  <div class="card mc10"><span class="label">MC-10 · Void Breach</span>
+    <div class="ui">
+      <div class="ui-title">VOID PLINKO</div>
+      <div class="ui-mult"><span class="ui-mult-val">×∞</span><span class="ui-mult-lbl">&nbsp;BREACH</span></div>
+      <div class="ui-row"><span>RUIN</span><span>???</span></div>
+      <div class="ui-bar-wrap"><div class="ui-bar"></div></div>
+      <div class="ui-btns">
+        <button class="ui-btn">CONSUME</button>
+        <button class="ui-btn">FLEE</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

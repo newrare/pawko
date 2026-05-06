@@ -1,767 +1,971 @@
-<!doctype html>
-<html lang="fr">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Pawko — 10 propositions de design</title>
-    <style>
-      /* --- Page shell --- */
-      :root {
-        --page-bg: #f5f1ea;
-        --page-fg: #1f1b2e;
-        --page-dim: #6b6478;
-        --page-card: #ffffff;
-        --page-line: rgba(0, 0, 0, 0.08);
-        --page-shadow: 0 10px 30px rgba(20, 14, 38, 0.08);
-        --radius: 16px;
-        --gap: 22px;
-      }
-      * { box-sizing: border-box; }
-      html, body { margin: 0; padding: 0; }
-      body {
-        font-family: ui-rounded, "SF Pro Rounded", "Quicksand", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-        background: var(--page-bg);
-        color: var(--page-fg);
-        line-height: 1.45;
-        -webkit-font-smoothing: antialiased;
-      }
-      header.page {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 56px 24px 24px;
-      }
-      header.page h1 {
-        font-size: clamp(28px, 4vw, 40px);
-        margin: 0 0 8px;
-        letter-spacing: -0.02em;
-      }
-      header.page p.lede {
-        margin: 0;
-        color: var(--page-dim);
-        max-width: 60ch;
-      }
-      header.page .crumbs {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 18px;
-        font-size: 12px;
-        text-transform: uppercase;
-        letter-spacing: 0.12em;
-        color: var(--page-dim);
-      }
-      header.page .crumbs span:not(:last-child)::after {
-        content: "·";
-        margin-left: 10px;
-        opacity: 0.5;
-      }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pawko — Style Guide · Velvet Rouge × Classic Gold</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
-      main.grid {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 24px 24px 80px;
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-        gap: var(--gap);
-      }
+:root {
+  --bg:             #14040a;
+  --bg-surface:     #1e080e;
+  --bg-card:        #200a10;
+  --crimson-muted:  #3a0e18;
+  --crimson-deep:   #6a1828;
+  --crimson:        #cc2840;
+  --rose:           #f28090;
+  --rose-dim:       #a05868;
+  --rose-muted:     #6a3040;
+  --gold:           #d4af37;
+  --gold-light:     #f5d77a;
+  --gold-dim:       #8a7040;
+  --text:           #f5d77a;
+  --text-sec:       #a05868;
+  --text-dim:       #6a3040;
+  --font:           Georgia, 'Times New Roman', serif;
+}
 
-      /* --- Card chrome --- */
-      .card {
-        background: var(--page-card);
-        border-radius: var(--radius);
-        overflow: hidden;
-        box-shadow: var(--page-shadow);
-        display: flex;
-        flex-direction: column;
-        border: 1px solid var(--page-line);
-      }
-      .meta {
-        padding: 14px 16px 16px;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-      .meta h2 {
-        font-size: 16px;
-        margin: 0;
-        letter-spacing: -0.01em;
-      }
-      .meta .tags {
-        margin: 0;
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--page-dim);
-      }
-      .meta .blurb {
-        margin: 4px 0 0;
-        font-size: 13px;
-        color: #3b3447;
-      }
-      .palette {
-        list-style: none;
-        margin: 6px 0 0;
-        padding: 0;
-        display: flex;
-        gap: 6px;
-      }
-      .palette li {
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        background: var(--c);
-        border: 1px solid rgba(0, 0, 0, 0.06);
-      }
+body {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse at 50% 100%, #2a0814 0%, transparent 65%),
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 10px,
+      rgba(212,175,55,0.03) 10px,
+      rgba(212,175,55,0.03) 20px
+    );
+  color: var(--text);
+  font-family: var(--font);
+  padding: 2rem;
+  min-height: 100vh;
+}
 
-      /* --- Mini preview (matches prototype layout: 10/70/10/10) --- */
-      .preview {
-        position: relative;
-        aspect-ratio: 9 / 14;
-        background: var(--bg, #eee);
-        color: var(--fg, #222);
-        display: grid;
-        grid-template-rows: 12% 68% 10% 10%;
-        font-family: var(--font, inherit);
-        overflow: hidden;
-        isolation: isolate;
-      }
+/* ─── Layout helpers ────────────────────────────── */
 
-      .row {
-        display: flex;
-        position: relative;
-      }
-      .row > * {
-        flex: 1 1 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 13px;
-        font-weight: 700;
-      }
+.section { margin-bottom: 3rem; }
 
-      /* --- Drops row --- */
-      .drop {
-        background: var(--drop-bg, rgba(255, 255, 255, 0.5));
-        color: var(--drop-fg, inherit);
-        border-right: 1px solid var(--divider, rgba(0, 0, 0, 0.08));
-        position: relative;
-      }
-      .drop:last-child { border-right: 0; }
-      .drop.is-open {
-        background: var(--drop-open, rgba(255, 255, 255, 0.85));
-        box-shadow: inset 0 -3px 0 var(--accent, #e0a0a0);
-      }
-      .drop::before {
-        content: var(--drop-icon, "");
-        position: absolute;
-        top: 4px;
-        font-size: 10px;
-        opacity: 0.7;
-      }
+.section-title {
+  font-size: 0.6rem;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--text-sec);
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--crimson-deep);
+  margin-bottom: 1.5rem;
+}
 
-      /* --- Arena --- */
-      .arena {
-        position: relative;
-        background: var(--arena-bg, rgba(255, 255, 255, 0.35));
-        overflow: hidden;
-      }
-      .pegs {
-        position: absolute;
-        inset: 12% 8% 12% 8%;
-        display: grid;
-        grid-template-rows: repeat(5, 1fr);
-      }
-      .pegs .peg-row {
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-      }
-      .pegs .peg-row.offset {
-        padding: 0 12%;
-      }
-      .peg {
-        width: 14px;
-        height: 14px;
-        border-radius: 50%;
-        background: var(--peg-bg, #fff);
-        box-shadow: var(--peg-shadow, 0 1px 2px rgba(0, 0, 0, 0.15));
-        display: grid;
-        place-items: center;
-        font-size: 10px;
-        line-height: 1;
-        color: var(--peg-fg, #555);
-      }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 1rem;
+}
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+.row { display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-start; }
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--crimson-muted);
+  border-radius: 4px;
+  padding: 1rem;
+}
 
-      .ball {
-        position: absolute;
-        top: 0;
-        left: var(--start-x, 50%);
-        width: 18px;
-        height: 18px;
-        margin-left: -9px;
-        margin-top: -9px;
-        border-radius: 50%;
-        background: var(--ball-bg, #ffe17a);
-        box-shadow: var(--ball-shadow, 0 2px 4px rgba(0, 0, 0, 0.2));
-        display: grid;
-        place-items: center;
-        font-size: 12px;
-        color: var(--ball-fg, #4a3a1a);
-        animation: fall 3.2s linear forwards;
-        will-change: transform;
-      }
-      @keyframes fall {
-        0%   { transform: translate(0, 0) rotate(0); }
-        15%  { transform: translate(8px, 18%) rotate(40deg); }
-        28%  { transform: translate(-6px, 32%) rotate(80deg); }
-        42%  { transform: translate(10px, 48%) rotate(140deg); }
-        58%  { transform: translate(-4px, 64%) rotate(200deg); }
-        75%  { transform: translate(6px, 80%) rotate(260deg); }
-        100% { transform: translate(0, 110%) rotate(340deg); }
-      }
+/* ─── Header ────────────────────────────────────── */
 
-      /* --- Outcomes row --- */
-      .outcomes .out {
-        background: var(--out-bg, rgba(255, 255, 255, 0.5));
-        border-right: 1px solid var(--divider, rgba(0, 0, 0, 0.08));
-        font-size: 14px;
-      }
-      .outcomes .out:last-child { border-right: 0; }
-      .out.score { background: var(--out-score-bg, rgba(120, 200, 140, 0.25)); color: var(--out-score-fg, #2a6a3a); }
-      .out.tp    { background: var(--out-tp-bg,    rgba(120, 160, 230, 0.25)); color: var(--out-tp-fg,    #2a4a8a); }
-      .out.lose  { background: var(--out-lose-bg,  rgba(230, 120, 120, 0.25)); color: var(--out-lose-fg,  #8a2a2a); }
+.header {
+  text-align: center;
+  padding: 3rem 0 2.5rem;
+  border-bottom: 1px solid var(--crimson-deep);
+  margin-bottom: 3rem;
+}
+.header-eye {
+  font-size: 0.55rem;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 1rem;
+}
+.header-title {
+  font-size: 3.2rem;
+  color: var(--gold);
+  letter-spacing: 14px;
+  text-transform: uppercase;
+  text-shadow: 0 0 40px rgba(212,175,55,0.22);
+  margin-bottom: 0.6rem;
+}
+.header-tagline {
+  font-size: 0.72rem;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--text-sec);
+  margin-bottom: 1rem;
+}
+.header-badge {
+  display: inline-block;
+  padding: 3px 14px;
+  border: 1px solid var(--crimson-deep);
+  font-size: 0.55rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
 
-      /* --- Menu row (compressed footer) --- */
-      .menu {
-        background: var(--menu-bg, rgba(0, 0, 0, 0.06));
-        color: var(--menu-fg, var(--fg));
-        font-size: 10px;
-        letter-spacing: 0.05em;
-        gap: 10px;
-      }
-      .menu .score-label, .menu .lost-label {
-        opacity: 0.7;
-      }
-      .menu b {
-        margin-left: 4px;
-      }
+/* ─── Color swatches ────────────────────────────── */
 
-      /* --- Optional decorative cat watcher (positioned in arena) --- */
-      .watcher {
-        position: absolute;
-        right: 6px;
-        bottom: 6px;
-        font-size: 28px;
-        opacity: 0.8;
-        pointer-events: none;
-        filter: var(--watcher-filter, none);
-      }
+.swatch { border-radius: 3px; overflow: hidden; border: 1px solid rgba(255,255,255,0.06); }
+.swatch-color { height: 50px; }
+.swatch-label { padding: 6px 8px; background: var(--bg-card); }
+.swatch-name { display: block; font-size: 0.68rem; color: var(--text); letter-spacing: 0.5px; margin-bottom: 2px; }
+.swatch-hex  { display: block; font-size: 0.55rem; color: var(--text-sec); font-family: monospace; letter-spacing: 0.5px; }
 
-      /* --- Optional star/sparkle layer for some themes --- */
-      .twinkles {
-        position: absolute;
-        inset: 0;
-        pointer-events: none;
-        background-image: var(--twinkle-bg, none);
-        background-size: 60px 60px;
-        opacity: 0.5;
-      }
+/* ─── Typography labels ─────────────────────────── */
 
-      /* ====================================================== */
-      /* THEMES                                                  */
-      /* ====================================================== */
+.type-label {
+  font-size: 0.5rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 0.4rem;
+}
 
-      /* 01 — Cozy Yarn */
-      .theme-yarn {
-        --bg: linear-gradient(180deg, #fff5e8 0%, #ffe6e1 100%);
-        --fg: #5a3a3a;
-        --divider: rgba(120, 80, 80, 0.12);
-        --drop-bg: #fff;
-        --drop-open: #ffe1d6;
-        --accent: #f3a4a4;
-        --arena-bg: #fff8f0;
-        --peg-bg: #f8d4cf;
-        --peg-fg: #8a4a4a;
-        --peg-shadow: 0 1px 2px rgba(160, 100, 100, 0.3);
-        --ball-bg: #ff9eb1;
-        --ball-fg: #fff;
-        --ball-shadow: 0 2px 4px rgba(200, 100, 130, 0.4), inset -3px -3px 6px rgba(150, 60, 90, 0.25);
-        --out-score-bg: #d8f0d4; --out-score-fg: #3a6a3a;
-        --out-tp-bg: #d4e6f0;    --out-tp-fg: #3a5a7a;
-        --out-lose-bg: #f0d4d4;  --out-lose-fg: #7a3a3a;
-        --menu-bg: #faece5;
-        --menu-fg: #6a4a4a;
-      }
-      .theme-yarn .peg::after { content: "🐾"; font-size: 8px; }
+/* ─── Buttons ───────────────────────────────────── */
 
-      /* 02 — Sleepy Night */
-      .theme-sleepy {
-        --bg: linear-gradient(180deg, #1f1d3a 0%, #3a2e5a 100%);
-        --fg: #e9e1ff;
-        --divider: rgba(255, 255, 255, 0.1);
-        --drop-bg: rgba(255, 255, 255, 0.06);
-        --drop-open: rgba(255, 230, 180, 0.18);
-        --accent: #ffe18c;
-        --arena-bg: radial-gradient(circle at 50% 30%, rgba(255, 230, 200, 0.08), transparent 60%), #2a2548;
-        --peg-bg: #ffe18c;
-        --peg-fg: #2a2548;
-        --peg-shadow: 0 0 6px rgba(255, 225, 140, 0.7);
-        --ball-bg: #b8a8ff;
-        --ball-fg: #2a2548;
-        --ball-shadow: 0 0 10px rgba(184, 168, 255, 0.6);
-        --out-score-bg: rgba(184, 168, 255, 0.2); --out-score-fg: #c8b8ff;
-        --out-tp-bg: rgba(120, 200, 255, 0.18);   --out-tp-fg: #a0d8ff;
-        --out-lose-bg: rgba(255, 120, 140, 0.18); --out-lose-fg: #ffb0c0;
-        --menu-bg: #181530;
-        --menu-fg: #c0b8d8;
-        --twinkle-bg: radial-gradient(circle at 20% 30%, #fff 0.5px, transparent 1px),
-                      radial-gradient(circle at 80% 60%, #fff 0.5px, transparent 1px),
-                      radial-gradient(circle at 50% 80%, #fff 0.5px, transparent 1px);
-      }
+.btn {
+  padding: 0.5rem 1.2rem;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 0.72rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  border-radius: 0;
+  transition: filter 0.1s;
+}
+.btn:hover  { filter: brightness(1.12); }
+.btn:active { filter: brightness(0.9); }
 
-      /* 03 — Sushi Cat */
-      .theme-sushi {
-        --bg: linear-gradient(180deg, #fdf3e7 0%, #f6e0c9 100%);
-        --fg: #4a2a1a;
-        --divider: rgba(120, 60, 30, 0.15);
-        --drop-bg: #fffaf0;
-        --drop-open: #ffd9c0;
-        --accent: #e85a4f;
-        --arena-bg: repeating-linear-gradient(45deg, #fffaf0 0 8px, #fdf3e7 8px 16px);
-        --peg-bg: #6a8a4a;
-        --peg-fg: #fff;
-        --peg-shadow: 0 1px 2px rgba(60, 80, 30, 0.4);
-        --ball-bg: #fff;
-        --ball-fg: #e85a4f;
-        --ball-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-        --out-score-bg: #ffd5c7; --out-score-fg: #b03a2a;
-        --out-tp-bg: #d8e8c0;    --out-tp-fg: #4a6a2a;
-        --out-lose-bg: #444;     --out-lose-fg: #fff;
-        --menu-bg: #2a1a0a;
-        --menu-fg: #f6e0c9;
-      }
+.btn-primary   { background: var(--crimson-deep); color: var(--gold-light); border: 1px solid var(--gold); }
+.btn-secondary { background: transparent; color: var(--gold); border: 1px solid var(--crimson-deep); }
+.btn-danger    { background: #3a0a0a; color: #ff8080; border: 1px solid #7a1515; }
+.btn-ghost     { background: transparent; color: var(--text-sec); border: 1px solid var(--rose-muted); font-size: 0.65rem; }
+.btn-disabled  { background: var(--crimson-muted); color: var(--text-dim); border: 1px solid var(--rose-muted); opacity: 0.38; cursor: default; }
 
-      /* 04 — Bubble Tank */
-      .theme-bubble {
-        --bg: linear-gradient(180deg, #c8eef5 0%, #6fb3d2 100%);
-        --fg: #0a3a4a;
-        --divider: rgba(0, 60, 80, 0.15);
-        --drop-bg: rgba(255, 255, 255, 0.5);
-        --drop-open: rgba(255, 255, 255, 0.85);
-        --accent: #ff8aa8;
-        --arena-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(120, 200, 220, 0.35) 100%);
-        --peg-bg: rgba(255, 255, 255, 0.7);
-        --peg-fg: #0a3a4a;
-        --peg-shadow: 0 0 6px rgba(255, 255, 255, 0.8), inset 1px 1px 2px rgba(255, 255, 255, 0.9);
-        --ball-bg: #ffaa6a;
-        --ball-fg: #fff;
-        --ball-shadow: 0 2px 4px rgba(0, 60, 80, 0.3);
-        --out-score-bg: rgba(255, 160, 100, 0.4); --out-score-fg: #803a10;
-        --out-tp-bg: rgba(140, 220, 255, 0.5);    --out-tp-fg: #0a3a6a;
-        --out-lose-bg: rgba(50, 50, 80, 0.3);     --out-lose-fg: #1a1a3a;
-        --menu-bg: #0a3a4a;
-        --menu-fg: #c8eef5;
-      }
+/* ─── Toggles ───────────────────────────────────── */
 
-      /* 05 — Neon Pawcade */
-      .theme-neon {
-        --bg: linear-gradient(180deg, #0a0a1f 0%, #1a0a2a 100%);
-        --fg: #fff;
-        --divider: rgba(255, 100, 200, 0.2);
-        --drop-bg: #150a25;
-        --drop-open: #2a0a40;
-        --accent: #ff4ad8;
-        --arena-bg: radial-gradient(ellipse at 50% 30%, rgba(255, 80, 200, 0.15), transparent 60%), #100820;
-        --peg-bg: #ff4ad8;
-        --peg-fg: #0a0a1f;
-        --peg-shadow: 0 0 8px #ff4ad8, 0 0 14px rgba(255, 74, 216, 0.5);
-        --ball-bg: #4afff1;
-        --ball-fg: #0a0a1f;
-        --ball-shadow: 0 0 10px #4afff1, 0 0 18px rgba(74, 255, 241, 0.6);
-        --out-score-bg: rgba(74, 255, 130, 0.18);  --out-score-fg: #4aff80;
-        --out-tp-bg: rgba(74, 200, 255, 0.18);     --out-tp-fg: #4abfff;
-        --out-lose-bg: rgba(255, 74, 130, 0.18);   --out-lose-fg: #ff6a8a;
-        --menu-bg: #050010;
-        --menu-fg: #ff4ad8;
-      }
+.toggle-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--crimson-muted);
+  border-radius: 4px;
+}
+.toggle-lbl { font-size: 0.78rem; letter-spacing: 2px; text-transform: uppercase; color: var(--text-sec); }
+.toggle {
+  width: 40px; height: 20px;
+  background: var(--crimson-muted);
+  border-radius: 10px;
+  border: 1px solid var(--crimson-deep);
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.toggle::after {
+  content: '';
+  position: absolute;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--rose-muted);
+  top: 2px; left: 2px;
+  transition: left 0.15s;
+}
+.toggle--on { background: var(--crimson); border-color: var(--gold-dim); }
+.toggle--on::after { background: var(--gold-light); left: 22px; }
 
-      /* 06 — Cardboard Box */
-      .theme-cardboard {
-        --bg: linear-gradient(180deg, #d8b88a 0%, #b8966a 100%);
-        --fg: #4a2a0a;
-        --divider: rgba(60, 30, 0, 0.2);
-        --drop-bg: #e8c89a;
-        --drop-open: #f8e2b8;
-        --accent: #6a3a1a;
-        --arena-bg: repeating-linear-gradient(0deg, #d8b88a 0 6px, #cfae80 6px 7px),
-                    linear-gradient(180deg, transparent, rgba(60, 30, 0, 0.08));
-        --peg-bg: #6a3a1a;
-        --peg-fg: #f8e2b8;
-        --peg-shadow: 0 1px 2px rgba(60, 30, 0, 0.4);
-        --ball-bg: #888;
-        --ball-fg: #fff;
-        --ball-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        --out-score-bg: #c8a878;   --out-score-fg: #4a2a0a;
-        --out-tp-bg: #a8886a;      --out-tp-fg: #fff;
-        --out-lose-bg: #5a3a1a;    --out-lose-fg: #f8e2b8;
-        --menu-bg: #4a2a0a;
-        --menu-fg: #f8e2b8;
-      }
+/* ─── Peg / ball demo cells ─────────────────────── */
 
-      /* 07 — Tea Time Tabby */
-      .theme-tea {
-        --bg: linear-gradient(180deg, #fcf7f0 0%, #ecdfd0 100%);
-        --fg: #5a3e2a;
-        --divider: rgba(120, 80, 50, 0.15);
-        --drop-bg: #fff;
-        --drop-open: #f5e0c8;
-        --accent: #c89878;
-        --arena-bg: #fcf7f0;
-        --peg-bg: #c89878;
-        --peg-fg: #fff;
-        --peg-shadow: 0 1px 2px rgba(120, 80, 50, 0.3);
-        --ball-bg: #f3a8b8;
-        --ball-fg: #fff;
-        --ball-shadow: 0 2px 4px rgba(180, 100, 120, 0.3);
-        --out-score-bg: #d8e0c0; --out-score-fg: #4a6a2a;
-        --out-tp-bg: #e8d8c0;    --out-tp-fg: #6a4a2a;
-        --out-lose-bg: #e8c0c0;  --out-lose-fg: #6a3a3a;
-        --menu-bg: #5a3e2a;
-        --menu-fg: #fcf7f0;
-        --font: "Georgia", "Cochin", serif;
-      }
+.peg-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 1rem 0.5rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--crimson-muted);
+  border-radius: 4px;
+}
+.peg-cell-lbl {
+  font-size: 0.5rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-align: center;
+}
 
-      /* 08 — Catnip Garden */
-      .theme-catnip {
-        --bg: linear-gradient(180deg, #e8f5d8 0%, #b8e090 100%);
-        --fg: #2a4a1a;
-        --divider: rgba(40, 80, 20, 0.15);
-        --drop-bg: rgba(255, 255, 255, 0.6);
-        --drop-open: #fff;
-        --accent: #5a9a3a;
-        --arena-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(180, 220, 140, 0.5));
-        --peg-bg: #5a9a3a;
-        --peg-fg: #fff;
-        --peg-shadow: 0 1px 2px rgba(40, 80, 20, 0.3);
-        --ball-bg: #fff;
-        --ball-fg: #5a9a3a;
-        --ball-shadow: 0 2px 4px rgba(40, 80, 20, 0.2);
-        --out-score-bg: rgba(120, 200, 80, 0.4); --out-score-fg: #2a5a1a;
-        --out-tp-bg: rgba(255, 200, 100, 0.4);   --out-tp-fg: #6a4a0a;
-        --out-lose-bg: rgba(180, 80, 80, 0.3);   --out-lose-fg: #6a2a2a;
-        --menu-bg: #3a5a2a;
-        --menu-fg: #e8f5d8;
-      }
+/* ─── Pegs ──────────────────────────────────────── */
 
-      /* 09 — Pixel Cat */
-      .theme-pixel {
-        --bg: #2a2a4a;
-        --fg: #fff;
-        --divider: #1a1a2a;
-        --drop-bg: #4a4a7a;
-        --drop-open: #ffd070;
-        --accent: #ff6a8a;
-        --arena-bg: #1a1a3a;
-        --peg-bg: #ff6a8a;
-        --peg-fg: #fff;
-        --peg-shadow: 2px 2px 0 #1a1a2a;
-        --ball-bg: #ffd070;
-        --ball-fg: #2a2a4a;
-        --ball-shadow: 2px 2px 0 #1a1a2a;
-        --out-score-bg: #4ad898; --out-score-fg: #0a3a1a;
-        --out-tp-bg: #6ad8ff;    --out-tp-fg: #0a2a4a;
-        --out-lose-bg: #ff5a7a;  --out-lose-fg: #4a0a1a;
-        --menu-bg: #0a0a1a;
-        --menu-fg: #ffd070;
-        --font: "Courier New", "Courier", monospace;
-      }
-      .theme-pixel .preview { image-rendering: pixelated; }
-      .theme-pixel .peg { border-radius: 2px; }
-      .theme-pixel .ball { border-radius: 2px; }
-      .theme-pixel .drop, .theme-pixel .out { font-family: "Courier New", monospace; }
+.peg {
+  border-radius: 50%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.peg--reg      { width:14px; height:14px; background: radial-gradient(circle at 35% 28%, #b07080, #6a1828); box-shadow: 0 1px 2px rgba(60,0,20,.5); }
+.peg--bumper   { width:22px; height:22px; background: radial-gradient(circle at 30% 30%, #ffd66b, #c08a2a); box-shadow: 0 0 0 2px rgba(74,42,10,.35), 0 2px 6px rgba(74,42,10,.4); animation: bumper-idle 2.4s ease-in-out infinite; }
+.peg--coin     { width:18px; height:18px; background: radial-gradient(circle at 30% 30%, #ffe066, #c9a030); box-shadow: 0 0 0 2px rgba(74,42,10,.25), 0 2px 4px rgba(74,42,10,.3); font-size:.55rem; font-weight:800; color:#3a1a00; animation: coin-idle 2s ease-in-out infinite; }
+.peg--shop-c   { width:24px; height:24px; background: radial-gradient(circle at 35% 30%, #86efac, #16a34a); box-shadow: 0 0 6px rgba(22,163,74,.55), 0 2px 4px rgba(0,0,0,.25); font-size:.55rem; font-weight:900; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.55); }
+.peg--shop-r   { width:24px; height:24px; background: radial-gradient(circle at 35% 30%, #93c5fd, #2563eb); box-shadow: 0 0 8px rgba(37,99,235,.65), 0 2px 4px rgba(0,0,0,.25); font-size:.55rem; font-weight:900; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.55); }
+.peg--shop-e   { width:24px; height:24px; background: radial-gradient(circle at 35% 30%, #d8b4fe, #9333ea); box-shadow: 0 0 10px rgba(147,51,234,.65), 0 2px 4px rgba(0,0,0,.25); font-size:.55rem; font-weight:900; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.55); }
+.peg--shop-l   { width:24px; height:24px; background: radial-gradient(circle at 35% 30%, #fde68a, #d97706); box-shadow: 0 0 12px rgba(217,119,6,.75), 0 0 22px rgba(217,119,6,.35), 0 2px 4px rgba(0,0,0,.25); font-size:.55rem; font-weight:900; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.55); animation: legendary-idle 1.8s ease-in-out infinite; }
+.peg--ice3     { width:14px; height:14px; background: radial-gradient(circle at 28% 22%, #e8f8ff, #7dd3fc 55%, #38bdf8) !important; box-shadow: 0 0 10px rgba(125,211,252,.9), 0 1px 2px rgba(0,0,0,.25) !important; }
+.peg--ice2     { width:14px; height:14px; background: radial-gradient(circle at 28% 22%, #c8e8f4, #82b8d4 55%, #5a90b0) !important; box-shadow: 0 0 7px rgba(100,175,220,.75), 0 1px 2px rgba(0,0,0,.28) !important; }
+.peg--ice1     { width:14px; height:14px; background: radial-gradient(circle at 28% 22%, #b0bec5, #78909c 55%, #546e7a) !important; box-shadow: 0 0 4px rgba(84,110,122,.55), 0 1px 2px rgba(0,0,0,.3) !important; }
 
-      /* 10 — Galaxy Cats */
-      .theme-galaxy {
-        --bg: radial-gradient(ellipse at 50% 30%, #4a2a6a 0%, #1a0a2a 60%, #0a0518 100%);
-        --fg: #f0e8ff;
-        --divider: rgba(255, 255, 255, 0.08);
-        --drop-bg: rgba(255, 255, 255, 0.06);
-        --drop-open: rgba(180, 140, 255, 0.3);
-        --accent: #c898ff;
-        --arena-bg: radial-gradient(ellipse at 60% 40%, rgba(180, 140, 255, 0.2), transparent 60%);
-        --peg-bg: #ffd070;
-        --peg-fg: #4a2a6a;
-        --peg-shadow: 0 0 6px rgba(255, 208, 112, 0.7), 0 0 12px rgba(255, 208, 112, 0.4);
-        --ball-bg: linear-gradient(135deg, #ff9ad8 0%, #6ad8ff 100%);
-        --ball-fg: #fff;
-        --ball-shadow: 0 0 10px rgba(255, 154, 216, 0.6);
-        --out-score-bg: rgba(120, 255, 200, 0.18); --out-score-fg: #80ffc8;
-        --out-tp-bg: rgba(140, 180, 255, 0.18);    --out-tp-fg: #a0c0ff;
-        --out-lose-bg: rgba(255, 120, 180, 0.18);  --out-lose-fg: #ffa0c8;
-        --menu-bg: #0a0518;
-        --menu-fg: #c898ff;
-        --twinkle-bg: radial-gradient(circle at 15% 25%, #fff 0.6px, transparent 1.2px),
-                      radial-gradient(circle at 65% 50%, #fff 0.6px, transparent 1.2px),
-                      radial-gradient(circle at 35% 75%, #fff 0.6px, transparent 1.2px),
-                      radial-gradient(circle at 85% 15%, #fff 0.4px, transparent 1px);
-      }
+/* ─── Balls ─────────────────────────────────────── */
 
-      /* --- Footer --- */
-      footer.page {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 24px 60px;
-        font-size: 12px;
-        color: var(--page-dim);
-        text-align: center;
-      }
+.ball { border-radius: 50%; flex-shrink: 0; }
+.ball--reg   { width:18px; height:18px; background: radial-gradient(circle at 30% 30%, #c4a0b0, #9a7080); box-shadow: 0 2px 4px rgba(0,0,0,.4); }
+.ball--ice   { width:18px; height:18px; background: radial-gradient(circle at 35% 28%, #f0f9ff, #7dd3fc 60%, #38bdf8); box-shadow: 0 0 10px rgba(125,211,252,.9), 0 0 22px rgba(125,211,252,.5), inset 0 2px 3px rgba(255,255,255,.8), 0 2px 4px rgba(0,0,0,.2); animation: ice-idle 1.8s ease-in-out infinite; }
+.ball--glass { width:18px; height:18px; background: radial-gradient(circle at 28% 22%, rgba(255,255,255,.98) 0%, rgba(255,255,255,0) 38%), radial-gradient(circle at 50% 50%, rgba(240,240,240,.12) 0%, rgba(180,180,180,.04) 100%); border: 1.5px solid rgba(200,200,200,.55); box-shadow: inset 0 2px 4px rgba(255,255,255,.9), 0 2px 5px rgba(0,0,0,.35); }
+.ball--g1    { width:18px; height:18px; border:1.5px solid rgba(160,160,180,.7); background: linear-gradient(52deg, transparent 40%, rgba(0,0,20,.55) 42%, rgba(255,255,255,.95) 45%, rgba(0,0,20,.55) 48%, transparent 50%), linear-gradient(155deg, transparent 55%, rgba(0,0,20,.45) 57%, rgba(255,255,255,.85) 60%, rgba(0,0,20,.45) 63%, transparent 65%), radial-gradient(circle at 28% 22%, rgba(255,255,255,.98) 0%, rgba(255,255,255,0) 38%); box-shadow: inset 0 2px 4px rgba(255,255,255,.9), 0 2px 5px rgba(0,0,0,.35); }
+.ball--g2    { width:18px; height:18px; border:1.5px solid rgba(140,140,160,.75); background: radial-gradient(circle at 28% 22%, rgba(255,255,255,.98) 0%, rgba(255,255,255,0) 38%), radial-gradient(circle at 50% 50%, rgba(220,222,228,.25) 0%, rgba(200,202,212,.1) 100%); box-shadow: inset 0 2px 4px rgba(255,255,255,.9), 0 2px 5px rgba(0,0,0,.35); }
+.ball--g3    { width:18px; height:18px; border:1.5px solid rgba(120,120,140,.8); background: radial-gradient(circle at 28% 22%, rgba(255,255,255,.9) 0%, rgba(255,255,255,0) 35%), radial-gradient(circle at 50% 50%, rgba(210,212,222,.55) 0%, rgba(190,192,205,.3) 100%); box-shadow: inset 0 2px 4px rgba(255,255,255,.8), 0 2px 5px rgba(0,0,0,.35); }
+.ball--g4    { width:18px; height:18px; border:2px solid rgba(100,100,120,.85); background: radial-gradient(circle at 28% 22%, rgba(255,255,255,.75) 0%, rgba(255,255,255,0) 30%), radial-gradient(circle at 50% 50%, rgba(200,202,215,.75) 0%, rgba(175,178,195,.55) 100%); box-shadow: inset 0 2px 4px rgba(255,255,255,.7), 0 2px 5px rgba(0,0,0,.35); }
 
-      @media (prefers-reduced-motion: reduce) {
-        .ball { animation: none; opacity: 0.85; transform: translateY(40%); }
-      }
-    </style>
-  </head>
-  <body>
-    <header class="page">
-      <div class="crumbs"><span>Pawko</span><span>Design</span><span>Falling balls × cats</span></div>
-      <h1>10 propositions de direction visuelle</h1>
-      <p class="lede">
-        Variations autour du même prototype « plinko mignon » : trois colonnes de drop,
-        une arène à pegs, trois zones d'issue (score / téléport / défaite).
-        Chaque carte applique des tokens distincts — le squelette HTML est identique.
-      </p>
-    </header>
+/* ─── Pinboard mini ─────────────────────────────── */
 
-    <main class="grid">
-      <!-- Cards injected by JS -->
-    </main>
+.pinboard {
+  position: relative;
+  background:
+    repeating-linear-gradient(0deg, #1e0810 0 6px, #150608 6px 7px),
+    linear-gradient(180deg, transparent, rgba(60,0,20,.08));
+  border-top:    2px dashed rgba(212,175,55,.22);
+  border-bottom: 2px dashed rgba(212,175,55,.22);
+  border-radius: 4px;
+  overflow: hidden;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  min-height: 100px;
+}
+.lvl-label {
+  position: absolute;
+  top: 6px; right: 10px;
+  background: rgba(212,175,55,.1);
+  color: var(--gold);
+  border: 1px solid rgba(212,175,55,.2);
+  padding: 3px 8px;
+  border-radius: 2px;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+.lvl-tag {
+  font-size: .7rem;
+  color: rgba(212,175,55,.35);
+  font-weight: 700;
+}
+.lvl-tag--milestone {
+  color: var(--gold);
+  background: rgba(212,175,55,.1);
+  border: 1px solid rgba(212,175,55,.2);
+  padding: 1px 6px;
+  border-radius: 2px;
+}
+.progress-wrap {
+  background: var(--crimson-muted);
+  border-radius: 0;
+  height: 8px;
+  margin-top: .75rem;
+  border: 1px solid var(--crimson-deep);
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--crimson-deep), var(--crimson), var(--gold));
+  width: 62%;
+}
 
-    <footer class="page">
-      Aperçu statique. Le moteur physique réel vit dans <code>src/scenes/prototype-scene.js</code>.
-    </footer>
+/* ─── Launch zone ───────────────────────────────── */
 
-    <script>
-      const themes = [
-        {
-          id: "yarn",
-          n: "01",
-          name: "Cozy Yarn",
-          tags: "pastel · ronron · doux",
-          blurb: "Pelotes de laine qui rebondissent sur des coussinets de patte. Crème + rose poudré.",
-          palette: ["#fff5e8", "#ffe6e1", "#ff9eb1", "#f3a4a4", "#5a3a3a"],
-          drops: ["🧶", "🧶", "🧶"],
-          ballEmoji: "",
-          pegEmoji: "🐾",
-          outcomes: ["+10", "↻", "✕"],
-          watcher: "🐱",
-        },
-        {
-          id: "sleepy",
-          n: "02",
-          name: "Sleepy Night",
-          tags: "nocturne · onirique · zen",
-          blurb: "Chatons endormis qui glissent dans une nuit étoilée. Bleus profonds, étoiles dorées.",
-          palette: ["#1f1d3a", "#3a2e5a", "#b8a8ff", "#ffe18c", "#e9e1ff"],
-          drops: ["💤", "💤", "💤"],
-          ballEmoji: "😴",
-          pegEmoji: "⭐",
-          outcomes: ["🌙", "↻", "✕"],
-          watcher: "🌙",
-          twinkles: true,
-        },
-        {
-          id: "sushi",
-          n: "03",
-          name: "Sushi Cat",
-          tags: "japonisant · gourmand · graphique",
-          blurb: "Onigiri à oreilles de chat qui ricochent sur des tronçons de bambou.",
-          palette: ["#fdf3e7", "#f6e0c9", "#6a8a4a", "#e85a4f", "#4a2a1a"],
-          drops: ["🍙", "🍙", "🍙"],
-          ballEmoji: "🍣",
-          pegEmoji: "🎋",
-          outcomes: ["🐟", "↻", "🥢"],
-          watcher: "😺",
-        },
-        {
-          id: "bubble",
-          n: "04",
-          name: "Bubble Tank",
-          tags: "aquatique · frais · contemplatif",
-          blurb: "Petits poissons qui tombent dans un aquarium, vu depuis le coussin du chat.",
-          palette: ["#c8eef5", "#6fb3d2", "#ffaa6a", "#ff8aa8", "#0a3a4a"],
-          drops: ["🐟", "🐟", "🐟"],
-          ballEmoji: "🐠",
-          pegEmoji: "○",
-          outcomes: ["💛", "↻", "💔"],
-          watcher: "🐈",
-        },
-        {
-          id: "neon",
-          n: "05",
-          name: "Neon Pawcade",
-          tags: "rétro arcade · électrique · punchy",
-          blurb: "Esthétique borne d'arcade années 90, traînées néon, bumpers fluo.",
-          palette: ["#0a0a1f", "#1a0a2a", "#ff4ad8", "#4afff1", "#fff"],
-          drops: ["▼", "▼", "▼"],
-          ballEmoji: "🐾",
-          pegEmoji: "◆",
-          outcomes: ["+10", "↻", "✕"],
-          watcher: "😼",
-        },
-        {
-          id: "cardboard",
-          n: "06",
-          name: "Cardboard Box",
-          tags: "kraft · doodle · DIY",
-          blurb: "Souris en carton qui dévalent une boîte vue de l'intérieur. Stickers et tampons.",
-          palette: ["#d8b88a", "#b8966a", "#6a3a1a", "#888", "#4a2a0a"],
-          drops: ["🐭", "🐭", "🐭"],
-          ballEmoji: "🐭",
-          pegEmoji: "✱",
-          outcomes: ["★", "↻", "✕"],
-          watcher: "📦",
-        },
-        {
-          id: "tea",
-          n: "07",
-          name: "Tea Time Tabby",
-          tags: "vintage · feutré · cosy",
-          blurb: "Macarons qui dégringolent à travers des théières en porcelaine. Sérif élégante.",
-          palette: ["#fcf7f0", "#ecdfd0", "#c89878", "#f3a8b8", "#5a3e2a"],
-          drops: ["🧁", "🧁", "🧁"],
-          ballEmoji: "🍪",
-          pegEmoji: "♢",
-          outcomes: ["♡", "↻", "✕"],
-          watcher: "🫖",
-        },
-        {
-          id: "catnip",
-          n: "08",
-          name: "Catnip Garden",
-          tags: "végétal · printanier · doux",
-          blurb: "Feuilles d'herbe à chat qui virevoltent au-dessus d'un parterre de trèfles.",
-          palette: ["#e8f5d8", "#b8e090", "#5a9a3a", "#fff", "#2a4a1a"],
-          drops: ["🌿", "🌿", "🌿"],
-          ballEmoji: "🍃",
-          pegEmoji: "🍀",
-          outcomes: ["🌼", "↻", "🥀"],
-          watcher: "😺",
-        },
-        {
-          id: "pixel",
-          n: "09",
-          name: "Pixel Cat",
-          tags: "rétro 8-bit · chiptune · net",
-          blurb: "Pixel art crispy, palette CGA réinventée. Pegs et balles carrées.",
-          palette: ["#2a2a4a", "#ff6a8a", "#ffd070", "#4ad898", "#fff"],
-          drops: ["▼", "▼", "▼"],
-          ballEmoji: ":3",
-          pegEmoji: "■",
-          outcomes: ["+10", "↻", "GG"],
-          watcher: "ʕ•ᴥ•ʔ",
-        },
-        {
-          id: "galaxy",
-          n: "10",
-          name: "Galaxy Cats",
-          tags: "cosmique · onirique · premium",
-          blurb: "Chats-planètes en chute libre dans une nébuleuse violette pleine d'étoiles.",
-          palette: ["#0a0518", "#1a0a2a", "#4a2a6a", "#ff9ad8", "#6ad8ff"],
-          drops: ["🪐", "🪐", "🪐"],
-          ballEmoji: "🐾",
-          pegEmoji: "✦",
-          outcomes: ["✨", "↻", "💫"],
-          watcher: "🐈‍⬛",
-          twinkles: true,
-        },
-      ];
+.sublaunch {
+  position: relative;
+  background: rgba(212,175,55,.06);
+  border: 1.5px solid rgba(212,175,55,.2);
+  border-radius: 6px 6px 12px 12px;
+  width: 80px;
+  height: 56px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 6px;
+  overflow: hidden;
+}
+.sublaunch::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(212,175,55,.1) 0%, transparent 40%);
+  pointer-events: none;
+}
+.sublaunch-lbl { font-size: .78rem; font-weight: 700; color: var(--gold); letter-spacing: 1px; position: relative; }
+.sublaunch--firing { background: rgba(212,175,55,.15); border-color: rgba(212,175,55,.45); }
+.sublaunch--empty  { opacity: .28; background: rgba(212,175,55,.02); border-color: rgba(212,175,55,.08); }
 
-      const grid = document.querySelector("main.grid");
+/* ─── Collection gates ──────────────────────────── */
 
-      function buildPegs(rowsCount, cols, emoji) {
-        let html = '<div class="pegs">';
-        for (let r = 0; r < rowsCount; r++) {
-          const offset = r % 2 === 1;
-          html += `<div class="peg-row${offset ? " offset" : ""}">`;
-          const n = offset ? cols - 1 : cols;
-          for (let c = 0; c < n; c++) {
-            html += `<div class="peg">${emoji}</div>`;
-          }
-          html += "</div>";
-        }
-        html += "</div>";
-        return html;
-      }
+.gates-wrap {
+  display: flex;
+  height: 70px;
+  gap: 0;
+  overflow: hidden;
+  border-radius: 4px;
+  border: 1px solid var(--crimson-muted);
+}
+.gate {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 8px;
+  gap: 4px;
+}
+.gate-lbl {
+  font-size: .6rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+.gate--save    { flex: 2.5; background: linear-gradient(180deg,rgba(34,197,94,.14) 0%,rgba(34,197,94,.05) 100%); border-right:1px solid rgba(34,197,94,.2); }
+.gate--recycle { flex: 4.8; background: linear-gradient(180deg,rgba(59,130,246,.14) 0%,rgba(59,130,246,.05) 100%); border-right:1px solid rgba(59,130,246,.18); }
+.gate--shop    { flex: 0.4; min-width: 28px; background: linear-gradient(180deg,rgba(234,179,8,.14) 0%,rgba(234,179,8,.05) 100%); border-right:1px solid rgba(234,179,8,.18); }
+.gate--drain   { flex: 2.5; background: linear-gradient(180deg,rgba(239,68,68,.14) 0%,rgba(239,68,68,.05) 100%); }
+.gate--save .gate-lbl    { color: #22c55e; }
+.gate--recycle .gate-lbl { color: #60a5fa; }
+.gate--shop .gate-lbl    { font-size:.38rem; color: var(--gold); writing-mode: vertical-lr; letter-spacing:1px; margin-top:4px; }
+.gate--drain .gate-lbl   { color: #ef4444; }
 
-      function buildCard(t, idx) {
-        const drops = t.drops
-          .map(
-            (d, i) =>
-              `<div class="drop${i === 1 ? " is-open" : ""}"><span>${d}</span></div>`,
-          )
-          .join("");
-        const outs = `
-          <div class="out score">${t.outcomes[0]}</div>
-          <div class="out tp">${t.outcomes[1]}</div>
-          <div class="out lose">${t.outcomes[2]}</div>`;
-        const palette = t.palette
-          .map((c) => `<li style="--c:${c}"></li>`)
-          .join("");
-        const twinkles = t.twinkles ? '<div class="twinkles"></div>' : "";
-        const watcher = t.watcher
-          ? `<div class="watcher" aria-hidden="true">${t.watcher}</div>`
-          : "";
+/* ─── Status bar ────────────────────────────────── */
 
-        return `
-        <article class="card theme-${t.id}">
-          <div class="preview" data-card="${idx}">
-            <div class="row drops">${drops}</div>
-            <div class="arena">
-              ${twinkles}
-              ${buildPegs(5, 4, t.pegEmoji)}
-              ${watcher}
-            </div>
-            <div class="row outcomes">${outs}</div>
-            <div class="row menu">
-              <span class="score-label">SCORE<b>0</b></span>
-              <span class="lost-label">LOST<b>0</b></span>
-            </div>
-          </div>
-          <div class="meta">
-            <h2>${t.n} · ${t.name}</h2>
-            <p class="tags">${t.tags}</p>
-            <p class="blurb">${t.blurb}</p>
-            <ul class="palette">${palette}</ul>
-          </div>
-        </article>`;
-      }
+.status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(14,4,10,.96);
+  border: 1px solid var(--crimson-deep);
+  border-radius: 4px;
+  font-weight: 700;
+}
+.status-readouts { display: flex; gap: 16px; flex-wrap: wrap; font-size: .82rem; }
+.stat-lbl { font-size: .65rem; font-weight: 500; color: var(--text-sec); letter-spacing: 1px; text-transform: uppercase; margin-right: 3px; }
+.status-actions { display: flex; gap: 6px; }
 
-      grid.innerHTML = themes.map(buildCard).join("");
+/* ─── Chest ─────────────────────────────────────── */
 
-      // --- Ball spawner: drops a themed ball every ~2.5s in each card ---
-      const previews = Array.from(grid.querySelectorAll(".preview"));
+.chest {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: rgba(212,175,55,.1);
+  border: 1px solid rgba(212,175,55,.22);
+  border-radius: 2px;
+  color: var(--gold-light);
+  font-size: .78rem;
+  font-weight: 700;
+}
 
-      function spawnBall(preview) {
-        const arena = preview.querySelector(".arena");
-        if (!arena) return;
-        const themeIdx = Number(preview.dataset.card);
-        const theme = themes[themeIdx];
+/* ─── Score popup ───────────────────────────────── */
 
-        const ball = document.createElement("div");
-        ball.className = "ball";
-        ball.textContent = theme.ballEmoji || "";
-        const col = Math.floor(Math.random() * 3);
-        const x = ["18%", "50%", "82%"][col];
-        ball.style.setProperty("--start-x", x);
-        ball.style.animationDuration = (2.6 + Math.random() * 1.2).toFixed(2) + "s";
-        ball.addEventListener("animationend", () => ball.remove(), { once: true });
-        arena.appendChild(ball);
-      }
+.popup {
+  display: inline-block;
+  font-weight: 800;
+  font-size: .8rem;
+  color: var(--gold);
+  text-shadow: 0 1px 0 rgba(0,0,0,.6);
+}
+.popup--big { font-size: 1.1rem; color: var(--crimson); }
 
-      previews.forEach((p, i) => {
-        // Stagger the first spawn so cards don't all drop in unison.
-        setTimeout(() => spawnBall(p), i * 180);
-        setInterval(() => spawnBall(p), 2200 + Math.random() * 800);
-      });
-    </script>
-  </body>
+/* ─── Bonus cards ───────────────────────────────── */
+
+.bonus-card {
+  background: var(--bg-card);
+  border: 1px solid var(--crimson-deep);
+  border-radius: 4px;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+.bonus-card--perm { border-color: var(--gold-dim); }
+.bonus-card--leg  { border-color: #d97706; box-shadow: 0 0 14px rgba(217,119,6,.18); }
+.bonus-card--epic { border-color: #9333ea; box-shadow: 0 0 12px rgba(147,51,234,.15); }
+.bonus-card--rare { border-color: #2563eb; box-shadow: 0 0 10px rgba(37,99,235,.15); }
+
+.bonus-icon { font-size: 1.4rem; line-height: 1; }
+.bonus-name { font-size: .85rem; color: var(--text); letter-spacing: 1px; }
+.bonus-desc { font-size: .7rem; color: var(--text-sec); line-height: 1.55; }
+.bonus-footer { display: flex; justify-content: space-between; align-items: center; margin-top: .25rem; }
+.bonus-dur  { font-size: .55rem; color: var(--text-dim); letter-spacing: 1px; }
+
+.rarity {
+  font-size: .5rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 2px;
+  display: inline-block;
+}
+.rarity--perm { color: var(--gold);  border: 1px solid var(--gold-dim); }
+.rarity--leg  { color: #fbbf24;      border: 1px solid #d97706; }
+.rarity--epic { color: #c084fc;      border: 1px solid #9333ea; }
+.rarity--rare { color: #93c5fd;      border: 1px solid #2563eb; }
+.rarity--com  { color: #86efac;      border: 1px solid #16a34a; }
+
+/* ─── Modals ────────────────────────────────────── */
+
+.modal {
+  background: #1a060e;
+  border: 1px solid var(--crimson-deep);
+  border-radius: 4px;
+  padding: 1.5rem;
+  max-width: 300px;
+}
+.modal-title {
+  font-size: .9rem;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--gold);
+  text-align: center;
+  margin-bottom: 1rem;
+  padding-bottom: .75rem;
+  border-bottom: 1px solid var(--crimson-deep);
+}
+.modal-art   { text-align: center; font-size: 2.2rem; margin-bottom: .75rem; }
+.modal-body  { text-align: center; font-size: .78rem; color: var(--text-sec); line-height: 1.6; margin-bottom: 1rem; }
+.modal-coins { text-align: center; font-size: .8rem; font-weight: 700; color: var(--gold); margin-bottom: .75rem; }
+.modal-actions { display: flex; flex-direction: column; gap: .5rem; }
+
+/* ─── Animations ────────────────────────────────── */
+
+@keyframes bumper-idle {
+  0%,100% { transform: scale(1); }
+  50%      { transform: scale(1.06); }
+}
+@keyframes coin-idle {
+  0%,100% { transform: scale(1); }
+  50%      { transform: scale(1.08); filter: brightness(1.12); }
+}
+@keyframes legendary-idle {
+  0%,100% { transform: scale(1); filter: brightness(1); }
+  50%      { transform: scale(1.1); filter: brightness(1.25) drop-shadow(0 0 6px #fbbf24); }
+}
+@keyframes ice-idle {
+  0%,100% { filter: brightness(1) drop-shadow(0 0 2px #7dd3fc); }
+  50%      { filter: brightness(1.18) drop-shadow(0 0 7px #38bdf8); }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══════════════════════════════════════════════════════════════ -->
+
+<div class="header">
+  <div class="header-eye">Style Guide · Velvet Rouge × Classic Gold</div>
+  <div class="header-title">PAWKO</div>
+  <div class="header-tagline">Drop · Bounce · Save</div>
+  <div class="header-badge">v0.1.0 · Preview</div>
+</div>
+
+<!-- ═══ 1. COLORS ════════════════════════════════════════════════════════════ -->
+
+<div class="section">
+  <div class="section-title">01 · Color Tokens</div>
+  <div class="grid">
+    <div class="swatch">
+      <div class="swatch-color" style="background:#14040a;"></div>
+      <div class="swatch-label"><span class="swatch-name">Background</span><span class="swatch-hex">#14040a</span></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#1e080e;"></div>
+      <div class="swatch-label"><span class="swatch-name">Surface</span><span class="swatch-hex">#1e080e</span></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#200a10;"></div>
+      <div class="swatch-label"><span class="swatch-name">Card</span><span class="swatch-hex">#200a10</span></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#3a0e18;"></div>
+      <div class="swatch-label"><span class="swatch-name">Muted Border</span><span class="swatch-hex">#3a0e18</span></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#6a1828;"></div>
+      <div class="swatch-label"><span class="swatch-name">Crimson Deep</span><span class="swatch-hex">#6a1828</span></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#cc2840;"></div>
+      <div class="swatch-label"><span class="swatch-name">Crimson</span><span class="swatch-hex">#cc2840</span></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#f28090;"></div>
+      <div class="swatch-label"><span class="swatch-name">Rose</span><span class="swatch-hex">#f28090</span></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#a05868;"></div>
+      <div class="swatch-label"><span class="swatch-name">Text Secondary</span><span class="swatch-hex">#a05868</span></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#6a3040;"></div>
+      <div class="swatch-label"><span class="swatch-name">Text Dim</span><span class="swatch-hex">#6a3040</span></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#d4af37;"></div>
+      <div class="swatch-label"><span class="swatch-name">Gold</span><span class="swatch-hex">#d4af37</span></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#f5d77a;"></div>
+      <div class="swatch-label"><span class="swatch-name">Gold Light</span><span class="swatch-hex">#f5d77a</span></div>
+    </div>
+    <div class="swatch">
+      <div class="swatch-color" style="background:#8a7040;"></div>
+      <div class="swatch-label"><span class="swatch-name">Gold Dim</span><span class="swatch-hex">#8a7040</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 2. TYPOGRAPHY ════════════════════════════════════════════════════════ -->
+
+<div class="section">
+  <div class="section-title">02 · Typography</div>
+  <div class="grid-2">
+
+    <div class="card" style="display:flex;flex-direction:column;gap:1.1rem;">
+      <div>
+        <div class="type-label">Game title · 3rem · 14px tracking</div>
+        <div style="font-size:3rem;letter-spacing:14px;text-transform:uppercase;color:var(--gold);text-shadow:0 0 30px rgba(212,175,55,.22);">PAWKO</div>
+      </div>
+      <div>
+        <div class="type-label">Section heading · 0.6rem · 5px tracking</div>
+        <div style="font-size:.6rem;letter-spacing:5px;text-transform:uppercase;color:var(--text-sec);">COLLECTION GATES</div>
+      </div>
+      <div>
+        <div class="type-label">Multiplier value · 1.6rem · rose</div>
+        <div style="font-size:1.6rem;color:var(--rose);font-weight:bold;">×5.5</div>
+      </div>
+      <div>
+        <div class="type-label">Score readout · 0.85rem · gold light</div>
+        <div style="font-size:.85rem;color:var(--gold-light);display:flex;gap:16px;flex-wrap:wrap;">
+          <span><span style="color:var(--text-sec);margin-right:4px;font-size:.7rem;">Hits</span>1 840</span>
+          <span><span style="color:var(--text-sec);margin-right:4px;font-size:.7rem;">Saved</span>243</span>
+          <span><span style="color:var(--text-sec);margin-right:4px;font-size:.7rem;">Level</span>12</span>
+        </div>
+      </div>
+      <div>
+        <div class="type-label">Gate label · 0.6rem · 2px tracking · bold</div>
+        <div style="display:flex;gap:12px;align-items:center;">
+          <span style="font-size:.6rem;letter-spacing:2px;text-transform:uppercase;font-weight:800;color:#22c55e;">SAVE</span>
+          <span style="font-size:.6rem;letter-spacing:2px;text-transform:uppercase;font-weight:800;color:#60a5fa;">RECYCLE</span>
+          <span style="font-size:.6rem;letter-spacing:2px;text-transform:uppercase;font-weight:800;color:#ef4444;">DRAIN</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="display:flex;flex-direction:column;gap:1.1rem;">
+      <div>
+        <div class="type-label">Score popups</div>
+        <div style="display:flex;gap:12px;align-items:baseline;">
+          <span class="popup">+1</span>
+          <span class="popup">+10</span>
+          <span class="popup--big">+50</span>
+        </div>
+      </div>
+      <div>
+        <div class="type-label">Body / modal copy · 0.78rem</div>
+        <div style="font-size:.78rem;color:var(--text-sec);line-height:1.6;">You reached level <strong style="color:var(--gold);">12</strong> with <strong style="color:var(--gold);">1 840</strong> hits.<br>243 saved, 57 drained.</div>
+      </div>
+      <div>
+        <div class="type-label">Button label · 0.72rem · 3px tracking</div>
+        <div style="font-size:.72rem;letter-spacing:3px;text-transform:uppercase;color:var(--gold-light);">DROP BALL</div>
+      </div>
+      <div>
+        <div class="type-label">Layer tags</div>
+        <div style="display:flex;gap:12px;align-items:center;">
+          <span class="lvl-tag">LVL 11</span>
+          <span class="lvl-tag lvl-tag--milestone">LVL 10 ★</span>
+        </div>
+      </div>
+      <div>
+        <div class="type-label">Rarity tags · 0.5rem · 3px tracking</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+          <span class="rarity rarity--perm">Permanent</span>
+          <span class="rarity rarity--leg">Legendary</span>
+          <span class="rarity rarity--epic">Epic</span>
+          <span class="rarity rarity--rare">Rare</span>
+          <span class="rarity rarity--com">Common</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ 3. BUTTONS ═══════════════════════════════════════════════════════════ -->
+
+<div class="section">
+  <div class="section-title">03 · Buttons</div>
+  <div class="row" style="gap:.75rem;">
+    <button class="btn btn-primary">Drop Ball</button>
+    <button class="btn btn-primary">Play Again</button>
+    <button class="btn btn-secondary">Upgrade</button>
+    <button class="btn btn-secondary">Back</button>
+    <button class="btn btn-danger">Drain</button>
+    <button class="btn btn-ghost">No Thanks</button>
+    <button class="btn btn-disabled" disabled>Locked</button>
+  </div>
+</div>
+
+<!-- ═══ 4. TOGGLES ═══════════════════════════════════════════════════════════ -->
+
+<div class="section">
+  <div class="section-title">04 · Options Toggles</div>
+  <div style="display:flex;flex-direction:column;gap:.5rem;max-width:320px;">
+    <div class="toggle-wrap">
+      <span class="toggle-lbl">Music</span>
+      <div class="toggle toggle--on"></div>
+    </div>
+    <div class="toggle-wrap">
+      <span class="toggle-lbl">Sound</span>
+      <div class="toggle toggle--on"></div>
+    </div>
+    <div class="toggle-wrap">
+      <span class="toggle-lbl">Skip Animations</span>
+      <div class="toggle"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 5. PEGS ══════════════════════════════════════════════════════════════ -->
+
+<div class="section">
+  <div class="section-title">05 · Pegs</div>
+  <div class="grid">
+
+    <div class="peg-cell">
+      <div class="peg peg--reg"></div>
+      <div class="peg-cell-lbl">Regular</div>
+    </div>
+
+    <div class="peg-cell">
+      <div class="peg peg--bumper"></div>
+      <div class="peg-cell-lbl">Bumper<br>×10 pts</div>
+    </div>
+
+    <div class="peg-cell">
+      <div class="peg peg--coin">¢</div>
+      <div class="peg-cell-lbl">Coin Peg</div>
+    </div>
+
+    <div class="peg-cell">
+      <div class="peg peg--shop-c">2</div>
+      <div class="peg-cell-lbl">Shop<br><span class="rarity rarity--com" style="font-size:.42rem;">Common</span></div>
+    </div>
+
+    <div class="peg-cell">
+      <div class="peg peg--shop-r">4</div>
+      <div class="peg-cell-lbl">Shop<br><span class="rarity rarity--rare" style="font-size:.42rem;">Rare</span></div>
+    </div>
+
+    <div class="peg-cell">
+      <div class="peg peg--shop-e">7</div>
+      <div class="peg-cell-lbl">Shop<br><span class="rarity rarity--epic" style="font-size:.42rem;">Epic</span></div>
+    </div>
+
+    <div class="peg-cell">
+      <div class="peg peg--shop-l">12</div>
+      <div class="peg-cell-lbl">Shop<br><span class="rarity rarity--leg" style="font-size:.42rem;">Legendary</span></div>
+    </div>
+
+    <div class="peg-cell">
+      <div class="peg peg--reg peg--ice3"></div>
+      <div class="peg-cell-lbl">Frozen ③<br>intact</div>
+    </div>
+
+    <div class="peg-cell">
+      <div class="peg peg--reg peg--ice2"></div>
+      <div class="peg-cell-lbl">Frozen ②<br>cracking</div>
+    </div>
+
+    <div class="peg-cell">
+      <div class="peg peg--reg peg--ice1"></div>
+      <div class="peg-cell-lbl">Frozen ①<br>thawing</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ 6. BALLS ═════════════════════════════════════════════════════════════ -->
+
+<div class="section">
+  <div class="section-title">06 · Balls</div>
+  <div class="grid">
+
+    <div class="peg-cell">
+      <div class="ball ball--reg"></div>
+      <div class="peg-cell-lbl">Regular</div>
+    </div>
+
+    <div class="peg-cell">
+      <div class="ball ball--ice"></div>
+      <div class="peg-cell-lbl">Ice Ball<br>freezes pegs</div>
+    </div>
+
+    <div class="peg-cell">
+      <div class="ball ball--glass"></div>
+      <div class="peg-cell-lbl">Glass<br>intact</div>
+    </div>
+
+    <div class="peg-cell">
+      <div class="ball ball--g1"></div>
+      <div class="peg-cell-lbl">Glass<br>crack 1/4</div>
+    </div>
+
+    <div class="peg-cell">
+      <div class="ball ball--g2"></div>
+      <div class="peg-cell-lbl">Glass<br>crack 2/4</div>
+    </div>
+
+    <div class="peg-cell">
+      <div class="ball ball--g3"></div>
+      <div class="peg-cell-lbl">Glass<br>crack 3/4</div>
+    </div>
+
+    <div class="peg-cell">
+      <div class="ball ball--g4"></div>
+      <div class="peg-cell-lbl">Glass<br>shatter soon</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ 7. PINBOARD ══════════════════════════════════════════════════════════ -->
+
+<div class="section">
+  <div class="section-title">07 · Pinboard Arena</div>
+  <div class="pinboard">
+    <span class="lvl-label">LVL 12</span>
+    <span class="lvl-tag">LVL 11</span>
+    <div class="peg peg--reg"></div>
+    <div class="peg peg--reg"></div>
+    <div class="peg peg--bumper"></div>
+    <div class="peg peg--reg"></div>
+    <div class="peg peg--shop-r">4</div>
+    <div class="peg peg--reg"></div>
+    <div class="peg peg--coin">¢</div>
+    <div class="peg peg--reg peg--ice3"></div>
+    <div class="peg peg--reg"></div>
+    <div class="peg peg--shop-l">12</div>
+    <div class="peg peg--reg"></div>
+    <div class="peg peg--bumper"></div>
+    <div class="ball ball--reg" style="position:static;margin:0;"></div>
+    <div class="ball ball--ice" style="position:static;margin:0;"></div>
+    <span class="lvl-tag lvl-tag--milestone">LVL 10 ★</span>
+    <div class="chest" style="position:absolute;right:10px;bottom:8px;">🪙 42</div>
+  </div>
+  <div style="margin-top:.6rem;">
+    <div class="type-label">Level progress (62%)</div>
+    <div class="progress-wrap"><div class="progress-fill"></div></div>
+  </div>
+</div>
+
+<!-- ═══ 8. LAUNCH ZONE ══════════════════════════════════════════════════════ -->
+
+<div class="section">
+  <div class="section-title">08 · Launch Zone</div>
+  <div style="background:var(--bg-surface);border:1px solid var(--crimson-muted);border-radius:4px;padding:1rem;display:flex;flex-direction:column;gap:.75rem;">
+    <div class="row" style="gap:.5rem;">
+      <div class="sublaunch sublaunch--firing"><span class="sublaunch-lbl">5 ●</span></div>
+      <div class="sublaunch"><span class="sublaunch-lbl">5 ●</span></div>
+      <div class="sublaunch"><span class="sublaunch-lbl">3 ●</span></div>
+      <div class="sublaunch sublaunch--empty"><span class="sublaunch-lbl">—</span></div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;padding:.4rem .8rem;font-size:.7rem;">Saved 12 ↑</button>
+  </div>
+  <div style="margin-top:.5rem;font-size:.55rem;color:var(--text-dim);letter-spacing:1px;">
+    Left cell firing (brighter border) · Right cell empty (faded) · "Saved ↑" sends collected balls back into play
+  </div>
+</div>
+
+<!-- ═══ 9. COLLECTION GATES ═════════════════════════════════════════════════ -->
+
+<div class="section">
+  <div class="section-title">09 · Collection Gates</div>
+  <div class="gates-wrap">
+    <div class="gate gate--save"><span class="gate-lbl">Save</span></div>
+    <div class="gate gate--recycle"><span class="gate-lbl">Recycle</span></div>
+    <div class="gate gate--shop"><span class="gate-lbl">Shop</span></div>
+    <div class="gate gate--drain"><span class="gate-lbl">Drain</span></div>
+  </div>
+  <div style="margin-top:.5rem;font-size:.55rem;color:var(--text-dim);letter-spacing:1px;">
+    Save 25% · Recycle 48% · Shop 2% (rare landing) · Drain 25%
+  </div>
+</div>
+
+<!-- ═══ 10. STATUS BAR ══════════════════════════════════════════════════════ -->
+
+<div class="section">
+  <div class="section-title">10 · Status Bar</div>
+  <div class="status">
+    <div class="status-readouts">
+      <span><span class="stat-lbl">Hits</span>1 840</span>
+      <span><span class="stat-lbl">Saved</span>243</span>
+      <span><span class="stat-lbl">Level</span>12</span>
+      <span><span class="stat-lbl">Coins</span>🪙 42</span>
+      <span><span class="stat-lbl">Balls</span>5</span>
+    </div>
+    <div class="status-actions">
+      <button class="btn btn-secondary" style="min-height:34px;padding:4px 10px;font-size:.8rem;">≡</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 11. BONUS CARDS ══════════════════════════════════════════════════════ -->
+
+<div class="section">
+  <div class="section-title">11 · Bonuses — Permanent</div>
+  <div class="grid-2">
+
+    <div class="bonus-card bonus-card--perm">
+      <span class="bonus-icon">🟢</span>
+      <div class="bonus-name">Extra Start Ball</div>
+      <div class="bonus-desc">Start each round with 6 balls per launcher instead of 5.</div>
+      <div class="bonus-footer">
+        <span class="rarity rarity--perm">Permanent</span>
+        <span class="bonus-dur">Unlocks at Level 10</span>
+      </div>
+    </div>
+
+    <div class="bonus-card bonus-card--perm">
+      <span class="bonus-icon">🧲</span>
+      <div class="bonus-name">Shop Magnet</div>
+      <div class="bonus-desc">Shop pegs attract nearby balls with a gravity field.</div>
+      <div class="bonus-footer">
+        <span class="rarity rarity--perm">Permanent</span>
+        <span class="bonus-dur">Unlocks at Level 20</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="section-title" style="margin-top:2rem;">11 · Bonuses — Session</div>
+  <div class="grid-2">
+
+    <div class="bonus-card bonus-card--epic">
+      <span class="bonus-icon">🚀</span>
+      <div class="bonus-name">Bonus Launcher</div>
+      <div class="bonus-desc">+1 launcher with 5 balls for 3 levels.</div>
+      <div class="bonus-footer">
+        <span class="rarity rarity--epic">Epic</span>
+        <span class="bonus-dur">3 levels</span>
+      </div>
+    </div>
+
+    <div class="bonus-card bonus-card--leg">
+      <span class="bonus-icon">✨</span>
+      <div class="bonus-name">Score ×2</div>
+      <div class="bonus-desc">Double your score multiplier for 3 levels.</div>
+      <div class="bonus-footer">
+        <span class="rarity rarity--leg">Legendary</span>
+        <span class="bonus-dur">3 levels</span>
+      </div>
+    </div>
+
+    <div class="bonus-card bonus-card--rare">
+      <span class="bonus-icon">🧊</span>
+      <div class="bonus-name">Ice Ball</div>
+      <div class="bonus-desc">One ball becomes icy for 10 levels. It freezes every peg it touches — frozen pegs are inactive until thawed by another ball.</div>
+      <div class="bonus-footer">
+        <span class="rarity rarity--rare">Rare</span>
+        <span class="bonus-dur">10 levels</span>
+      </div>
+    </div>
+
+    <div class="bonus-card bonus-card--rare">
+      <span class="bonus-icon">🔮</span>
+      <div class="bonus-name">Glass Ball</div>
+      <div class="bonus-desc">One ball becomes a glass bead. Transparent and fragile — shatters after 20 hits. Cracks appear in the final 5 hits.</div>
+      <div class="bonus-footer">
+        <span class="rarity rarity--rare">Rare</span>
+        <span class="bonus-dur">15 levels</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ 12. SHOP MODAL ═══════════════════════════════════════════════════════ -->
+
+<div class="section">
+  <div class="section-title">12 · Shop Modal</div>
+  <div class="modal">
+    <div class="modal-title">Shop</div>
+    <p class="modal-body">Shop peg destroyed! Choose a free bonus:</p>
+    <div class="modal-coins">🪙 42 coins</div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" style="width:100%;font-size:.9rem;padding:.55rem;">🧊 Ice Ball <span style="opacity:.55;font-size:.6rem;margin-left:.5rem;">12 coins</span></button>
+      <button class="btn btn-primary" style="width:100%;font-size:.9rem;padding:.55rem;">✨ Score ×2 <span style="opacity:.55;font-size:.6rem;margin-left:.5rem;">12 coins</span></button>
+      <button class="btn btn-secondary" style="width:100%;padding:.45rem;">+1 Ball — 10 coins</button>
+      <button class="btn btn-ghost" style="width:100%;margin-top:.25rem;">No Thanks</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 13. GAME OVER MODAL ══════════════════════════════════════════════════ -->
+
+<div class="section">
+  <div class="section-title">13 · Game Over Modal</div>
+  <div class="modal">
+    <div class="modal-title">Round Over</div>
+    <div class="modal-art">🎲</div>
+    <div class="modal-body">
+      <p>You reached level <strong style="color:var(--gold);">12</strong> with <strong style="color:var(--gold);">1 840</strong> hits.</p>
+      <p style="margin-top:.4rem;">243 saved · 57 drained</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" style="width:100%;padding:.55rem;">Play Again</button>
+      <button class="btn btn-ghost" style="width:100%;padding:.4rem;">Back to Title</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 14. BONUS UNLOCK MODAL ═══════════════════════════════════════════════ -->
+
+<div class="section">
+  <div class="section-title">14 · Bonus Unlock Modal</div>
+  <div class="modal">
+    <div class="modal-title">Bonus Unlocked!</div>
+    <div class="modal-art">🟢</div>
+    <div class="modal-body">
+      <div style="font-size:.95rem;color:var(--gold);letter-spacing:1px;margin-bottom:.5rem;">Extra Start Ball</div>
+      <p>Start each round with 6 balls per launcher instead of 5.</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary" style="width:100%;padding:.55rem;">OK</button>
+    </div>
+  </div>
+</div>
+
+</body>
 </html>

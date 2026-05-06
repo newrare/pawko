@@ -29,6 +29,8 @@
  *   removeSublaunch: () => void,
  *   queueIceBall: () => void,
  *   cleanupIce: () => void,
+ *   queueGlassBall: () => void,
+ *   cleanupGlass: () => void,
  * }} BonusContext
  */
 
@@ -118,6 +120,19 @@ export const SESSION_BONUSES = [
       effect: (ctx) => ctx.queueIceBall(),
     },
     onExpire: (ctx) => ctx.cleanupIce(),
+  },
+  {
+    id: "glass_ball",
+    category: "session",
+    rarity: "rare",
+    shopWeight: 0.5,
+    icon: "\ud83d\udd2e",
+    durationLevels: 15,
+    trigger: {
+      event: "bonus:applied",
+      effect: (ctx) => ctx.queueGlassBall(),
+    },
+    onExpire: (ctx) => ctx.cleanupGlass(),
   },
 ];
 

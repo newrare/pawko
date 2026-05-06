@@ -16,15 +16,19 @@
 }
 
 html {
-  font-family:
-    system-ui,
-    -apple-system,
-    "Segoe UI",
-    Roboto,
-    sans-serif;
+  font-family: var(--gt-font-body);
   font-size: clamp(13px, 4vmin, 17px);
   color: var(--gt-color-text);
-  background: var(--gt-color-bg);
+  background-color: var(--gt-color-bg);
+  background-image:
+    radial-gradient(ellipse at 50% 100%, #2a0814 0%, transparent 65%),
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 10px,
+      rgba(212, 175, 55, 0.03) 10px,
+      rgba(212, 175, 55, 0.03) 20px
+    );
 }
 
 html,

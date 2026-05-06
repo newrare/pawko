@@ -23,6 +23,10 @@ export class Ball extends Entity {
   alive = true;
   /** @type {boolean} True when this ball carries the ice-ball bonus effect. */
   isIce = false;
+  /** @type {boolean} True when this ball carries the glass-ball bonus effect. */
+  isGlass = false;
+  /** @type {number} Number of peg hits accumulated (glass ball shatters at GLASS_BALL_MAX_HITS). */
+  glassHits = 0;
   /** @type {'held' | 'active' | 'captured'} */
   state = "active";
   /** @type {string | null} Gate that captured this ball. */

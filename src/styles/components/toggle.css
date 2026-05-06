@@ -2,32 +2,35 @@
 
 .gt-toggle {
   position: relative;
-  width: 42px;
-  height: 24px;
-  border-radius: 999px;
-  background: var(--gt-color-surface-2);
+  width: 40px;
+  height: 20px;
+  border-radius: 10px;
+  background: var(--pk-crimson-muted);
+  border: 1px solid var(--pk-crimson-deep);
   transition: background var(--anim-fast, 120ms) ease;
   flex-shrink: 0;
+  cursor: pointer;
 }
 
 .gt-toggle--on {
-  background: var(--gt-color-primary);
+  background: var(--pk-crimson);
+  border-color: var(--pk-gold-dim);
 }
 
 .gt-toggle-knob {
   position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 18px;
-  height: 18px;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: #ffffff;
-  transition: transform var(--anim-fast, 120ms) ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  background: var(--pk-rose-muted);
+  transition: left 0.15s ease;
 }
 
 .gt-toggle--on .gt-toggle-knob {
-  transform: translateX(18px);
+  background: var(--pk-gold-light);
+  left: 22px;
 }
 
 .gt-row[data-disabled] {

@@ -223,6 +223,12 @@ export const PLINKO = {
 
   /** Number of hits needed to thaw a frozen peg. */
   ICE_HITS_TO_THAW: 3,
+
+  /* Glass ball */
+  /** Total peg hits before a glass ball shatters. */
+  GLASS_BALL_MAX_HITS: 10,
+  /** How many hits before the end show visible cracks (last N hits). */
+  GLASS_BALL_CRACK_THRESHOLD: 5,
 };
 
 export const PLINKO_RANKING_MODE = "plinko";

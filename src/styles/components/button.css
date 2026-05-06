@@ -6,44 +6,52 @@
   justify-content: center;
   gap: 8px;
   min-height: 44px;
-  padding: 10px 18px;
-  border: 1px solid transparent;
-  border-radius: var(--gt-radius-md);
+  padding: 0.5rem 1.2rem;
+  border: none;
+  border-radius: 0;
+  font-family: var(--gt-font-body);
+  font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
-  background: var(--gt-color-primary);
-  color: #ffffff;
-  transition:
-    transform var(--anim-fast, 120ms) ease,
-    filter var(--anim-fast, 120ms) ease;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  background: var(--pk-crimson-deep);
+  color: var(--pk-gold-light);
+  border: 1px solid var(--pk-gold);
+  transition: filter 0.1s;
 }
 
 .gt-btn:hover {
-  filter: brightness(1.1);
+  filter: brightness(1.12);
 }
 .gt-btn:active {
-  transform: scale(0.97);
+  filter: brightness(0.9);
 }
 .gt-btn:disabled {
-  opacity: 0.5;
+  background: var(--pk-crimson-muted);
+  color: var(--gt-color-text-dim);
+  border-color: var(--pk-rose-muted);
+  opacity: 0.38;
   cursor: not-allowed;
-  transform: none;
   filter: none;
 }
 
 .gt-btn--secondary {
-  background: var(--gt-color-surface-2);
-  color: var(--gt-color-text);
-  border-color: rgba(255, 255, 255, 0.08);
+  background: transparent;
+  color: var(--pk-gold);
+  border: 1px solid var(--pk-crimson-deep);
 }
 
 .gt-btn--ghost {
   background: transparent;
-  color: var(--gt-color-text-dim);
+  color: var(--gt-color-text-sec);
+  border: 1px solid var(--pk-rose-muted);
+  font-size: 0.65rem;
 }
 
 .gt-btn--danger {
-  background: var(--gt-color-danger);
+  background: #3a0a0a;
+  color: #ff8080;
+  border: 1px solid #7a1515;
 }
 
 .gt-btn-icon {

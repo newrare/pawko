@@ -38,6 +38,9 @@ export class GameController {
   /** @type {HTMLElement | null} */ #readoutHits = null;
   /** @type {HTMLElement | null} */ #readoutDrained = null;
   /** @type {HTMLElement | null} */ #readoutLevel = null;
+  /** @type {HTMLElement | null} */ #readoutBalls = null;
+  /** @type {HTMLElement | null} */ #readoutBallsIce = null;
+  /** @type {HTMLElement | null} */ #readoutBallsGlass = null;
   /** @type {GameOverModal | null} */ #overModal = null;
   /** @type {HTMLElement | null} */ #bonusBarEl = null;
 
@@ -75,6 +78,14 @@ export class GameController {
   /** @type {Set<number>} */ #iceBallIds = new Set();
   /** True when an ice ball entered the save/shop gate and is waiting to be re-queued. */
   /** @type {boolean} */ #iceBallSaved = false;
+
+  /* --- Glass-ball bonus state --- */
+  /** Sublaunch index whose next spawn should be a glass ball (-1 = none queued). */
+  /** @type {number} */ #glassBallSublaunchQueued = -1;
+  /** Live glass-ball ids (while the ball is in the physics world). */
+  /** @type {Set<number>} */ #glassBallIds = new Set();
+  /** True when a glass ball entered the save/shop gate and is waiting to be re-queued. */
+  /** @type {boolean} */ #glassBallSaved = false;
 
   /* --- Extended physics (ball layer, gate zones) --- */
   /** @type {HTMLElement | null} */ #ballLayerEl = null;
@@ -121,6 +132,7 @@ export class GameController {
     if (import.meta.env.DEV) {
       this.#bag.add(gameEvents.on("dev:spawnBall", () => this.#devSpawnBall(false)));
       this.#bag.add(gameEvents.on("dev:spawnIceBall", () => this.#devSpawnBall(true)));
+      this.#bag.add(gameEvents.on("dev:spawnGlassBall", () => this.#devSpawnBall(false, true)));
       this.#bag.add(gameEvents.on("dev:activateBonus", ({ id }) => this.#devActivateBonus(id)));
     }
   }
@@ -139,6 +151,9 @@ export class GameController {
     this.#iceBallIds.clear();
     this.#iceBallSaved = false;
     this.#iceBallSublaunchQueued = -1;
+    this.#glassBallIds.clear();
+    this.#glassBallSublaunchQueued = -1;
+    this.#glassBallSaved = false;
     gameEvents.emit("game:end");
   }
 
@@ -184,6 +199,9 @@ export class GameController {
           <span class="pk-status-readout"><span>${i18n.t("game.hits")}:</span><b data-role="r-hits">0</b></span>
           <span class="pk-status-readout"><span>${i18n.t("game.drained")}:</span><b data-role="r-drained">0</b></span>
           <span class="pk-status-readout"><span>${i18n.t("game.level")}:</span><b data-role="r-level">0</b></span>
+          <span class="pk-status-readout"><span>${i18n.t("game.balls")}:</span><b data-role="r-balls">0</b></span>
+          <span class="pk-status-readout"><span>${i18n.t("game.balls_ice")}:</span><b data-role="r-balls-ice">0</b></span>
+          <span class="pk-status-readout"><span>${i18n.t("game.balls_glass")}:</span><b data-role="r-balls-glass">0</b></span>
         </div>
         <div class="pk-status-actions">
           ${buttonHtml({ action: "back", label: i18n.t("game.back"), variant: "ghost" })}
@@ -206,6 +224,9 @@ export class GameController {
     this.#readoutHits = safe.querySelector('[data-role="r-hits"]');
     this.#readoutDrained = safe.querySelector('[data-role="r-drained"]');
     this.#readoutLevel = safe.querySelector('[data-role="r-level"]');
+    this.#readoutBalls = safe.querySelector('[data-role="r-balls"]');
+    this.#readoutBallsIce = safe.querySelector('[data-role="r-balls-ice"]');
+    this.#readoutBallsGlass = safe.querySelector('[data-role="r-balls-glass"]');
     this.#bonusBarEl = safe.querySelector('[data-role="bonus-bar"]');
     this.#chestEl = safe.querySelector('[data-role="chest"]');
     this.#coinCountEl = safe.querySelector('[data-role="coin-count"]');
@@ -504,6 +525,12 @@ export class GameController {
           ball.isIce = true;
           this.#iceBallIds.add(ball.id);
           el.classList.add("pk-ball--ice");
+        } else if (this.#glassBallSublaunchQueued === i && b === n - 1) {
+          this.#glassBallSublaunchQueued = -1;
+          ball.isGlass = true;
+          ball.glassHits = PLINKO.GLASS_BALL_MAX_HITS;
+          this.#glassBallIds.add(ball.id);
+          el.classList.add("pk-ball--glass");
         }
         const oy = this.#pinboardOffsetTop;
         el.style.transform = `translate(${ball.x}px, ${ball.y + oy}px)`;
@@ -512,10 +539,11 @@ export class GameController {
       }
     }
     this.#startLoop();
+    this.#refreshBallReadouts();
   }
 
   /** Spawn a single active ball (used by dev panel and recycle). */
-  #spawnActiveBall(subIndex, ice = false) {
+  #spawnActiveBall(subIndex, ice = false, glass = false) {
     if (!this.#ballLayerEl) return;
     const w = this.#pinboardWidth;
     const count = this.#sublaunchEls.length;
@@ -534,6 +562,12 @@ export class GameController {
       ball.isIce = true;
       this.#iceBallIds.add(ball.id);
       el.classList.add("pk-ball--ice");
+    }
+    if (glass) {
+      ball.isGlass = true;
+      ball.glassHits = PLINKO.GLASS_BALL_MAX_HITS;
+      this.#glassBallIds.add(ball.id);
+      el.classList.add("pk-ball--glass");
     }
     const oy = this.#pinboardOffsetTop;
     el.style.transform = `translate(${ball.x}px, ${ball.y + oy}px)`;
@@ -593,6 +627,19 @@ export class GameController {
     if (this.#saved <= 0 || this.#level >= PLINKO.MAX_LEVEL) return;
     /* Remove captured balls from gates. */
     this.#clearCapturedBalls();
+    /* Remove held balls that were never fired — they'll be re-spawned after
+       distribution. Without this, #spawnHeldBalls() would add on top of the
+       existing held balls, doubling the count each level. */
+    for (const [id, { ball, el }] of this.#balls) {
+      if (ball.state === "held") {
+        if (ball.isIce) { this.#iceBallIds.delete(id); this.#iceBallSaved = true; }
+        if (ball.isGlass) { this.#glassBallIds.delete(id); this.#glassBallSaved = true; }
+        ball.alive = false;
+        el.remove();
+        this.#balls.delete(id);
+        this.#ballIdleTracker.delete(id);
+      }
+    }
     /* Equitable distribution into the sublaunches. */
     const count = this.#sublaunchEls.length;
     const per = Math.floor(this.#saved / count);
@@ -607,17 +654,27 @@ export class GameController {
       const idx = Math.floor(Math.random() * count);
       this.#iceBallSublaunchQueued = idx;
     }
+    /* Re-queue the glass ball into a random sublaunch if it was saved. */
+    if (this.#glassBallSaved) {
+      this.#glassBallSaved = false;
+      const idx = Math.floor(Math.random() * count);
+      this.#glassBallSublaunchQueued = idx;
+      /* Guarantee a slot even if the distribution gave 0 balls to this sublaunch. */
+      if (!(this.#sublaunchBalls[idx] > 0)) this.#sublaunchBalls[idx] = 1;
+    }
     this.#saved = 0;
     this.#level += 1;
     this.#shopUsedThisLevel = false;
+    /* Expire session bonuses BEFORE spawning. If ice/glass bonus expires here,
+       cleanupIce/cleanupGlass resets the sublaunch queue so #spawnHeldBalls
+       won't create a special ball that immediately loses its state. */
+    const newUnlocks = bonusManager.onLevelUp(this.#level);
+    this.#refreshBallReadouts();
     this.#addLayer();
     this.#spawnHeldBalls();
     this.#refreshSublaunches();
     this.#refreshLevelLabel();
     this.#refreshLevelBar();
-
-    /* Bonus system: check for new permanent unlocks. */
-    const newUnlocks = bonusManager.onLevelUp(this.#level);
     if (newUnlocks.length > 0) this.#showBonusUnlockModal(newUnlocks);
     this.#refreshBonusBar();
 
@@ -671,6 +728,7 @@ export class GameController {
     const subDt = dt / PLINKO.SUBSTEPS;
     for (let s = 0; s < PLINKO.SUBSTEPS; s++) this.#substep(subDt);
     this.#renderBalls();
+    this.#refreshBallReadouts();
     this.#checkStuckBalls();
     if (!this.#hasSimulatedBalls()) this.#checkEndOfRound();
   }
@@ -784,6 +842,24 @@ export class GameController {
 
   /** @param {import('../entities/peg-classic.js').Peg} peg @param {Ball} [ball] */
   #registerHit(peg, ball) {
+    /* Glass ball: decrement hit counter toward 0, shatter when exhausted. */
+    if (ball?.isGlass) {
+      ball.glassHits -= 1;
+      this.#syncGlassCrackClass(ball);
+      /* Flash the ball on every hit so the player sees damage. */
+      const glassEl = this.#balls.get(ball.id)?.el;
+      if (glassEl) {
+        glassEl.classList.remove("pk-glass-hit");
+        void glassEl.offsetWidth;
+        glassEl.classList.add("pk-glass-hit");
+      }
+      if (ball.glassHits <= 0) {
+        this.#shatterGlassBall(ball);
+        return;
+      }
+      /* Glass ball continues and scores normally. */
+    }
+
     /* Ice ball on already-frozen peg: reset thaw counter. */
     if (ball?.isIce && peg.frozenHits > 0) {
       peg.frozenHits = PLINKO.ICE_HITS_TO_THAW;
@@ -975,12 +1051,14 @@ export class GameController {
 
     if (gate === "save") {
       if (ball.isIce) { this.#iceBallIds.delete(ball.id); this.#iceBallSaved = true; }
+      if (ball.isGlass) { this.#glassBallIds.delete(ball.id); this.#glassBallSaved = true; }
       this.#saved += 1;
       gameEvents.emit("ball:saved", { ball });
       this.#refreshSavedBtn();
       this.#captureBall(ball, gate);
     } else if (gate === "shop") {
       if (ball.isIce) { this.#iceBallIds.delete(ball.id); this.#iceBallSaved = true; }
+      if (ball.isGlass) { this.#glassBallIds.delete(ball.id); this.#glassBallSaved = true; }
       this.#saved += 1;
       gameEvents.emit("ball:saved", { ball });
       this.#refreshSavedBtn();
@@ -1002,6 +1080,7 @@ export class GameController {
       this.#emitRecycleTeleport(oldX, oldY, this.#balls.get(ball.id)?.el ?? null);
     } else {
       if (ball.isIce) this.#onIceBallLost(ball);
+      if (ball.isGlass) this.#glassBallIds.delete(ball.id);
       this.#drained += 1;
       if (this.#readoutDrained) this.#readoutDrained.textContent = String(this.#drained);
       this.#captureBall(ball, gate);
@@ -1277,6 +1356,18 @@ export class GameController {
     }
   }
 
+  #refreshBallReadouts() {
+    let total = 0, ice = 0, glass = 0;
+    for (const { ball } of this.#balls.values()) {
+      total++;
+      if (ball.isIce) ice++;
+      if (ball.isGlass) glass++;
+    }
+    if (this.#readoutBalls) this.#readoutBalls.textContent = String(total);
+    if (this.#readoutBallsIce) this.#readoutBallsIce.textContent = String(ice);
+    if (this.#readoutBallsGlass) this.#readoutBallsGlass.textContent = String(glass);
+  }
+
   /* ──────────────────────────────────────────────────────────────────────
      End of round
      ────────────────────────────────────────────────────────────────────── */
@@ -1362,14 +1453,65 @@ export class GameController {
       queueIceBall: () => {
         const idx = Math.floor(Math.random() * this.#sublaunchEls.length);
         this.#iceBallSublaunchQueued = idx;
-        /* Add 1 extra ball to that sublaunch — the ice ball. */
         this.#sublaunchBalls[idx] = (this.#sublaunchBalls[idx] ?? 0) + 1;
+        this.#spawnOneHeldBall(idx, { ice: true });
         this.#refreshSublaunches();
       },
       cleanupIce: () => {
         this.#cleanupIceBallState();
       },
+      queueGlassBall: () => {
+        const idx = Math.floor(Math.random() * this.#sublaunchEls.length);
+        this.#glassBallSublaunchQueued = idx;
+        this.#sublaunchBalls[idx] = (this.#sublaunchBalls[idx] ?? 0) + 1;
+        this.#spawnOneHeldBall(idx, { glass: true });
+        this.#refreshSublaunches();
+      },
+      cleanupGlass: () => {
+        this.#cleanupGlassBallState();
+      },
     };
+  }
+
+  /**
+   * Spawn a single held ball into an existing sublaunch mid-game.
+   * Used when a bonus queues a special ball after the launch zone is already populated.
+   * @param {number} subIndex
+   * @param {{ ice?: boolean, glass?: boolean }} [opts]
+   */
+  #spawnOneHeldBall(subIndex, { ice = false, glass = false } = {}) {
+    if (!this.#ballLayerEl) return;
+    this.#computeLaunchWalls();
+    const box = this.#launchWalls[subIndex];
+    if (!box) return;
+    const cx = (box.left + box.right) / 2;
+    const boxW = box.right - box.left;
+    /* Count how many held balls already exist to stack above them. */
+    const heldCount = this.#getHeldBalls(subIndex).length;
+    const jx = (Math.random() - 0.5) * (boxW * 0.5);
+    const ball = new Ball({ x: cx + jx, y: box.top + 4 + heldCount * 4 });
+    ball.state = "held";
+    ball.sublaunchIdx = subIndex;
+    const el = document.createElement("div");
+    el.className = "pk-ball";
+    if (ice) {
+      this.#iceBallSublaunchQueued = -1;
+      ball.isIce = true;
+      this.#iceBallIds.add(ball.id);
+      el.classList.add("pk-ball--ice");
+    }
+    if (glass) {
+      this.#glassBallSublaunchQueued = -1;
+      ball.isGlass = true;
+      ball.glassHits = PLINKO.GLASS_BALL_MAX_HITS;
+      this.#glassBallIds.add(ball.id);
+      el.classList.add("pk-ball--glass");
+    }
+    const oy = this.#pinboardOffsetTop;
+    el.style.transform = `translate(${ball.x}px, ${ball.y + oy}px)`;
+    this.#ballLayerEl.appendChild(el);
+    this.#balls.set(ball.id, { ball, el });
+    this.#startLoop();
   }
 
   /** Remove all ice-ball state: unmark live balls, unfreeze all pegs. */
@@ -1416,6 +1558,94 @@ export class GameController {
     this.#refreshBonusBar();
   }
 
+  /** Called when the glass ball shatters at max hits. */
+  #shatterGlassBall(ball) {
+    this.#glassBallIds.delete(ball.id);
+    ball.alive = false;
+    const entry = this.#balls.get(ball.id);
+    if (entry) {
+      entry.el.style.opacity = "0";
+      this.#balls.delete(ball.id);
+      this.#ballIdleTracker.delete(ball.id);
+      this.#bag.timeout(() => entry.el.remove(), 50);
+    }
+    this.#emitGlassShatter(ball.x, ball.y);
+    audioManager.playSfx("click");
+    this.#cleanupGlassBallState();
+    bonusManager.removeSessionBonus("glass_ball");
+    this.#refreshBonusBar();
+  }
+
+  /**
+   * Emit shatter burst and shard particles at the given pinboard position.
+   * @param {number} bx  ball x in pinboard-local coords
+   * @param {number} by  ball y in pinboard-local coords
+   */
+  #emitGlassShatter(bx, by) {
+    if (!this.#ballLayerEl) return;
+    const oy = this.#pinboardOffsetTop;
+    const sx = bx;
+    const sy = by + oy;
+
+    /* Central burst flash. */
+    const burst = document.createElement("div");
+    burst.className = "pk-glass-burst";
+    burst.style.cssText = `left:${sx}px;top:${sy}px`;
+    this.#ballLayerEl.appendChild(burst);
+    this.#bag.timeout(() => burst.remove(), 400);
+
+    /* Shard particles flying outward. */
+    for (let i = 0; i < 8; i++) {
+      const p = document.createElement("div");
+      p.className = "pk-particle pk-particle--glass";
+      const angle = (Math.PI * 2 * i) / 8;
+      const dist = 10 + Math.random() * 16;
+      p.style.cssText = `left:${sx}px;top:${sy}px;--px:${(Math.cos(angle) * dist).toFixed(1)}px;--py:${(Math.sin(angle) * dist).toFixed(1)}px`;
+      this.#ballLayerEl.appendChild(p);
+      this.#bag.timeout(() => p.remove(), 420);
+    }
+  }
+
+  /** Sync crack CSS classes on the glass ball element based on `ball.glassHits`. */
+  #syncGlassCrackClass(ball) {
+    const entry = this.#balls.get(ball.id);
+    if (!entry) return;
+    const { el } = entry;
+    el.classList.remove(
+      "pk-ball--glass-crack-1",
+      "pk-ball--glass-crack-2",
+      "pk-ball--glass-crack-3",
+      "pk-ball--glass-crack-4",
+    );
+    /* Show cracks during the last CRACK_THRESHOLD hits.
+       glassHits = 4 → crack-1, 3 → crack-2, 2 → crack-3, 1 → crack-4 */
+    if (ball.glassHits >= PLINKO.GLASS_BALL_CRACK_THRESHOLD) return;
+    const crackLevel = PLINKO.GLASS_BALL_CRACK_THRESHOLD - ball.glassHits;
+    if (crackLevel >= 1 && crackLevel <= 4) {
+      el.classList.add(`pk-ball--glass-crack-${crackLevel}`);
+    }
+  }
+
+  /** Remove glass marking from all live glass balls. */
+  #cleanupGlassBallState() {
+    this.#glassBallSublaunchQueued = -1;
+    this.#glassBallSaved = false;
+    for (const id of this.#glassBallIds) {
+      const entry = this.#balls.get(id);
+      if (entry) {
+        entry.ball.isGlass = false;
+        entry.el.classList.remove(
+          "pk-ball--glass",
+          "pk-ball--glass-crack-1",
+          "pk-ball--glass-crack-2",
+          "pk-ball--glass-crack-3",
+          "pk-ball--glass-crack-4",
+        );
+      }
+    }
+    this.#glassBallIds.clear();
+  }
+
   /** @param {import('../configs/bonus-defs.js').BonusDef[]} unlocked */
   #showBonusUnlockModal(unlocked) {
     import("../components/bonus-unlock-modal.js").then(({ BonusUnlockModal }) => {
@@ -1457,9 +1687,9 @@ export class GameController {
      ────────────────────────────────────────────────────────────────────── */
 
   /** @param {boolean} ice */
-  #devSpawnBall(ice) {
+  #devSpawnBall(ice, glass = false) {
     const idx = Math.floor(Math.random() * this.#sublaunchEls.length);
-    this.#spawnActiveBall(idx, ice);
+    this.#spawnActiveBall(idx, ice, glass);
   }
 
   /** @param {string} id */

@@ -30,17 +30,17 @@ describe("Layer", () => {
   it("produces only pegs and one coin when bumperChance=0", () => {
     const layer = new Layer({ level: 0, width: 200, y: 0, bumperChance: 0 });
     const coins = layer.pegs.filter((p) => p.type === "coin");
-    const pegs = layer.pegs.filter((p) => p.type === "peg");
+    const bumpers = layer.pegs.filter((p) => p.type === "bumper");
     expect(coins.length).toBe(1);
-    expect(pegs.length).toBe(layer.pegs.length - 1);
+    expect(bumpers.length).toBe(0);
   });
 
   it("produces bumpers and one coin when bumperChance=1", () => {
     const layer = new Layer({ level: 0, width: 200, y: 0, bumperChance: 1 });
     const coins = layer.pegs.filter((p) => p.type === "coin");
-    const bumpers = layer.pegs.filter((p) => p.type === "bumper");
+    const regularPegs = layer.pegs.filter((p) => p.type === "peg");
     expect(coins.length).toBe(1);
-    expect(bumpers.length).toBe(layer.pegs.length - 1);
+    expect(regularPegs.length).toBe(0);
   });
 
   it("contains exactly one coin peg per layer", () => {

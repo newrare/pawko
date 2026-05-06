@@ -29,6 +29,7 @@ export function installDevAdminPanel({ onTitle, onStyleguide } = {}) {
       <h4>Balls</h4>
       <button class="pk-dev-admin-btn" data-dev="ball">Normal</button>
       <button class="pk-dev-admin-btn pk-dev-admin-btn--ice" data-dev="ice-ball">Ice</button>
+      <button class="pk-dev-admin-btn pk-dev-admin-btn--glass" data-dev="glass-ball">Glass</button>
     </div>
     <div class="pk-dev-admin-section">
       <h4>Bonus</h4>
@@ -53,6 +54,7 @@ export function installDevAdminPanel({ onTitle, onStyleguide } = {}) {
       else if (action === "nav-styleguide") onStyleguide?.();
       else if (action === "ball") gameEvents.emit("dev:spawnBall");
       else if (action === "ice-ball") gameEvents.emit("dev:spawnIceBall");
+      else if (action === "glass-ball") gameEvents.emit("dev:spawnGlassBall");
       else if (action === "bonus") {
         gameEvents.emit("dev:activateBonus", { id: /** @type {HTMLElement} */ (btn).dataset.bonusId });
       }

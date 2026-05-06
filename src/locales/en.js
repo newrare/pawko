@@ -13,6 +13,9 @@ export const en = {
   "game.drained": "Drained",
   "game.saved": "Saved",
   "game.level": "Level",
+  "game.balls": "Balls",
+  "game.balls_ice": "Ice",
+  "game.balls_glass": "Glass",
   "game.send_up": "Saved {n} \u2191",
   "game.replay": "Replay",
   "game.back": "Back",
@@ -74,6 +77,8 @@ export const en = {
   "bonus.session.score_x2.desc": "Double your score multiplier for 3 levels.",
   "bonus.session.ice_ball": "Ice Ball",
   "bonus.session.ice_ball.desc": "One ball becomes icy for 10 levels. It freezes every peg it touches — frozen pegs give no effect until thawed by another ball.",
+  "bonus.session.glass_ball": "Glass Ball",
+  "bonus.session.glass_ball.desc": "One ball becomes a glass bead. Transparent and fragile — it shatters into shards after 20 hits. Cracks appear in the last 5 hits.",
 
   "shop.skip": "No thanks",
   "shop.peg.intro": "Shop peg destroyed! Choose a free bonus:",

@@ -6,37 +6,42 @@
   align-items: center;
   gap: 14px;
   text-align: center;
-  padding: 24px 16px;
-  border-radius: var(--gt-radius-lg);
-  background: rgba(255, 244, 221, 0.55);
-  border: 2px dashed rgba(74, 42, 10, 0.45);
-  box-shadow: var(--gt-shadow-md);
+  padding: 3rem 2rem 2.5rem;
+  border-bottom: 1px solid var(--pk-crimson-deep);
   animation: gt-pop-in var(--anim-modal-open, 200ms) ease-out forwards;
 }
 
 .gt-title-art {
-  font-size: clamp(2.5rem, 12vmin, 5rem);
+  font-size: 0.55rem;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: var(--gt-color-text-dim);
   line-height: 1;
-  filter: drop-shadow(0 4px 6px rgba(74, 42, 10, 0.25));
 }
 
 .gt-title-name {
-  font-size: clamp(2.4rem, 10vmin, 4.5rem);
-  font-weight: 900;
-  color: var(--gt-color-text);
-  letter-spacing: 0.04em;
-  text-shadow: 0 3px 0 rgba(74, 42, 10, 0.18);
+  font-size: clamp(2.4rem, 10vmin, 3.2rem);
+  font-weight: 700;
+  color: var(--pk-gold);
+  letter-spacing: 14px;
+  text-transform: uppercase;
+  text-shadow: 0 0 40px rgba(212, 175, 55, 0.22);
 }
 
 .gt-title-tag {
-  font-size: 1rem;
-  color: var(--gt-color-text);
-  opacity: 0.8;
-  font-style: italic;
+  font-size: 0.72rem;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--gt-color-text-sec);
 }
 
 .gt-title-hint {
-  font-size: 0.95rem;
+  font-size: 0.55rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
   color: var(--gt-color-text-dim);
+  display: inline-block;
+  padding: 3px 14px;
+  border: 1px solid var(--pk-crimson-deep);
   animation: gt-pulse 1.6s ease-in-out infinite;
 }

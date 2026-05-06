@@ -46,7 +46,7 @@ export class TitleScene {
   #renderInner() {
     return `
       <div class="gt-title">
-        <div class="gt-title-art" aria-hidden="true">📦</div>
+        <div class="gt-title-art" aria-hidden="true">Style Guide · Velvet Rouge × Classic Gold</div>
         <h1 class="gt-title-name">${i18n.t("app.name")}</h1>
         <p class="gt-title-tag">${i18n.t("app.tagline")}</p>
         <p class="gt-title-hint">${i18n.t("title.tap_to_start")}</p>
