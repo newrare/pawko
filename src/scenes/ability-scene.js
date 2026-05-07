@@ -72,7 +72,7 @@ export class AbilityScene {
 
     return `
       <h1 class="pk-ability-title">${i18n.t("ability.title")}</h1>
-      <p class="pk-ability-coins">🪙 <b>${coins}</b></p>
+      <p class="pk-ability-coins"><img src="images/coin.png" class="pk-coin-icon" alt="" /> <b>${coins}</b></p>
       <div class="pk-ability-list">${rows}</div>
       <button class="gt-btn gt-btn--ghost pk-ability-back" data-action="back">
         <span class="gt-btn-label">${i18n.t("menu.back")}</span>
@@ -84,7 +84,7 @@ export class AbilityScene {
   #renderRow(a) {
     const owned = abilityManager.isUnlocked(a.id);
     const canAfford = currencyManager.get() >= a.cost;
-    const btnLabel = owned ? "✓" : `${a.cost} 🪙`;
+    const btnLabel = owned ? "✓" : `${a.cost} <img src="images/coin.png" class="pk-coin-icon" alt="" />`;
     const btnAttrs = owned || !canAfford ? "disabled" : "";
     return `
       <div class="pk-ability-row${owned ? " is-owned" : ""}">

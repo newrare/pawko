@@ -97,6 +97,38 @@
   z-index: 1;
 }
 
+/* --- HUD bonuses bar (active session bonuses) --- */
+
+.pk-hud-bonuses {
+  position: absolute;
+  top: 6px;
+  left: 10px;
+  display: flex;
+  gap: 4px;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.pk-hud-bonus {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 4px;
+  padding: 2px 5px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--pk-gold-light);
+  letter-spacing: 0.5px;
+}
+
+.pk-hud-bonus-dur {
+  font-size: 0.58rem;
+  color: var(--pk-gold-dim);
+  font-weight: 700;
+}
+
 /* --- Score gauge (fills bottom to top based on score/target) --- */
 
 .pk-score-gauge {
@@ -198,6 +230,9 @@
 }
 .pk-popup--big { font-size: 1.1rem; color: var(--pk-crimson); }
 .pk-popup--coin { color: #facc15; }
+.pk-popup--gate { font-size: 0.95rem; font-weight: 900; }
+.pk-popup--bonus { color: var(--gt-color-success); }
+.pk-popup--malus { color: var(--gt-color-danger); }
 
 /* --- Collection gates --- */
 
@@ -284,8 +319,8 @@
 }
 
 .pk-particle--recycle {
-  background: rgba(99, 179, 255, 0.95);
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.9);
+  background: rgba(250, 204, 21, 0.95);
+  box-shadow: 0 0 8px rgba(212, 175, 55, 0.9);
   width: 7px;
   height: 7px;
   animation-duration: 0.38s;
@@ -300,11 +335,11 @@
   border-radius: 2px;
   background: linear-gradient(
     to top,
-    rgba(59, 130, 246, 0.6) 0%,
-    rgba(147, 197, 253, 0.2) 70%,
+    rgba(212, 175, 55, 0.7) 0%,
+    rgba(250, 204, 21, 0.25) 70%,
     transparent 100%
   );
-  box-shadow: 0 0 4px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 6px rgba(212, 175, 55, 0.4);
   animation: pk-recycle-beam 0.35s ease-out forwards;
   pointer-events: none;
   z-index: 11;

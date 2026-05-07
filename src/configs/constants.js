@@ -155,7 +155,7 @@ export const PLINKO = {
   BUMPER_CHANCE_MAX: 0.35,
 
   /** Number of layers loaded at once at the start of a level. */
-  INITIAL_LAYERS: 10,
+  INITIAL_LAYERS: 9,
 
   /* Launch zone */
   SUBLAUNCH_COUNT: 3,
@@ -181,6 +181,8 @@ export const PLINKO = {
   RESTITUTION_PEG: 0.55,
   RESTITUTION_BUMPER: 1.05,
   WALL_RESTITUTION: 0.7,
+  /** Horizontal velocity multiplier when a ball contacts a floor surface. */
+  FLOOR_FRICTION: 0.4,
   MAX_VELOCITY: 1200,
   /** Max simulation step (s); avoids tunneling on tab refocus. */
   MAX_STEP: 1 / 60,

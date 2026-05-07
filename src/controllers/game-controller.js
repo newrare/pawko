@@ -109,6 +109,7 @@ export class GameController {
     this.#spawnHeldBalls();
     this.#refreshSublaunches();
     this.#updateScoreGauge();
+    this.#renderHudBonuses();
   }
 
   destroy() {
@@ -142,12 +143,13 @@ export class GameController {
 
     const sublaunchCount = this.#sublaunchBalls.length;
     safe.innerHTML = `
-      <div class="pk-launch" data-role="launch">
+      <div class="pk-launch" data-role="launch" style="grid-template-columns: repeat(${sublaunchCount}, 1fr)">
         ${Array.from({ length: sublaunchCount }, (_, i) => `<div class="pk-sublaunch" data-sublaunch="${i}"></div>`).join("")}
       </div>
       <div class="pk-pinboard" data-role="pinboard">
         <div class="pk-score-gauge" data-role="score-gauge"></div>
         <div class="pk-score-label" data-role="score-label">0 / ${this.#targetScore}</div>
+        <div class="pk-hud-bonuses" data-role="hud-bonuses"></div>
         <div class="pk-stack" data-role="stack"></div>
       </div>
       <div class="pk-collection">
@@ -477,7 +479,7 @@ export class GameController {
         if (box) {
           if (ball.x - r < box.left) { ball.x = box.left + r; ball.vx = Math.abs(ball.vx) * wallR; }
           else if (ball.x + r > box.right) { ball.x = box.right - r; ball.vx = -Math.abs(ball.vx) * wallR; }
-          if (ball.y + r > box.bottom) { ball.y = box.bottom - r; ball.vy = -Math.abs(ball.vy) * 0.3; }
+          if (ball.y + r > box.bottom) { ball.y = box.bottom - r; ball.vy = -Math.abs(ball.vy) * 0.3; ball.vx *= PLINKO.FLOOR_FRICTION; }
           if (ball.y - r < box.top) { ball.y = box.top + r; ball.vy = Math.abs(ball.vy) * wallR; }
         }
       } else if (ball.state === "captured") {
@@ -487,7 +489,7 @@ export class GameController {
           if (ball.x - r < walls.left) { ball.x = walls.left + r; ball.vx = Math.abs(ball.vx) * wallR; }
           else if (ball.x + r > walls.right) { ball.x = walls.right - r; ball.vx = -Math.abs(ball.vx) * wallR; }
         }
-        if (ball.y + r > gateFloor) { ball.y = gateFloor - r; ball.vy = -Math.abs(ball.vy) * 0.3; }
+        if (ball.y + r > gateFloor) { ball.y = gateFloor - r; ball.vy = -Math.abs(ball.vy) * 0.3; ball.vx *= PLINKO.FLOOR_FRICTION; }
         if (ball.y < bottomY) { ball.y = bottomY; ball.vy = Math.abs(ball.vy) * wallR; }
       } else {
         if (ball.x - r < 0) { ball.x = r; ball.vx = Math.abs(ball.vx) * wallR; }
@@ -541,7 +543,7 @@ export class GameController {
       const coinValue = /** @type {any} */ (peg).coinValue ?? PLINKO.COIN_VALUE;
       currencyManager.add(coinValue);
       audioManager.playSfx("click");
-      this.#popText(`+${coinValue}🪙`, peg.x, peg.y, "pk-popup pk-popup--coin");
+      this.#popText(`+${coinValue}`, peg.x, peg.y, "pk-popup pk-popup--coin");
       this.#destroyPeg(peg, ball);
       return;
     }
@@ -584,6 +586,23 @@ export class GameController {
     pop.style.top = `${y - 12}px`;
     this.#stackEl.appendChild(pop);
     this.#bag.timeout(() => pop.remove(), 600);
+  }
+
+  /**
+   * Pop a floating score label at the pinboard bottom when a ball enters a gate.
+   * @param {number} points
+   * @param {number} x
+   * @param {number} y
+   */
+  #popGateScore(points, x, y) {
+    if (!this.#stackEl || points === 0) return;
+    const pop = document.createElement("div");
+    pop.className = `pk-popup pk-popup--gate ${points > 0 ? "pk-popup--bonus" : "pk-popup--malus"}`;
+    pop.textContent = points > 0 ? `+${points}` : `${points}`;
+    pop.style.left = `${x}px`;
+    pop.style.top = `${y - 8}px`;
+    this.#stackEl.appendChild(pop);
+    this.#bag.timeout(() => pop.remove(), 900);
   }
 
   /* ──────────────────────────────────────────────────────────────────────
@@ -633,6 +652,7 @@ export class GameController {
 
       this.#levelScore = Math.max(0, this.#levelScore + points);
       this.#updateScoreGauge();
+      this.#popGateScore(points, ball.x, this.#pinboardHeight);
       this.#captureBall(ball, gate);
     }
   }
@@ -822,12 +842,13 @@ export class GameController {
       }
     }
     const victory = this.#levelScore >= this.#targetScore;
-    this.#endRound({ victory });
+    this.#bag.timeout(() => this.#endRound({ victory }), 2000);
+    this.#ended = true;
   }
 
   /** @param {{ victory: boolean }} args */
   #endRound({ victory }) {
-    if (this.#ended) return;
+    if (this.#overModal) return;
     this.#ended = true;
     this.#stopLoop();
 
@@ -880,5 +901,21 @@ export class GameController {
       );
       if (el) el.textContent = i18n.t(`game.gate.${gate}`);
     }
+  }
+
+  #renderHudBonuses() {
+    const el = this.#safeEl?.querySelector('[data-role="hud-bonuses"]');
+    if (!el) return;
+    const active = bonusManager.getActiveSession();
+    const icons = {
+      bonus_launcher: "🚀",
+      score_x2: "×2",
+    };
+    el.innerHTML = active
+      .map((b) => {
+        const icon = icons[b.id] ?? "⭐";
+        return `<span class="pk-hud-bonus" title="${b.id}">${icon}<span class="pk-hud-bonus-dur">${b.remaining}</span></span>`;
+      })
+      .join("");
   }
 }

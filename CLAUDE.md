@@ -306,6 +306,21 @@ When **Claude Opus** is selected for a task, follow this checklist for each requ
 
 This workflow ensures quality, maintainability, and alignment with project standards.
 
+## Command approval rules
+
+The agent can execute the following command categories **without requesting user consent**:
+
+- **File utilities**: `cp`, `mv`, `rm`, `ls`, `cat`, `mkdir`, `find`, `du`, etc.
+- **Text processing**: `sed`, `grep`, `awk`, `cut`, `sort`, `uniq`, `tr`, etc.
+- **Build & package management**: `npm`, `npm run`, `npx`, `npm test`, `npm run build`, etc.
+- **Dev server**: `npm run dev`, `npm run preview`
+- **Linting & formatting**: `npm run lint`, `npm run format`
+- **Testing**: `npm test`, `npm run test:watch`, `npx vitest`, etc.
+
+**Requires user approval:**
+
+- **All Git commands**: `git commit`, `git push`, `git pull`, `git reset`, `git checkout`, `git branch`, etc.
+
 ## Code conventions
 
 - **JavaScript only** — no TypeScript. Use JSDoc for types.

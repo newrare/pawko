@@ -78,7 +78,7 @@ export class LevelSelectorScene {
       <h1 class="pk-level-selector-title">${i18n.t("level_selector.title")}</h1>
       <div class="pk-level-meta">
         <span class="pk-coin-balance" aria-label="${i18n.t("currency.label")}">
-          🪙 <b>${currencyManager.get()}</b>
+          <img src="images/coin.png" class="pk-coin-icon" alt="" /> <b>${currencyManager.get()}</b>
         </span>
       </div>
       <div class="pk-level-grid">${grid}</div>

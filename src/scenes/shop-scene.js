@@ -82,7 +82,7 @@ export class ShopScene {
 
     return `
       <h1 class="pk-shop-title">${i18n.t("shop.title")}</h1>
-      <p class="pk-shop-coins">🪙 <b>${coins}</b></p>
+      <p class="pk-shop-coins"><img src="images/coin.png" class="pk-coin-icon" alt="" /> <b>${coins}</b></p>
       <div class="pk-shop-list">${rows}</div>
       <button class="gt-btn gt-btn--ghost pk-shop-back" data-action="back">
         <span class="gt-btn-label">${i18n.t("menu.back")}</span>
@@ -102,7 +102,7 @@ export class ShopScene {
     const tagKey = isPermanent ? "shop.tag.permanent" : "shop.tag.session";
     const btnLabel = owned
       ? i18n.t("shop.owned")
-      : `${b.cost} 🪙`;
+      : `${b.cost} <img src="images/coin.png" class="pk-coin-icon" alt="" />`;
     const btnAttrs = owned || !canAfford ? "disabled" : "";
     return `
       <div class="pk-shop-row${owned ? " is-owned" : ""}">

@@ -57,3 +57,12 @@ button:focus-visible,
   outline: 2px solid var(--gt-color-focus);
   outline-offset: 2px;
 }
+
+/* --- Coin icon inline image --- */
+.pk-coin-icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.1em;
+  object-fit: contain;
+}

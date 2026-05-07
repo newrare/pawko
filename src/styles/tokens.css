@@ -22,8 +22,8 @@
   --gt-color-surface: var(--pk-bg-card);
   --gt-color-surface-2: var(--pk-bg-surface);
   --gt-color-text: var(--pk-gold-light);
-  --gt-color-text-dim: var(--pk-rose-muted);
-  --gt-color-text-sec: var(--pk-rose-dim);
+  --gt-color-text-dim: var(--pk-rose-dim);
+  --gt-color-text-sec: var(--pk-rose);
   --gt-color-primary: var(--pk-crimson-deep);
   --gt-color-primary-2: var(--pk-crimson);
   --gt-color-gold: var(--pk-gold);

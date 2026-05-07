@@ -28,7 +28,7 @@ describe("Layer", () => {
     expect(indices).toEqual(expected);
   });
 
-  it("produces only pegs when bumperChance=0 and coinChance=0", () => {
+  it("produces mostly pegs when bumperChance=0 and coinChance=0, with one guaranteed coin", () => {
     const layer = new Layer({
       level: 0,
       width: 200,
@@ -37,13 +37,15 @@ describe("Layer", () => {
       coinChance: 0,
     });
     const types = new Set(layer.pegs.map((p) => p.type));
-    expect(types).toEqual(new Set(["peg"]));
+    expect(types.has("peg")).toBe(true);
+    expect(types.has("coin")).toBe(true);
   });
 
-  it("produces only bumpers when bumperChance=1", () => {
+  it("produces mostly bumpers when bumperChance=1, with at least one guaranteed coin", () => {
     const layer = new Layer({ level: 0, width: 200, y: 0, bumperChance: 1 });
     const types = new Set(layer.pegs.map((p) => p.type));
-    expect(types).toEqual(new Set(["bumper"]));
+    expect(types.has("bumper")).toBe(true);
+    expect(types.has("coin")).toBe(true);
   });
 
   it("produces only coin pegs when bumperChance=0 and coinChance=1", () => {

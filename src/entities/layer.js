@@ -61,6 +61,14 @@ export class Layer extends Entity {
       else Cls = Peg;
       this.pegs.push(new Cls({ x, y, slot: i }));
     }
+
+    /* Guarantee at least one coin peg per layer (random position). */
+    const hasCoin = this.pegs.some((p) => p.type === "coin");
+    if (!hasCoin && this.pegs.length > 0) {
+      const idx = Math.floor(rng() * this.pegs.length);
+      const old = this.pegs[idx];
+      this.pegs[idx] = new CoinPeg({ x: old.x, y: old.y, slot: old.slot });
+    }
   }
 }
 
