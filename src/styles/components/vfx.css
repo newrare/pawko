@@ -1,0 +1,420 @@
+/* --- VFX Overlay System — all visual effects CSS.
+       Independent, library-style. No dependency on project tokens. --- */
+
+/* --- Base overlay --- */
+.vfx-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 9999;
+  border-radius: inherit;
+}
+
+/* ===== POSITIVE EFFECTS ===== */
+
+/* --- Sunburst --- */
+.vfx-sunburst {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: vfx-sunburst-spin 4s linear infinite;
+}
+
+.vfx-sunburst-ray {
+  position: absolute;
+  width: 3px;
+  height: 120%;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(255, 215, 0, 0.4) 30%,
+    rgba(255, 215, 0, 0.6) 50%,
+    rgba(255, 215, 0, 0.4) 70%,
+    transparent 100%
+  );
+  transform: rotate(var(--ray-angle));
+  transform-origin: center center;
+  opacity: 0.7;
+}
+
+@keyframes vfx-sunburst-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* --- Confetti Pop --- */
+.vfx-confetti {
+  perspective: 600px;
+}
+
+.vfx-confetti-piece {
+  position: absolute;
+  top: -10px;
+  left: var(--x);
+  width: 8px;
+  height: 10px;
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  animation: vfx-confetti-fall var(--fall-duration, 2s) ease-in var(--delay, 0s) forwards;
+  opacity: 0;
+}
+
+@keyframes vfx-confetti-fall {
+  0% {
+    opacity: 1;
+    transform: translateY(0) translateX(0) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(calc(100cqh + 20px)) translateX(var(--drift, 0px)) rotate(var(--rotate, 360deg));
+  }
+}
+
+/* Container query fallback */
+.vfx-confetti {
+  container-type: size;
+}
+@supports not (container-type: size) {
+  @keyframes vfx-confetti-fall {
+    0% {
+      opacity: 1;
+      transform: translateY(0) translateX(0) rotate(0deg);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(300px) translateX(var(--drift, 0px)) rotate(var(--rotate, 360deg));
+    }
+  }
+}
+
+
+
+.vfx-sparkle {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: 6px;
+  height: 6px;
+  background: radial-gradient(circle, #fff 0%, rgba(255, 215, 0, 0.8) 40%, transparent 70%);
+  border-radius: 50%;
+  animation: vfx-sparkle-blink 0.8s ease-in-out var(--delay, 0s) infinite;
+  transform: scale(var(--scale, 1));
+}
+
+@keyframes vfx-sparkle-blink {
+  0%, 100% { opacity: 0; transform: scale(0); }
+  50% { opacity: 1; transform: scale(var(--scale, 1)); }
+}
+
+/* --- God Rays --- */
+.vfx-god-rays {
+  background: transparent;
+}
+
+.vfx-god-ray {
+  position: absolute;
+  top: -20%;
+  left: var(--ray-x);
+  width: var(--ray-width, 60px);
+  height: 140%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 200, var(--ray-opacity, 0.3)) 0%,
+    transparent 100%
+  );
+  transform: skewX(-5deg);
+  animation: vfx-god-ray-pulse 2.5s ease-in-out var(--ray-delay, 0s) infinite;
+}
+
+@keyframes vfx-god-ray-pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+/* --- Gold Shower --- */
+.vfx-gold-shower {
+  container-type: size;
+}
+
+.vfx-gold-coin {
+  position: absolute;
+  top: -30px;
+  left: var(--x);
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  animation: vfx-gold-fall var(--fall-duration, 2s) ease-in var(--delay, 0s) forwards;
+  opacity: 0;
+}
+
+@keyframes vfx-gold-fall {
+  0% {
+    opacity: 1;
+    transform: translateY(0) translateX(0) rotateY(0deg);
+  }
+  100% {
+    opacity: 0.6;
+    transform: translateY(calc(100cqh + 30px)) translateX(var(--drift, 0px)) rotateY(720deg);
+  }
+}
+
+@supports not (container-type: size) {
+  @keyframes vfx-gold-fall {
+    0% {
+      opacity: 1;
+      transform: translateY(0) translateX(0) rotateY(0deg);
+    }
+    100% {
+      opacity: 0.6;
+      transform: translateY(350px) translateX(var(--drift, 0px)) rotateY(720deg);
+    }
+  }
+}
+
+/* --- Bloom Flash --- */
+.vfx-bloom-flash {
+  background: radial-gradient(
+    ellipse at center,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(255, 215, 0, 0.4) 40%,
+    transparent 70%
+  );
+  animation: vfx-bloom 0.6s ease-out forwards;
+}
+
+@keyframes vfx-bloom {
+  0% { opacity: 1; transform: scale(0.5); }
+  50% { opacity: 0.8; transform: scale(1.2); }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+
+
+
+.vfx-firework-burst {
+  position: absolute;
+  left: var(--burst-x);
+  top: var(--burst-y);
+  width: 0;
+  height: 0;
+  animation: vfx-burst-appear 0.1s ease var(--burst-delay, 0s) forwards;
+  opacity: 0;
+}
+
+.vfx-firework-spark {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  top: 0;
+  left: 0;
+  animation: vfx-spark-fly 1s ease-out var(--burst-delay, 0s) forwards;
+  opacity: 0;
+}
+
+@keyframes vfx-burst-appear {
+  to { opacity: 1; }
+}
+
+@keyframes vfx-spark-fly {
+  0% {
+    opacity: 1;
+    transform: rotate(var(--angle)) translateY(0);
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--angle)) translateY(calc(-1 * var(--dist, 40px)));
+  }
+}
+
+/* --- Halo Ring --- */
+.vfx-halo-ring {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vfx-halo {
+  width: 30%;
+  height: 30%;
+  border: 3px solid rgba(255, 215, 0, 0.8);
+  border-radius: 50%;
+  animation: vfx-halo-expand 1s ease-out forwards;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.5), inset 0 0 15px rgba(255, 215, 0, 0.3);
+}
+
+@keyframes vfx-halo-expand {
+  0% {
+    transform: scale(0.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+
+/* --- Floating Text --- */
+.vfx-floating-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vfx-float-number {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #ffd700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6), 0 0 10px rgba(255, 215, 0, 0.5);
+  animation: vfx-float-up 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes vfx-float-up {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(0.5);
+  }
+  20% {
+    transform: translateY(-10px) scale(1.3);
+  }
+  40% {
+    transform: translateY(-25px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-60px) scale(0.8);
+  }
+}
+
+
+
+/* ===== NEGATIVE EFFECTS ===== */
+
+/* --- Blood Vignette --- */
+.vfx-blood-vignette {
+  background: radial-gradient(
+    ellipse at center,
+    transparent 40%,
+    rgba(180, 0, 0, 0.3) 70%,
+    rgba(120, 0, 0, 0.7) 100%
+  );
+  animation: vfx-vignette-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes vfx-vignette-pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+
+
+/* --- Frost / Ice Overlay --- */
+.vfx-frost {
+  background:
+    radial-gradient(ellipse at 0% 0%, rgba(150, 220, 255, 0.4) 0%, transparent 50%),
+    radial-gradient(ellipse at 100% 0%, rgba(150, 220, 255, 0.35) 0%, transparent 45%),
+    radial-gradient(ellipse at 0% 100%, rgba(150, 220, 255, 0.35) 0%, transparent 45%),
+    radial-gradient(ellipse at 100% 100%, rgba(150, 220, 255, 0.4) 0%, transparent 50%);
+  backdrop-filter: blur(1px);
+  border: 2px solid rgba(180, 230, 255, 0.3);
+  animation: vfx-frost-pulse 3s ease-in-out infinite;
+}
+
+@keyframes vfx-frost-pulse {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+
+.vfx-crack {
+  position: absolute;
+  left: var(--crack-x);
+  top: var(--crack-y);
+  width: var(--crack-len, 80px);
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.6) 20%,
+    rgba(255, 255, 255, 0.9) 50%,
+    rgba(255, 255, 255, 0.6) 80%,
+    transparent 100%
+  );
+  transform: rotate(var(--crack-angle, 0deg));
+  animation: vfx-crack-appear 0.2s ease-out forwards;
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+}
+
+.vfx-crack::before,
+.vfx-crack::after {
+  content: "";
+  position: absolute;
+  width: 40%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.vfx-crack::before {
+  top: -4px;
+  left: 30%;
+  transform: rotate(25deg);
+}
+
+.vfx-crack::after {
+  bottom: -4px;
+  right: 20%;
+  transform: rotate(-20deg);
+}
+
+@keyframes vfx-crack-appear {
+  0% { opacity: 0; transform: rotate(var(--crack-angle, 0deg)) scaleX(0); }
+  100% { opacity: 1; transform: rotate(var(--crack-angle, 0deg)) scaleX(1); }
+}
+
+/* --- Styleguide VFX Demo Section --- */
+.gt-sg-vfx-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.gt-sg-vfx-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.gt-sg-vfx-stage {
+  position: relative;
+  width: 120px;
+  height: 90px;
+  background: var(--gt-color-surface, #1e080e);
+  border: 1px solid var(--gt-color-primary, #6a1828);
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.gt-sg-vfx-stage:hover {
+  border-color: var(--gt-color-gold, #d4af37);
+}
+
+.gt-sg-vfx-label {
+  font-size: 0.55rem;
+  color: var(--gt-color-text-sec, #f28090);
+  text-align: center;
+  letter-spacing: 0.5px;
+}
+
+.gt-sg-vfx-category {
+  font-size: 0.6rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gt-color-gold, #d4af37);
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--gt-color-primary, #6a1828);
+}

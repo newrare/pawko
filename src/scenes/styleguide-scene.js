@@ -5,6 +5,7 @@ import { buttonHtml } from "../components/ui/button.js";
 import { toggleRowHtml } from "../components/ui/toggle-row.js";
 import { OptionsModal } from "../components/options-modal.js";
 import { TitleScene } from "./title-scene.js";
+import { vfx } from "../utils/vfx.js";
 
 /**
  * StyleguideScene — dev-only visual library for every UI primitive.
@@ -56,6 +57,7 @@ export class StyleguideScene {
       ${this.#renderBonusCards()}
       ${this.#renderModals()}
       ${this.#renderAnimations()}
+      ${this.#renderVfx()}
     `;
   }
 
@@ -464,6 +466,44 @@ export class StyleguideScene {
     `;
   }
 
+  #renderVfx() {
+    const positive = [
+      { id: "sunburst", label: "Sunburst" },
+      { id: "confetti", label: "Confetti Pop" },
+      { id: "sparkle-trail", label: "Sparkle Trail" },
+      { id: "god-rays", label: "God Rays" },
+      { id: "gold-shower", label: "Gold Shower" },
+      { id: "bloom-flash", label: "Bloom Flash" },
+      { id: "fireworks", label: "Fireworks" },
+      { id: "halo-ring", label: "Halo Ring" },
+      { id: "floating-text", label: "Floating Text" },
+    ];
+    const negative = [
+      { id: "blood-vignette", label: "Blood Vignette" },
+      { id: "frost", label: "Frost" },
+      { id: "cracked-screen", label: "Cracked Screen" },
+    ];
+
+    const cell = ({ id, label }) =>
+      `<div class="gt-sg-vfx-cell">
+        <div class="gt-sg-vfx-stage" data-action="play-vfx" data-vfx-id="${id}"></div>
+        <span class="gt-sg-vfx-label">${label}</span>
+      </div>`;
+
+    return `
+      <section class="gt-sg-section">
+        <h2 class="gt-sg-h2">14 · VFX Overlay System</h2>
+        <p style="font-size:.7rem;color:var(--gt-color-text-sec);margin-bottom:1rem;line-height:1.5;">
+          Click any cell to trigger the effect. Use <code style="background:var(--pk-bg-surface);padding:1px 4px;border-radius:2px;">vfx.play('id', element)</code> in code.
+        </p>
+        <div class="gt-sg-vfx-category">Positive</div>
+        <div class="gt-sg-vfx-grid">${positive.map(cell).join("")}</div>
+        <div class="gt-sg-vfx-category" style="margin-top:1.5rem;">Negative</div>
+        <div class="gt-sg-vfx-grid">${negative.map(cell).join("")}</div>
+      </section>
+    `;
+  }
+
   #refresh() {
     if (!this.#el) return;
     this.#el.innerHTML = this.#renderInner();
@@ -488,6 +528,17 @@ export class StyleguideScene {
         });
         this.#sampleModal.open();
         break;
+      case "play-vfx": {
+        const vfxId = /** @type {HTMLElement} */ (actionEl).dataset.vfxId;
+        if (!vfxId) break;
+        const stage = /** @type {HTMLElement} */ (actionEl);
+        // Stop any existing effect on this stage
+        const existing = stage.querySelector("[data-vfx]");
+        if (existing) existing.remove();
+        const opts = vfxId === "floating-text" ? { text: "+50", duration: 2000 } : { duration: 3000 };
+        vfx.play(vfxId, stage, opts);
+        break;
+      }
     }
   };
 
