@@ -98,6 +98,9 @@ export const STORAGE_KEYS = {
   AUTOSAVE: `${NS}.autosave`,
   RANKINGS: `${NS}.rankings`,
   LEVEL_PROGRESS: `${NS}.level_progress`,
+  CURRENCY: `${NS}.currency`,
+  BONUSES: `${NS}.bonuses`,
+  ABILITIES: `${NS}.abilities`,
 };
 
 export const MAX_SAVE_SLOTS = 8;
@@ -187,6 +190,12 @@ export const PLINKO = {
   /* Scoring */
   SCORE_PEG: 1,
   SCORE_BUMPER: 10,
+
+  /* Currency */
+  /** Coins awarded when a ball touches a coin peg. */
+  COIN_VALUE: 5,
+  /** Probability a filled slot becomes a coin peg (independent of bumper roll). */
+  COIN_CHANCE_BASE: 0.04,
   /** How long (ms) a ball must be stationary before its blocker is removed. */
   STUCK_TIMEOUT_MS: 3000,
 

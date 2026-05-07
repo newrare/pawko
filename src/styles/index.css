@@ -13,4 +13,6 @@
 @import "./components/title.css";
 @import "./components/game.css";
 @import "./components/level-selector.css";
+@import "./components/shop.css";
+@import "./components/ability.css";
 @import "./components/styleguide.css";

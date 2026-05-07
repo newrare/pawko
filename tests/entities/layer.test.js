@@ -17,6 +17,7 @@ describe("Layer", () => {
       width: 200,
       y: 50,
       bumperChance: 0,
+      coinChance: 0,
       rng: seedRng([0, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99, 0.99]),
     });
     expect(layer.startSlot).toBe(PLINKO.START_SLOT_CHOICES[0]);
@@ -27,8 +28,14 @@ describe("Layer", () => {
     expect(indices).toEqual(expected);
   });
 
-  it("produces only pegs when bumperChance=0", () => {
-    const layer = new Layer({ level: 0, width: 200, y: 0, bumperChance: 0 });
+  it("produces only pegs when bumperChance=0 and coinChance=0", () => {
+    const layer = new Layer({
+      level: 0,
+      width: 200,
+      y: 0,
+      bumperChance: 0,
+      coinChance: 0,
+    });
     const types = new Set(layer.pegs.map((p) => p.type));
     expect(types).toEqual(new Set(["peg"]));
   });
@@ -39,25 +46,43 @@ describe("Layer", () => {
     expect(types).toEqual(new Set(["bumper"]));
   });
 
-  it("produces a mix of pegs and bumpers with intermediate bumperChance", () => {
-    const layer = new Layer({ level: 5, width: 300, y: 80, bumperChance: 0.5 });
+  it("produces only coin pegs when bumperChance=0 and coinChance=1", () => {
+    const layer = new Layer({
+      level: 0,
+      width: 200,
+      y: 0,
+      bumperChance: 0,
+      coinChance: 1,
+    });
+    const types = new Set(layer.pegs.map((p) => p.type));
+    expect(types).toEqual(new Set(["coin"]));
+  });
+
+  it("produces a mix of pegs/bumpers/coins with intermediate chances", () => {
+    const layer = new Layer({
+      level: 5,
+      width: 300,
+      y: 80,
+      bumperChance: 0.3,
+      coinChance: 0.3,
+    });
     const types = new Set(layer.pegs.map((p) => p.type));
     for (const t of types) {
-      expect(["peg", "bumper"]).toContain(t);
+      expect(["peg", "bumper", "coin"]).toContain(t);
     }
   });
 
   it("startSlot offset shifts the pattern between layers", () => {
     /* Two layers with different start choices yield different first peg slots. */
-    const a = new Layer({ level: 0, width: 200, y: 0, bumperChance: 0, rng: seedRng([0, 0.99]) });
-    const b = new Layer({ level: 0, width: 200, y: 0, bumperChance: 0, rng: seedRng([0.99, 0.99]) });
+    const a = new Layer({ level: 0, width: 200, y: 0, bumperChance: 0, coinChance: 0, rng: seedRng([0, 0.99]) });
+    const b = new Layer({ level: 0, width: 200, y: 0, bumperChance: 0, coinChance: 0, rng: seedRng([0.99, 0.99]) });
     /* rng[0]=0   -> floor(0 * 3) = 0 */
     /* rng[0]=.99 -> floor(.99 * 3) = 2 */
     expect(a.startSlot).not.toBe(b.startSlot);
   });
 
   it("positions pegs evenly across width", () => {
-    const layer = new Layer({ level: 0, width: 200, y: 100, bumperChance: 0 });
+    const layer = new Layer({ level: 0, width: 200, y: 100, bumperChance: 0, coinChance: 0 });
     for (const peg of layer.pegs) {
       expect(peg.x).toBeCloseTo(Slot.xFor(peg.slot, 200));
       expect(peg.y).toBe(100);

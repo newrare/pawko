@@ -103,12 +103,20 @@ class SaveManager {
     this.#write(STORAGE_KEYS.RANKINGS, all);
   }
 
-  /** Wipe every save key (rankings, slots, autosave, level progress). */
+  /**
+   * Wipe every save key (rankings, slots, autosave, level progress, plus
+   * the rogue-lite state — currency, abilities, owned permanent bonuses).
+   * Active session bonuses are not cleared here; the UI flow that triggers
+   * a reset also calls `bonusManager.resetAll()` which handles it.
+   */
   resetAll() {
     localStorage.removeItem(STORAGE_KEYS.AUTOSAVE);
     localStorage.removeItem(STORAGE_KEYS.SAVE_SLOTS);
     localStorage.removeItem(STORAGE_KEYS.RANKINGS);
     localStorage.removeItem(STORAGE_KEYS.LEVEL_PROGRESS);
+    localStorage.removeItem(STORAGE_KEYS.CURRENCY);
+    localStorage.removeItem(STORAGE_KEYS.BONUSES);
+    localStorage.removeItem(STORAGE_KEYS.ABILITIES);
   }
 
   // ─── Level progress ───────────────────────────────

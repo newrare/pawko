@@ -1,0 +1,81 @@
+/* --- Ability scene --- */
+
+.pk-ability {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: var(--gt-space-4);
+  gap: var(--gt-space-3);
+  overflow-y: auto;
+  max-height: 100%;
+  width: 100%;
+}
+
+.pk-ability-title {
+  font-family: var(--gt-font-display);
+  font-size: 1.3rem;
+  color: var(--pk-gold);
+  text-align: center;
+  margin: 0;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.pk-ability-coins {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--pk-gold);
+  margin: 0;
+}
+
+.pk-ability-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gt-space-2);
+  width: 100%;
+  max-width: 360px;
+}
+
+.pk-ability-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gt-space-1);
+  padding: var(--gt-space-3);
+  border: 1px solid var(--pk-gold-dim);
+  border-radius: var(--gt-radius-md);
+  background: var(--pk-bg-card);
+  color: var(--pk-gold-light);
+}
+
+.pk-ability-row.is-owned {
+  border-color: var(--gt-color-success);
+  background: rgba(34, 197, 94, 0.06);
+}
+
+.pk-ability-row-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.pk-ability-row-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--pk-gold);
+}
+
+.pk-ability-row-desc {
+  font-size: 0.78rem;
+  color: var(--gt-color-text-sec);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.pk-ability-row-buy {
+  align-self: flex-end;
+  min-width: 5rem;
+}
+
+.pk-ability-back {
+  margin-top: var(--gt-space-3);
+}

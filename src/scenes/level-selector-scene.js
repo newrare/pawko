@@ -1,8 +1,11 @@
 import { i18n } from "../managers/i18n-manager.js";
 import { saveManager } from "../managers/save-manager.js";
+import { currencyManager } from "../managers/currency-manager.js";
 import { LEVELS } from "../configs/constants.js";
 import { ListenerBag } from "../utils/listener-bag.js";
 import { GameScene } from "./game-scene.js";
+import { ShopScene } from "./shop-scene.js";
+import { AbilityScene } from "./ability-scene.js";
 
 /**
  * Level selector — displays a grid of 20 levels. Levels unlock sequentially.
@@ -31,9 +34,15 @@ export class LevelSelectorScene {
     root.appendChild(this.#el);
 
     this.#bag.on(this.#el, "click", (e) => {
-      const btn = /** @type {HTMLElement} */ (e.target).closest(
-        ".pk-level-btn:not(.pk-level-btn--locked)",
-      );
+      const target = /** @type {HTMLElement} */ (e.target);
+      const action = target.closest("[data-action]");
+      if (action) {
+        const name = /** @type {HTMLElement} */ (action).dataset.action;
+        if (name === "open-shop") this.#router.start(ShopScene);
+        else if (name === "open-ability") this.#router.start(AbilityScene);
+        return;
+      }
+      const btn = target.closest(".pk-level-btn:not(.pk-level-btn--locked)");
       if (!btn) return;
       const levelId = Number(btn.dataset.level);
       if (!levelId) return;
@@ -41,6 +50,7 @@ export class LevelSelectorScene {
     });
 
     this.#bag.add(i18n.onChange(() => this.#refresh()));
+    this.#bag.add(currencyManager.on("change", () => this.#refresh()));
   }
 
   #render() {
@@ -66,7 +76,20 @@ export class LevelSelectorScene {
 
     return `
       <h1 class="pk-level-selector-title">${i18n.t("level_selector.title")}</h1>
+      <div class="pk-level-meta">
+        <span class="pk-coin-balance" aria-label="${i18n.t("currency.label")}">
+          🪙 <b>${currencyManager.get()}</b>
+        </span>
+      </div>
       <div class="pk-level-grid">${grid}</div>
+      <div class="pk-level-actions">
+        <button class="gt-btn gt-btn--secondary" data-action="open-shop">
+          <span class="gt-btn-label">${i18n.t("shop.title")}</span>
+        </button>
+        <button class="gt-btn gt-btn--secondary" data-action="open-ability">
+          <span class="gt-btn-label">${i18n.t("ability.title")}</span>
+        </button>
+      </div>
     `;
   }
 

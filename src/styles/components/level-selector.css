@@ -75,3 +75,27 @@
   pointer-events: none;
   border-color: var(--pk-crimson-muted);
 }
+
+.pk-level-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--gt-space-3);
+}
+
+.pk-coin-balance {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--pk-gold);
+}
+
+.pk-level-actions {
+  display: flex;
+  gap: var(--gt-space-2);
+  width: 100%;
+  max-width: 360px;
+  margin-top: var(--gt-space-2);
+}
+
+.pk-level-actions .gt-btn {
+  flex: 1;
+}

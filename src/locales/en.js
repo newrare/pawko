@@ -62,4 +62,40 @@ export const en = {
   "common.no": "No",
   "common.cancel": "Cancel",
   "common.ok": "OK",
+
+  "currency.label": "Coins",
+
+  "shop.title": "Shop",
+  "shop.empty": "Unlock abilities to reveal bonuses here.",
+  "shop.owned": "Owned",
+  "shop.tag.permanent": "Permanent",
+  "shop.tag.session": "Session",
+  "shop.peg.intro": "Coin pegs drop coins on contact.",
+  "shop.skip": "Skip",
+
+  "ability.title": "Abilities",
+
+  "ability.start_ball_up": "Heavier loadout",
+  "ability.start_ball_up.desc": "Reveals the +1 starting-ball bonus in the shop.",
+  "ability.magnet": "Magnetism",
+  "ability.magnet.desc": "Reveals the shop magnet bonus in the shop.",
+  "ability.extra_launch": "Fourth chamber",
+  "ability.extra_launch.desc": "Reveals the extra sublauncher bonus in the shop.",
+  "ability.score_boost": "Sharpened pegs",
+  "ability.score_boost.desc": "Reveals the score x2 bonus in the shop.",
+
+  "bonus.permanent.extra_start_ball": "Extra ball",
+  "bonus.permanent.extra_start_ball.desc":
+    "Start each round with one extra ball per launcher. Permanent.",
+  "bonus.permanent.shop_magnet": "Shop magnet",
+  "bonus.permanent.shop_magnet.desc":
+    "Shop pegs attract nearby balls with gravity. Permanent.",
+  "bonus.session.bonus_launcher": "Bonus launcher",
+  "bonus.session.bonus_launcher.desc":
+    "Adds a fourth sublauncher with 5 balls. Lasts 3 levels.",
+  "bonus.session.score_x2": "Score x2",
+  "bonus.session.score_x2.desc":
+    "Classic peg score is doubled. Lasts 3 levels.",
+
+  "game.gate.shop": "SHOP",
 };

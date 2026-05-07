@@ -4,6 +4,9 @@ import { buttonHtml } from "./ui/button.js";
 import { i18n } from "../managers/i18n-manager.js";
 import { optionsManager } from "../managers/options-manager.js";
 import { saveManager } from "../managers/save-manager.js";
+import { currencyManager } from "../managers/currency-manager.js";
+import { bonusManager } from "../managers/bonus-manager.js";
+import { abilityManager } from "../managers/ability-manager.js";
 
 /**
  * Sample options modal — music / sound / animSkip toggles, locale cycle,
@@ -77,6 +80,9 @@ export class OptionsModal extends BaseModal {
       case "reset-data":
         if (window.confirm(i18n.t("options.reset_data_confirm"))) {
           saveManager.resetAll();
+          currencyManager.reset();
+          abilityManager.reset();
+          bonusManager.resetAll();
         }
         break;
     }

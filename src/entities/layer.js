@@ -1,6 +1,7 @@
 import { Entity } from "./entity.js";
 import { Peg } from "./peg-classic.js";
 import { Bumper } from "./peg-bumper.js";
+import { CoinPeg } from "./peg-coin.js";
 import { Slot } from "./slot.js";
 import { PLINKO } from "../configs/constants.js";
 
@@ -11,8 +12,9 @@ import { PLINKO } from "../configs/constants.js";
  *   - one slot out of two is filled (alternating pattern);
  *   - the first filled slot (`startSlot`) is randomly picked from
  *     `START_SLOT_CHOICES` so consecutive layers shift the staggered grid;
- *   - each filled slot becomes a Bumper with `bumperChance` probability,
- *     otherwise a Peg.
+ *   - each filled slot is rolled with a single uniform random in [0,1):
+ *     bumper if roll < bumperChance, coin peg if roll < bumperChance + coinChance,
+ *     otherwise a classic peg.
  */
 export class Layer extends Entity {
   /** @type {number} */
@@ -21,7 +23,7 @@ export class Layer extends Entity {
   /** @type {number} 0,1,2 — picks the first filled slot. */
   startSlot = 0;
 
-  /** @type {Peg[]} Pegs and bumpers, positioned in pinboard space. */
+  /** @type {Peg[]} Pegs, bumpers and coin pegs, positioned in pinboard space. */
   pegs = [];
 
   /**
@@ -30,10 +32,18 @@ export class Layer extends Entity {
    *   width: number,
    *   y: number,
    *   bumperChance?: number,
+   *   coinChance?: number,
    *   rng?: () => number,
    * }} args
    */
-  constructor({ level, width, y, bumperChance = 0.05, rng = Math.random }) {
+  constructor({
+    level,
+    width,
+    y,
+    bumperChance = 0.05,
+    coinChance = PLINKO.COIN_CHANCE_BASE,
+    rng = Math.random,
+  }) {
     super({ type: "layer" });
     this.level = level;
     this.y = y;
@@ -44,8 +54,11 @@ export class Layer extends Entity {
 
     for (let i = this.startSlot; i < Slot.count; i += 2) {
       const x = Slot.xFor(i, width);
-      const isBumper = rng() < bumperChance;
-      const Cls = isBumper ? Bumper : Peg;
+      const roll = rng();
+      let Cls;
+      if (roll < bumperChance) Cls = Bumper;
+      else if (roll < bumperChance + coinChance) Cls = CoinPeg;
+      else Cls = Peg;
       this.pegs.push(new Cls({ x, y, slot: i }));
     }
   }

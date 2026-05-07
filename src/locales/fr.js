@@ -62,4 +62,45 @@ export const fr = {
   "common.no": "Non",
   "common.cancel": "Annuler",
   "common.ok": "OK",
+
+  "currency.label": "Pièces",
+
+  "shop.title": "Boutique",
+  "shop.empty":
+    "Débloque des aptitudes pour révéler des bonus à acheter.",
+  "shop.owned": "Acquis",
+  "shop.tag.permanent": "Permanent",
+  "shop.tag.session": "Session",
+  "shop.peg.intro": "Les clous-pièce donnent des pièces au contact.",
+  "shop.skip": "Passer",
+
+  "ability.title": "Aptitudes",
+
+  "ability.start_ball_up": "Munitions renforcées",
+  "ability.start_ball_up.desc":
+    "Révèle le bonus +1 bille de départ dans la boutique.",
+  "ability.magnet": "Magnétisme",
+  "ability.magnet.desc":
+    "Révèle le bonus aimant des clous-boutique dans la boutique.",
+  "ability.extra_launch": "Quatrième lanceur",
+  "ability.extra_launch.desc":
+    "Révèle le bonus de sous-lanceur supplémentaire dans la boutique.",
+  "ability.score_boost": "Clous affûtés",
+  "ability.score_boost.desc":
+    "Révèle le bonus score x2 dans la boutique.",
+
+  "bonus.permanent.extra_start_ball": "Bille bonus",
+  "bonus.permanent.extra_start_ball.desc":
+    "Commence chaque manche avec une bille supplémentaire par lanceur. Permanent.",
+  "bonus.permanent.shop_magnet": "Aimant boutique",
+  "bonus.permanent.shop_magnet.desc":
+    "Les clous-boutique attirent les billes proches. Permanent.",
+  "bonus.session.bonus_launcher": "Lanceur bonus",
+  "bonus.session.bonus_launcher.desc":
+    "Ajoute un quatrième sous-lanceur avec 5 billes. Dure 3 niveaux.",
+  "bonus.session.score_x2": "Score x2",
+  "bonus.session.score_x2.desc":
+    "Le score des clous classiques est doublé. Dure 3 niveaux.",
+
+  "game.gate.shop": "SHOP",
 };

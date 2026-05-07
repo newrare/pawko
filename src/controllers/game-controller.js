@@ -3,11 +3,14 @@ import { layout } from "../managers/layout-manager.js";
 import { i18n } from "../managers/i18n-manager.js";
 import { saveManager } from "../managers/save-manager.js";
 import { audioManager } from "../managers/audio-manager.js";
+import { currencyManager } from "../managers/currency-manager.js";
+import { bonusManager } from "../managers/bonus-manager.js";
 import { collideCircles, reflect, clampVelocity, collideBalls } from "../utils/physics.js";
 import { Ball } from "../entities/ball.js";
 import { Layer, bumperChanceForLevel } from "../entities/layer.js";
 import { Slot } from "../entities/slot.js";
 import { PLINKO, LEVELS } from "../configs/constants.js";
+import { PARAM_KEYS } from "../configs/bonus-defs.js";
 import { buttonHtml } from "../components/ui/button.js";
 import { LevelSelectorScene } from "../scenes/level-selector-scene.js";
 
@@ -72,10 +75,30 @@ export class GameController {
     const levelDef = LEVELS.find((l) => l.id === this.#levelId);
     this.#targetScore = levelDef?.target ?? 100;
 
-    this.#sublaunchBalls = Array(PLINKO.SUBLAUNCH_COUNT).fill(
-      PLINKO.STARTING_BALLS_PER_SUBLAUNCH,
+    /* Active bonuses can mutate the round shape (extra balls, extra
+       sublaunchers). Resolve once on round start and snapshot the values
+       in the round state — so a bonus expiring mid-round does not yank
+       balls/sublauncher away under the player. */
+    const sublaunchCount = Math.max(
+      1,
+      Math.floor(
+        bonusManager.resolve(
+          PARAM_KEYS.SUBLAUNCH_COUNT,
+          PLINKO.SUBLAUNCH_COUNT,
+        ),
+      ),
     );
-    this.#sublaunchFired = Array(PLINKO.SUBLAUNCH_COUNT).fill(false);
+    const ballsPerSublaunch = Math.max(
+      1,
+      Math.floor(
+        bonusManager.resolve(
+          PARAM_KEYS.STARTING_BALLS_PER_SUBLAUNCH,
+          PLINKO.STARTING_BALLS_PER_SUBLAUNCH,
+        ),
+      ),
+    );
+    this.#sublaunchBalls = Array(sublaunchCount).fill(ballsPerSublaunch);
+    this.#sublaunchFired = Array(sublaunchCount).fill(false);
 
     this.#buildDom();
     this.#measure();
@@ -117,9 +140,10 @@ export class GameController {
       malus: i18n.t("game.gate.malus"),
     };
 
+    const sublaunchCount = this.#sublaunchBalls.length;
     safe.innerHTML = `
       <div class="pk-launch" data-role="launch">
-        ${Array.from({ length: PLINKO.SUBLAUNCH_COUNT }, (_, i) => `<div class="pk-sublaunch" data-sublaunch="${i}"></div>`).join("")}
+        ${Array.from({ length: sublaunchCount }, (_, i) => `<div class="pk-sublaunch" data-sublaunch="${i}"></div>`).join("")}
       </div>
       <div class="pk-pinboard" data-role="pinboard">
         <div class="pk-score-gauge" data-role="score-gauge"></div>
@@ -265,8 +289,11 @@ export class GameController {
     for (const peg of layer.pegs) {
       peg.y = layer.y;
       const p = document.createElement("div");
-      const isBumper = peg.type === "bumper";
-      p.className = `pk-peg${isBumper ? " pk-peg--bumper" : ""}`;
+      let extra = "";
+      if (peg.type === "bumper") extra = " pk-peg--bumper";
+      else if (peg.type === "coin") extra = " pk-peg--coin";
+      p.className = `pk-peg${extra}`;
+      if (peg.type === "coin") p.textContent = "¢";
       p.style.left = `${peg.x}px`;
       p.style.top = "0px";
       p.dataset.pegId = String(peg.id);
@@ -509,7 +536,25 @@ export class GameController {
 
   /** @param {import('../entities/peg-classic.js').Peg} peg @param {Ball} ball */
   #registerHit(peg, ball) {
-    const score = peg.score;
+    /* Coin peg: credit currency, pop a coin label, consume the peg. */
+    if (peg.type === "coin") {
+      const coinValue = /** @type {any} */ (peg).coinValue ?? PLINKO.COIN_VALUE;
+      currencyManager.add(coinValue);
+      audioManager.playSfx("click");
+      this.#popText(`+${coinValue}🪙`, peg.x, peg.y, "pk-popup pk-popup--coin");
+      this.#destroyPeg(peg, ball);
+      return;
+    }
+
+    /* Score peg / bumper. Apply pegScoreMultiplier only to non-bumpers
+       since `score_x2` is documented as classic-peg only. */
+    const baseScore = peg.score;
+    const score =
+      peg.type === "bumper"
+        ? baseScore
+        : Math.round(
+            bonusManager.resolve(PARAM_KEYS.PEG_SCORE_MULTIPLIER, 1) * baseScore,
+          );
     ball.score += score;
     this.#updateScoreGauge();
     audioManager.playSfx("click");
@@ -521,15 +566,24 @@ export class GameController {
       el.classList.add("pk-flash");
     }
 
-    if (this.#stackEl) {
-      const pop = document.createElement("div");
-      pop.className = `pk-popup${peg.type === "bumper" ? " pk-popup--big" : ""}`;
-      pop.textContent = `+${score}`;
-      pop.style.left = `${peg.x}px`;
-      pop.style.top = `${peg.y - 12}px`;
-      this.#stackEl.appendChild(pop);
-      this.#bag.timeout(() => pop.remove(), 600);
-    }
+    this.#popText(
+      `+${score}`,
+      peg.x,
+      peg.y,
+      `pk-popup${peg.type === "bumper" ? " pk-popup--big" : ""}`,
+    );
+  }
+
+  /** @param {string} text @param {number} x @param {number} y @param {string} cls */
+  #popText(text, x, y, cls) {
+    if (!this.#stackEl) return;
+    const pop = document.createElement("div");
+    pop.className = cls;
+    pop.textContent = text;
+    pop.style.left = `${x}px`;
+    pop.style.top = `${y - 12}px`;
+    this.#stackEl.appendChild(pop);
+    this.#bag.timeout(() => pop.remove(), 600);
   }
 
   /* ──────────────────────────────────────────────────────────────────────
@@ -779,6 +833,9 @@ export class GameController {
 
     if (victory) {
       this.#markLevelComplete();
+      /* Tick session bonuses so they expire after N levels. Loss does
+         not consume duration — players retry without penalty. */
+      bonusManager.onLevelUp({ controller: this });
     }
 
     Promise.all([

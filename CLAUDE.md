@@ -313,7 +313,10 @@ This workflow ensures quality, maintainability, and alignment with project stand
   stay PascalCase.
 - `const` over `let`, never `var`. ES2022+ (private class fields, optional
   chaining, nullish coalescing).
-- Each module folder has an `index.js` barrel export.
+- **No barrel files** — there are no `index.js` re-export files. Always import
+  directly from the source file: `import { layout } from '../managers/layout-manager.js'`,
+  never `import { layout } from '../managers/index.js'`. This keeps dependency
+  paths explicit and avoids circular-reference risks.
 - Tests live under `tests/` mirroring `src/`. Test files are
   `<name>.test.js`.
 - All code, comments and documentation in English. CSS comments are

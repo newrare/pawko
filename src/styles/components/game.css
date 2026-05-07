@@ -161,6 +161,20 @@
 .pk-peg.pk-flash { animation: pk-peg-flash 0.18s ease-out; }
 .pk-peg--bumper.pk-flash { animation: pk-bumper-flash 0.22s ease-out; }
 
+.pk-peg--coin {
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  background: linear-gradient(180deg, #facc15, #b45309);
+  color: #2d1208;
+  font-weight: 900;
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 8px rgba(250, 204, 21, 0.55);
+}
+
 .pk-ball {
   position: absolute;
   width: 18px;
@@ -183,6 +197,7 @@
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
 }
 .pk-popup--big { font-size: 1.1rem; color: var(--pk-crimson); }
+.pk-popup--coin { color: #facc15; }
 
 /* --- Collection gates --- */
 
