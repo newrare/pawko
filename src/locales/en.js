@@ -110,4 +110,26 @@ export const en = {
     "Classic peg score is doubled. Lasts 3 levels.",
 
   "game.gate.shop": "SHOP",
+
+  "hud.active_list.title": "Active Effects",
+  "hud.active_list.bonuses": "Bonuses",
+  "hud.active_list.abilities": "Abilities",
+  "hud.active_list.empty": "No active effects.",
+  "hud.active_list.remaining": "{n} levels remaining",
+
+  "hud.ranking.title": "Rankings",
+  "hud.ranking.empty": "No scores recorded yet.",
+  "hud.ranking.col_score": "Score",
+  "hud.ranking.col_level": "Level",
+  "hud.ranking.col_date": "Date",
+  "hud.ranking.level": "Lv.{n}",
+
+  "hud.save.title": "Save / Load",
+  "hud.save.auto_title": "Auto-save",
+  "hud.save.slots_title": "Manual saves",
+  "hud.save.slot_label": "Slot {n}",
+  "hud.save.saved_at": "Saved: {date}",
+  "hud.save.empty_slot": "Empty",
+  "hud.save.save": "Save",
+  "hud.save.load": "Load",
 };

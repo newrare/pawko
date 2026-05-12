@@ -1,0 +1,206 @@
+/* --- HUD bar — persistent floating buttons on every scene.
+       Respects the safe zone by mirroring .gt-safe positioning. --- */
+
+.pk-hud-bar {
+  position: absolute;
+  left: var(--gt-safe-left, 0);
+  top: var(--gt-safe-top, 0);
+  width: var(--gt-safe-width, 100%);
+  height: var(--gt-safe-height, 100%);
+  pointer-events: none;
+  z-index: 50;
+}
+
+/* --- Buttons --- */
+
+.pk-hud-btn {
+  pointer-events: auto;
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 6px;
+  border-radius: var(--gt-radius-md);
+  background: var(--gt-color-surface);
+  border: 1px solid var(--pk-crimson-muted);
+  box-shadow: var(--gt-shadow-sm);
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.pk-hud-btn:active {
+  transform: scale(0.92);
+}
+
+.pk-hud-icon {
+  width: 22px;
+  height: 22px;
+  filter: brightness(0) invert(0.85) sepia(0.25) saturate(3) hue-rotate(10deg);
+  pointer-events: none;
+}
+
+/* --- Positions --- */
+
+.pk-hud-btn--top-right {
+  top: var(--gt-space-2);
+  right: var(--gt-space-2);
+}
+
+.pk-hud-btn--bottom-left {
+  bottom: var(--gt-space-2);
+  left: var(--gt-space-2);
+}
+
+.pk-hud-group--bottom-right {
+  pointer-events: auto;
+  position: absolute;
+  bottom: var(--gt-space-2);
+  right: var(--gt-space-2);
+  display: flex;
+  gap: var(--gt-space-2);
+}
+
+.pk-hud-group--bottom-right .pk-hud-btn {
+  position: static;
+}
+
+/* --- Active-list modal table --- */
+
+.pk-al-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.pk-al-table td {
+  padding: var(--gt-space-1) var(--gt-space-2);
+  border-bottom: 1px solid var(--pk-crimson-muted);
+  vertical-align: top;
+}
+
+.pk-al-icon {
+  width: 28px;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.pk-al-name {
+  font-weight: 600;
+  color: var(--gt-color-text);
+  white-space: nowrap;
+}
+
+.pk-al-desc {
+  color: var(--gt-color-text-dim);
+}
+
+.pk-al-section-title {
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gt-color-text-sec);
+  margin: var(--gt-space-2) 0 var(--gt-space-1);
+}
+
+.pk-al-empty {
+  color: var(--gt-color-text-dim);
+  text-align: center;
+  font-style: italic;
+  padding: var(--gt-space-4) 0;
+}
+
+/* --- Ranking modal table --- */
+
+.pk-rank-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.pk-rank-table th {
+  text-align: left;
+  font-size: 0.65rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gt-color-text-dim);
+  padding: var(--gt-space-1) var(--gt-space-2);
+  border-bottom: 1px solid var(--pk-crimson-muted);
+}
+
+.pk-rank-table td {
+  padding: var(--gt-space-1) var(--gt-space-2);
+  border-bottom: 1px solid var(--pk-crimson-muted);
+}
+
+.pk-rank-pos {
+  color: var(--gt-color-gold);
+  font-weight: 700;
+}
+
+.pk-rank-score {
+  color: var(--gt-color-text);
+  font-weight: 600;
+}
+
+.pk-rank-level {
+  color: var(--gt-color-text-sec);
+}
+
+.pk-rank-date {
+  color: var(--gt-color-text-dim);
+  font-size: 0.7rem;
+}
+
+.pk-rank-empty {
+  color: var(--gt-color-text-dim);
+  text-align: center;
+  font-style: italic;
+  padding: var(--gt-space-4) 0;
+}
+
+/* --- Save/Load modal --- */
+
+.pk-save-section-title {
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gt-color-text-sec);
+  margin: var(--gt-space-2) 0 var(--gt-space-1);
+}
+
+.pk-save-slot {
+  display: flex;
+  align-items: center;
+  gap: var(--gt-space-2);
+  padding: var(--gt-space-2) var(--gt-space-3);
+  background: var(--pk-bg-card);
+  border: 1px solid var(--pk-crimson-muted);
+  border-radius: var(--gt-radius-md);
+  flex-wrap: wrap;
+}
+
+.pk-save-slot-label {
+  font-weight: 600;
+  color: var(--gt-color-text);
+  min-width: 50px;
+  font-size: 0.78rem;
+}
+
+.pk-save-slot-info {
+  flex: 1;
+  color: var(--gt-color-text-dim);
+  font-size: 0.75rem;
+}
+
+.pk-save-slot-actions {
+  display: flex;
+  gap: var(--gt-space-1);
+}
+
+.pk-save-slot-actions .gt-btn {
+  padding: var(--gt-space-1) var(--gt-space-2);
+  font-size: 0.7rem;
+  min-height: 28px;
+}

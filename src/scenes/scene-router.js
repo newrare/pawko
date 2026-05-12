@@ -10,7 +10,13 @@
  * disposes the previous one before mounting the next. There is no game loop,
  * no canvas — gameplay code that needs `requestAnimationFrame` or Matter.js
  * runs it directly inside its own scene.
+ *
+ * A persistent HudBar is mounted alongside every scene so the four HUD
+ * buttons (active list, ranking, save/load, settings) remain visible
+ * across all screens.
  */
+import { HudBar } from "../components/hud-bar.js";
+
 export class SceneRouter {
   /** @type {HTMLElement} */
   #container;
@@ -20,6 +26,9 @@ export class SceneRouter {
 
   /** @type {HTMLElement | null} */
   #currentEl = null;
+
+  /** @type {HudBar | null} */
+  #hud = null;
 
   /** @param {HTMLElement} container */
   constructor(container) {
@@ -41,6 +50,9 @@ export class SceneRouter {
     scene.mount(el);
     this.#current = scene;
     this.#currentEl = el;
+
+    this.#hud = new HudBar();
+    this.#hud.mount(el);
   }
 
   /** Tear down the active scene without mounting another. */
@@ -49,6 +61,8 @@ export class SceneRouter {
   }
 
   #destroyCurrent() {
+    this.#hud?.destroy();
+    this.#hud = null;
     this.#current?.destroy();
     this.#currentEl?.remove();
     this.#current = null;

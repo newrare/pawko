@@ -115,4 +115,26 @@ export const fr = {
     "Le score des clous classiques est doublé. Dure 3 niveaux.",
 
   "game.gate.shop": "SHOP",
+
+  "hud.active_list.title": "Effets actifs",
+  "hud.active_list.bonuses": "Bonus",
+  "hud.active_list.abilities": "Aptitudes",
+  "hud.active_list.empty": "Aucun effet actif.",
+  "hud.active_list.remaining": "{n} niveaux restants",
+
+  "hud.ranking.title": "Classement",
+  "hud.ranking.empty": "Aucun score enregistré.",
+  "hud.ranking.col_score": "Score",
+  "hud.ranking.col_level": "Niveau",
+  "hud.ranking.col_date": "Date",
+  "hud.ranking.level": "Niv.{n}",
+
+  "hud.save.title": "Sauvegarder / Charger",
+  "hud.save.auto_title": "Sauvegarde auto",
+  "hud.save.slots_title": "Sauvegardes manuelles",
+  "hud.save.slot_label": "Emplacement {n}",
+  "hud.save.saved_at": "Sauvé : {date}",
+  "hud.save.empty_slot": "Vide",
+  "hud.save.save": "Sauvegarder",
+  "hud.save.load": "Charger",
 };
