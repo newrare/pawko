@@ -36,11 +36,17 @@ export const PARAM_KEYS = /** @type {const} */ ({
  */
 
 /**
+ * @typedef {'permanent' | 'legendary' | 'epic' | 'rare' | 'common'} BonusRarity
+ */
+
+/**
  * @typedef {object} BonusDef
  * @property {string} id
  * @property {'permanent' | 'session'} type
  * @property {number} cost
  * @property {string | null} abilityRequired
+ * @property {BonusRarity} rarity
+ * @property {string} icon — emoji used in the shop card
  * @property {number} [durationLevels] — session only
  * @property {BonusModifier[]} modifiers
  * @property {((ctx: object) => void) | null} [onExpire] — session only
@@ -53,6 +59,8 @@ export const PERMANENT_BONUSES = [
     type: BONUS_TYPES.PERMANENT,
     cost: 60,
     abilityRequired: "start_ball_up",
+    rarity: "permanent",
+    icon: "🟢",
     modifiers: [
       {
         paramKey: PARAM_KEYS.STARTING_BALLS_PER_SUBLAUNCH,
@@ -66,6 +74,8 @@ export const PERMANENT_BONUSES = [
     type: BONUS_TYPES.PERMANENT,
     cost: 120,
     abilityRequired: "magnet",
+    rarity: "permanent",
+    icon: "🧲",
     modifiers: [
       { paramKey: PARAM_KEYS.SHOP_MAGNET_ENABLED, op: "set", value: true },
     ],
@@ -79,6 +89,8 @@ export const SESSION_BONUSES = [
     type: BONUS_TYPES.SESSION,
     cost: 40,
     abilityRequired: "extra_launch",
+    rarity: "epic",
+    icon: "🚀",
     durationLevels: 3,
     modifiers: [
       { paramKey: PARAM_KEYS.SUBLAUNCH_COUNT, op: "add", value: 1 },
@@ -90,6 +102,8 @@ export const SESSION_BONUSES = [
     type: BONUS_TYPES.SESSION,
     cost: 30,
     abilityRequired: "score_boost",
+    rarity: "legendary",
+    icon: "✨",
     durationLevels: 3,
     modifiers: [
       { paramKey: PARAM_KEYS.PEG_SCORE_MULTIPLIER, op: "multiply", value: 2 },

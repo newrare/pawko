@@ -869,11 +869,11 @@ export class GameController {
         levelId: this.#levelId,
         onContinue: () => this.#router?.start(LevelSelectorScene),
         onRetry: () => {
-          saveManager.clearLevelProgress();
+          saveManager.clearGridState();
           this.#router?.start(LevelSelectorScene);
         },
         onBack: () => {
-          saveManager.clearLevelProgress();
+          saveManager.clearGridState();
           this.#router?.start(LevelSelectorScene);
         },
       });

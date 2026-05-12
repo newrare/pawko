@@ -101,9 +101,15 @@ export const STORAGE_KEYS = {
   CURRENCY: `${NS}.currency`,
   BONUSES: `${NS}.bonuses`,
   ABILITIES: `${NS}.abilities`,
+  GRID_STATE: `${NS}.grid_state`,
 };
 
 export const MAX_SAVE_SLOTS = 8;
+
+// ─── Shop ──────────────────────────────────────────────────────────────────
+
+/** Total number of slots shown in the shop drum (empty slots padded). */
+export const SHOP_SLOT_COUNT = 10;
 
 // ─── Default options ───────────────────────────────────────────────────────
 

@@ -117,6 +117,7 @@ class SaveManager {
     localStorage.removeItem(STORAGE_KEYS.CURRENCY);
     localStorage.removeItem(STORAGE_KEYS.BONUSES);
     localStorage.removeItem(STORAGE_KEYS.ABILITIES);
+    localStorage.removeItem(STORAGE_KEYS.GRID_STATE);
   }
 
   // ─── Level progress ───────────────────────────────
@@ -133,6 +134,22 @@ class SaveManager {
 
   clearLevelProgress() {
     localStorage.removeItem(STORAGE_KEYS.LEVEL_PROGRESS);
+  }
+
+  // ─── Grid state (exploration map) ──────────────────
+
+  /** @param {object} data */
+  saveGridState(data) {
+    this.#write(STORAGE_KEYS.GRID_STATE, data);
+  }
+
+  /** @returns {object | null} */
+  loadGridState() {
+    return this.#read(STORAGE_KEYS.GRID_STATE);
+  }
+
+  clearGridState() {
+    localStorage.removeItem(STORAGE_KEYS.GRID_STATE);
   }
 
   // ─── Internals ────────────────────────────────────

@@ -26,14 +26,18 @@ router.start(TitleScene);
 if (import.meta.env.DEV) {
   Promise.all([
     import("./scenes/styleguide-scene.js"),
+    import("./scenes/shop-scene.js"),
+    import("./scenes/ability-scene.js"),
     import("./utils/dev-overlay.js"),
     import("./utils/dev-admin-panel.js"),
-  ]).then(([{ StyleguideScene }, { installDevOverlay }, { installDevAdminPanel }]) => {
+  ]).then(([{ StyleguideScene }, { ShopScene }, { AbilityScene }, { installDevOverlay }, { installDevAdminPanel }]) => {
     const install = () => {
       installDevOverlay();
       installDevAdminPanel({
         onTitle: () => router.start(TitleScene),
         onStyleguide: () => router.start(StyleguideScene),
+        onShop: () => router.start(ShopScene),
+        onAbility: () => router.start(AbilityScene),
       });
     };
     if (document.body) install();

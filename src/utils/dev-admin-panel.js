@@ -14,9 +14,9 @@ import { ABILITY_DEFS } from "../configs/ability-defs.js";
  * fast-forwarding the rogue-lite progression while testing.
  *
  * Communicates with GameController via gameEvents — no direct coupling.
- * @param {{ onTitle?: () => void, onStyleguide?: () => void }} [hooks]
+ * @param {{ onTitle?: () => void, onStyleguide?: () => void, onShop?: () => void, onAbility?: () => void }} [hooks]
  */
-export function installDevAdminPanel({ onTitle, onStyleguide } = {}) {
+export function installDevAdminPanel({ onTitle, onStyleguide, onShop, onAbility } = {}) {
   if (document.getElementById("pk-dev-admin")) return;
 
   const panel = document.createElement("div");
@@ -30,6 +30,8 @@ export function installDevAdminPanel({ onTitle, onStyleguide } = {}) {
       <h4>Nav</h4>
       <button class="pk-dev-admin-btn" data-dev="nav-title" data-no-sfx>Title</button>
       <button class="pk-dev-admin-btn" data-dev="nav-styleguide" data-no-sfx>Style guide</button>
+      <button class="pk-dev-admin-btn" data-dev="nav-shop" data-no-sfx>Shop</button>
+      <button class="pk-dev-admin-btn" data-dev="nav-ability" data-no-sfx>Ability</button>
     </div>
     <div class="pk-dev-admin-section">
       <h4>Balls</h4>
@@ -55,6 +57,8 @@ export function installDevAdminPanel({ onTitle, onStyleguide } = {}) {
       const action = /** @type {HTMLElement} */ (btn).dataset.dev;
       if (action === "nav-title") onTitle?.();
       else if (action === "nav-styleguide") onStyleguide?.();
+      else if (action === "nav-shop") onShop?.();
+      else if (action === "nav-ability") onAbility?.();
       else if (action === "ball") gameEvents.emit("dev:spawnBall");
       else if (action === "add-coins") currencyManager.add(100);
       else if (action === "unlock-abilities") {

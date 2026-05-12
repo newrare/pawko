@@ -1,101 +1,307 @@
-/* --- Level selector grid --- */
+/* --- Level selector — exploration map grid --- */
 
+/* Full safe-zone container — header fixed top, grid scrolls below */
 .pk-level-selector {
+  position: absolute;
+  top: var(--gt-safe-top, 0);
+  left: var(--gt-safe-left, 0);
+  width: var(--gt-safe-width, 100%);
+  height: var(--gt-safe-height, 100%);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: var(--gt-space-4);
-  gap: var(--gt-space-4);
-  overflow-y: auto;
-  max-height: 100%;
+  overflow: hidden;
 }
 
-.pk-level-selector-title {
-  font-family: var(--gt-font-display);
-  font-size: 1.3rem;
-  color: var(--pk-gold);
-  text-align: center;
-  margin: 0;
-}
+/* --- Header bar — anchored at safe-zone top --- */
 
-.pk-level-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--gt-space-3);
+.pk-map-header {
+  flex-shrink: 0;
   width: 100%;
-  max-width: 360px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--gt-space-2) var(--gt-space-3);
+  background: var(--pk-bg);
+  border-bottom: 1px solid var(--pk-crimson-muted);
 }
 
-.pk-level-btn {
-  position: relative;
+.pk-map-header-title {
+  font-family: var(--gt-font-display);
+  font-size: 1rem;
+  color: var(--pk-gold);
+  margin: 0;
+  white-space: nowrap;
+}
+
+.pk-map-header-stats {
+  display: flex;
+  align-items: center;
+  gap: var(--gt-space-3);
+  font-family: var(--gt-font-body);
+  font-size: 0.72rem;
+  color: var(--pk-rose);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.pk-map-stat {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+.pk-map-stat-icon {
+  font-size: 0.8rem;
+}
+
+.pk-map-stat b {
+  color: var(--pk-gold-light);
+}
+
+.pk-map-stat-total {
+  color: var(--pk-rose-dim);
+  font-weight: normal;
+}
+
+/* --- Scrollable content below header --- */
+
+.pk-map-scroll {
+  flex: 1;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  min-height: 0;
+  padding-bottom: var(--gt-space-4);
+}
+
+/* --- Map grid — 7 cols × 12 rows with connector tracks --- */
+
+.pk-map-grid {
+  --pk-cell-size: 36px;
+  --pk-gap-size: 8px;
+  display: grid;
+  grid-template-columns: repeat(6, var(--pk-cell-size) var(--pk-gap-size)) var(--pk-cell-size);
+  grid-template-rows: repeat(11, var(--pk-cell-size) var(--pk-gap-size)) var(--pk-cell-size);
+  place-content: center;
   padding: var(--gt-space-3) var(--gt-space-2);
-  border: 1px solid var(--pk-gold-dim);
+}
+
+/* --- Connectors (only for edge-linked pairs) --- */
+
+.pk-map-connector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pk-map-connector-line {
+  background: var(--pk-crimson-muted);
+  border-radius: 1px;
+  opacity: 0;
+  transition: background 400ms, opacity 400ms;
+}
+
+.pk-map-connector--h .pk-map-connector-line {
+  width: 100%;
+  height: 2px;
+}
+
+.pk-map-connector--v .pk-map-connector-line {
+  height: 100%;
+  width: 2px;
+}
+
+.pk-map-connector--visible .pk-map-connector-line {
+  opacity: 0.3;
+  background: var(--pk-gold-dim);
+}
+
+.pk-map-connector--active .pk-map-connector-line {
+  opacity: 0.8;
+  background: var(--pk-gold);
+  box-shadow: 0 0 6px rgba(212, 175, 55, 0.3);
+}
+
+/* --- Grid cells --- */
+
+.pk-map-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   border-radius: var(--gt-radius-md);
-  background: var(--pk-bg-card);
-  color: var(--pk-gold-light);
+  border: 2px solid transparent;
   font-family: var(--gt-font-body);
+  transition: transform 150ms, box-shadow 300ms;
+  user-select: none;
+}
+
+/* --- Cell states --- */
+
+/* Hidden — clearly visible ghost silhouette so the map terrain is readable */
+.pk-map-cell--hidden {
+  background: rgba(60, 18, 28, 0.75);
+  border-color: rgba(120, 40, 60, 0.5);
+  opacity: 0.40;
+}
+
+/* Faint icon hint inside hidden shop/ability cells.
+   brightness(2.5) is applied BEFORE the parent opacity (0.40),
+   making the emoji clearly visible despite the low container opacity. */
+.pk-map-cell--hidden .pk-map-cell-icon {
+  font-size: 0.9rem;
+  filter: brightness(2.5);
+}
+
+/* Revealed — available for selection.
+   Border-only sweep animation via background dual-layer technique:
+   padding-box layer fills the cell content; border-box layer paints
+   the animated conic gradient visible only in the 2px border ring. */
+.pk-map-cell--revealed {
+  background-image:
+    linear-gradient(var(--pk-bg-card), var(--pk-bg-card)),
+    conic-gradient(
+      from var(--pk-border-angle, 0deg),
+      transparent 0%,
+      rgba(212, 175, 55, 0.3) 6%,
+      var(--pk-gold) 12%,
+      rgba(212, 175, 55, 0.3) 18%,
+      transparent 24%
+    );
+  background-clip: padding-box, border-box;
+  background-origin: padding-box, border-box;
+  background-color: transparent;
+  border-color: transparent;
   cursor: pointer;
-  transition: transform 120ms, border-color 120ms;
+  animation: pk-cell-reveal 400ms ease-out both, pk-border-rotate 3s linear infinite;
 }
 
-.pk-level-btn:active {
-  transform: scale(0.95);
+.pk-map-cell--revealed:hover {
+  background-image:
+    linear-gradient(var(--pk-bg-card), var(--pk-bg-card)),
+    linear-gradient(var(--pk-gold), var(--pk-gold));
+  background-clip: padding-box, border-box;
+  background-origin: padding-box, border-box;
+  box-shadow: 0 0 16px rgba(212, 175, 55, 0.3);
+  transform: scale(1.1);
+  animation: pk-cell-reveal 400ms ease-out both;
 }
 
-.pk-level-btn-num {
-  font-size: 1.1rem;
+.pk-map-cell--revealed:active {
+  transform: scale(0.9);
+}
+
+/* Current — player position, breathing gold glow */
+.pk-map-cell--current {
+  background: rgba(212, 175, 55, 0.1);
+  border-color: var(--pk-gold);
+  box-shadow: 0 0 14px rgba(212, 175, 55, 0.25),
+    inset 0 0 8px rgba(212, 175, 55, 0.06);
+  animation: pk-cell-pulse 2s ease-in-out infinite;
+}
+
+/* Current + just-completed level — green border instead of gold */
+.pk-map-cell--current.pk-map-cell--completed {
+  background: rgba(34, 197, 94, 0.07);
+  border-color: var(--gt-color-success);
+  box-shadow: 0 0 14px rgba(34, 197, 94, 0.25),
+    inset 0 0 8px rgba(34, 197, 94, 0.05);
+  animation: pk-cell-pulse-green 2s ease-in-out infinite;
+}
+
+/* Used — green tick */
+.pk-map-cell--used {
+  background: rgba(34, 197, 94, 0.06);
+  border-color: rgba(34, 197, 94, 0.3);
+  opacity: 0.5;
+}
+
+/* --- Cell type content (icon only) --- */
+
+.pk-map-cell-icon {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+/* Level */
+.pk-map-cell--type-level .pk-map-cell-icon {
+  color: var(--pk-gold-light);
   font-weight: 700;
 }
 
-.pk-level-btn-target {
-  font-size: 0.65rem;
-  color: var(--pk-rose);
+/* Shop */
+.pk-map-cell--type-shop .pk-map-cell-icon {
+  color: var(--pk-gold);
 }
 
-.pk-level-btn-check {
-  position: absolute;
-  top: 2px;
-  right: 4px;
-  font-size: 0.7rem;
+/* Ability */
+.pk-map-cell--type-ability .pk-map-cell-icon {
+  color: #a855f7;
+}
+
+/* Empty */
+.pk-map-cell--type-empty .pk-map-cell-icon {
+  color: var(--pk-rose-dim);
+  font-size: 0.75rem;
+}
+
+/* Start marker — green diamond to mark the origin */
+.pk-map-cell--type-start:not(.pk-map-cell--hidden) .pk-map-cell-icon {
   color: var(--gt-color-success);
 }
 
-.pk-level-btn--completed {
-  border-color: var(--gt-color-success);
+.pk-map-cell--current.pk-map-cell--type-start {
+  background: rgba(34, 197, 94, 0.08);
+  border-color: rgba(34, 197, 94, 0.55);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.2);
+  animation: pk-cell-pulse-green 2s ease-in-out infinite;
+}
+
+.pk-map-cell--used.pk-map-cell--type-start {
   background: rgba(34, 197, 94, 0.06);
+  border-color: rgba(34, 197, 94, 0.35);
+  opacity: 0.7;
 }
 
-.pk-level-btn--locked {
-  opacity: 0.35;
-  pointer-events: none;
-  border-color: var(--pk-crimson-muted);
+/* Used shop / ability — show icon in green instead of checkmark */
+.pk-map-cell--used.pk-map-cell--type-shop .pk-map-cell-icon,
+.pk-map-cell--used.pk-map-cell--type-ability .pk-map-cell-icon {
+  color: var(--gt-color-success);
+  opacity: 0.85;
 }
 
-.pk-level-meta {
+/* Used-cell checkmark overlay */
+.pk-map-cell-used-mark {
+  position: absolute;
+  inset: 0;
   display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  color: var(--gt-color-success);
+}
+
+/* Newly revealed cells — pop-in */
+.pk-map-cell--newly-revealed {
+  animation: pk-cell-reveal 500ms ease-out both, pk-border-rotate 3s linear 500ms infinite;
+}
+
+/* --- No-moves block --- */
+
+.pk-map-nomoves {
+  text-align: center;
+  color: var(--pk-rose);
+  font-size: 0.85rem;
+  padding: var(--gt-space-4);
+  display: flex;
+  flex-direction: column;
   align-items: center;
   gap: var(--gt-space-3);
 }
 
-.pk-coin-balance {
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: var(--pk-gold);
-}
-
-.pk-level-actions {
-  display: flex;
-  gap: var(--gt-space-2);
-  width: 100%;
-  max-width: 360px;
-  margin-top: var(--gt-space-2);
-}
-
-.pk-level-actions .gt-btn {
-  flex: 1;
+.pk-map-nomoves p {
+  margin: 0;
 }
