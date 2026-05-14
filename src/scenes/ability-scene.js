@@ -2,6 +2,7 @@ import { i18n } from "../managers/i18n-manager.js";
 import { currencyManager } from "../managers/currency-manager.js";
 import { abilityManager } from "../managers/ability-manager.js";
 import { ListenerBag } from "../utils/listener-bag.js";
+import { BackgroundAnimator } from "../utils/background-animator.js";
 import { LevelSelectorScene } from "./level-selector-scene.js";
 
 /**
@@ -22,6 +23,9 @@ export class AbilityScene {
   /** @type {ListenerBag} */
   #bag = new ListenerBag();
 
+  /** @type {BackgroundAnimator | null} */
+  #bg = null;
+
   /** @param {import('./scene-router.js').SceneRouter} router */
   constructor(router) {
     this.#router = router;
@@ -29,6 +33,9 @@ export class AbilityScene {
 
   /** @param {HTMLElement} root */
   mount(root) {
+    this.#bg = new BackgroundAnimator(root, 'shop');
+    this.#bag.add(() => this.#bg?.destroy());
+
     this.#el = document.createElement("div");
     this.#el.className = "gt-scene-center pk-ability";
     this.#el.innerHTML = this.#render();

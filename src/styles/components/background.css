@@ -1,0 +1,94 @@
+/* --- Animated particle background layer (BackgroundAnimator) ---
+   Prepended as the first child of every scene that uses it, so it sits
+   behind all scene content by default stacking order. --- */
+
+.pk-bg-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-color: var(--pk-bg);
+}
+
+.pk-bg-layer canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  z-index: 1;
+}
+
+/* --- Stripe overlay — sits above the canvas so particles pass behind the texture.
+   Semi-opaque so particles are faintly visible through the stripes. --- */
+
+.pk-bg-stripes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(44, 16, 32, 0.80) 0px, rgba(44, 16, 32, 0.80) 12px,
+    rgba(13, 3, 7, 0.94)  12px, rgba(13, 3, 7, 0.94)  13px
+  );
+}
+
+/* --- Atmosphere layers --- */
+
+.pk-bg-atmo {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.9s cubic-bezier(.4,0,.2,1);
+  z-index: 0;
+}
+
+.pk-bg-atmo--calm {
+  background:
+    radial-gradient(ellipse 80% 55% at 50% 100%, rgba(58,14,24,.55) 0%, transparent 62%),
+    radial-gradient(ellipse 50% 40% at 20% 20%, rgba(32,10,16,.4) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 80% 80%, rgba(32,10,16,.3) 0%, transparent 70%);
+  animation: pk-bg-breathe 12s ease-in-out infinite alternate;
+}
+
+.pk-bg-atmo--shop {
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 100%, rgba(106,24,40,.4) 0%, transparent 60%),
+    radial-gradient(ellipse 35% 25% at 50% 50%, rgba(212,175,55,.03) 0%, transparent 65%);
+  animation: pk-bg-breathe 8s ease-in-out infinite alternate;
+}
+
+.pk-bg-atmo--plinko {
+  background:
+    radial-gradient(ellipse 100% 55% at 50% 100%, rgba(204,40,64,.28) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(106,24,40,.45) 0%, transparent 52%),
+    radial-gradient(ellipse 70% 45% at 50% 0%, rgba(58,14,24,.38) 0%, transparent 70%);
+  animation: pk-bg-plinko-pulse 3.2s ease-in-out infinite alternate;
+}
+
+@keyframes pk-bg-breathe {
+  0%   { filter: brightness(1); }
+  100% { filter: brightness(1.06); }
+}
+
+@keyframes pk-bg-plinko-pulse {
+  0%   { filter: brightness(1); }
+  100% { filter: brightness(1.1) saturate(1.05); }
+}
+
+[data-bg-state="calm"]   .pk-bg-atmo--calm   { opacity: 1; }
+[data-bg-state="shop"]   .pk-bg-atmo--shop   { opacity: 1; }
+[data-bg-state="plinko"] .pk-bg-atmo--plinko { opacity: 1; }
+
+/* --- Edge vignette --- */
+
+.pk-bg-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 3;
+  background:
+    linear-gradient(to bottom, rgba(10,2,5,.65) 0%, transparent 14%, transparent 82%, rgba(10,2,5,.55) 100%),
+    radial-gradient(ellipse 100% 100% at 0 50%, rgba(10,2,5,.35) 0%, transparent 42%),
+    radial-gradient(ellipse 100% 100% at 100% 50%, rgba(10,2,5,.35) 0%, transparent 42%);
+}
