@@ -1,0 +1,58 @@
+/* --- Spark Web — purple lightning mesh overlay for electrified pegs and
+       electrical balls. Mounted as a child SVG by `utils/spark-web.js`. --- */
+
+.pk-spark-web {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  overflow: visible;
+  z-index: 1;
+  filter:
+    drop-shadow(0 0 2px rgba(168, 85, 247, 0.85))
+    drop-shadow(0 0 6px rgba(124, 58, 237, 0.55));
+  animation: pk-spark-web-pulse 0.18s steps(2) infinite alternate;
+}
+
+.pk-spark-web__bolts {
+  fill: none;
+  stroke: #c4b5fd;
+  stroke-width: 1.1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.95;
+}
+
+/* --- Spark Arc — single jagged bolt between two electrified pegs. Sized
+       and positioned by `mountSparkArc()`; only the stroke needs styling. --- */
+
+.pk-spark-arc {
+  position: absolute;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 5;
+  filter:
+    drop-shadow(0 0 3px rgba(196, 181, 253, 0.95))
+    drop-shadow(0 0 8px rgba(124, 58, 237, 0.7));
+  animation: pk-spark-arc-flicker 0.12s steps(3) infinite;
+}
+
+.pk-spark-arc__bolt {
+  fill: none;
+  stroke: #ede9fe;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 1;
+}
+
+@keyframes pk-spark-web-pulse {
+  0%   { opacity: 1; }
+  100% { opacity: 0.65; }
+}
+
+@keyframes pk-spark-arc-flicker {
+  0%, 100% { opacity: 1; filter: brightness(1) drop-shadow(0 0 3px rgba(196, 181, 253, 0.95)) drop-shadow(0 0 8px rgba(124, 58, 237, 0.7)); }
+  50%      { opacity: 0.55; filter: brightness(1.4) drop-shadow(0 0 5px rgba(221, 214, 254, 1)) drop-shadow(0 0 12px rgba(124, 58, 237, 0.9)); }
+}

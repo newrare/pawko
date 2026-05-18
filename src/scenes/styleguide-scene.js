@@ -3,6 +3,7 @@ import { i18n } from "../managers/i18n-manager.js";
 import { layout } from "../managers/layout-manager.js";
 import { buttonHtml } from "../components/ui/button.js";
 import { toggleRowHtml } from "../components/ui/toggle-row.js";
+import { mountSparkWeb, mountSparkArc } from "../utils/spark-web.js";
 
 import { TitleScene } from "./title-scene.js";
 import { vfx } from "../utils/vfx.js";
@@ -21,6 +22,9 @@ export class StyleguideScene {
   /** @type {ListenerBag} */
   #bag = new ListenerBag();
 
+  /** @type {Array<() => void>} Spark-web/arc unmount fns, cleared on each refresh. */
+  #sparkUnmounts = [];
+
 
 
   /** @param {import('./scene-router.js').SceneRouter} router */
@@ -35,9 +39,42 @@ export class StyleguideScene {
     this.#el.innerHTML = this.#renderInner();
     root.appendChild(this.#el);
 
+    this.#mountSparks();
+
     this.#bag.on(this.#el, "pointerdown", this.#onClick);
     this.#bag.add(i18n.onChange(() => this.#refresh()));
     this.#bag.add(layout.onChange(() => this.#refresh()));
+  }
+
+  /**
+   * Mount spark-web overlays on every electrified peg / electrical ball in
+   * the rendered guide, plus an arc between the paired-pegs cell.
+   * Must be re-run after every `#refresh()` (which rewrites innerHTML and
+   * wipes the previously-mounted SVGs).
+   */
+  #mountSparks() {
+    if (!this.#el) return;
+    /** @param {NodeListOf<HTMLElement>} els @param {Parameters<typeof mountSparkWeb>[1]} opts */
+    const each = (els, opts) => {
+      els.forEach((host) => this.#sparkUnmounts.push(mountSparkWeb(host, opts)));
+    };
+    each(this.#el.querySelectorAll('[data-sg-spark="peg"]'), { radius: 11, padding: 14 });
+    each(this.#el.querySelectorAll('[data-sg-spark="ball"]'), { radius: 9, padding: 14 });
+
+    const arcStage = this.#el.querySelector("[data-sg-arc]");
+    if (arcStage instanceof HTMLElement) {
+      /* Hard-coded peg centres from the inline styles above: left=11, right=stage-11. */
+      const w = arcStage.clientWidth || 140;
+      const h = arcStage.clientHeight || 40;
+      this.#sparkUnmounts.push(
+        mountSparkArc(arcStage, 11, h / 2, w - 11, h / 2, { padding: 8 }),
+      );
+    }
+  }
+
+  #unmountSparks() {
+    for (const fn of this.#sparkUnmounts) fn();
+    this.#sparkUnmounts = [];
   }
 
   #renderInner() {
@@ -215,13 +252,12 @@ export class StyleguideScene {
             ${cell('<div class="pk-peg pk-peg--frozen-2"></div>', "Frozen ②<br>2 hits left")}
             ${cell('<div class="pk-peg pk-peg--frozen-1"></div>', "Frozen ①<br>1 hit left")}
             ${cell('<div class="pk-peg pk-peg--burned"></div>', "Burned<br>÷2 score")}
-            ${cell('<div class="pk-peg pk-peg--electrified"></div>', "Electrified")}
+            ${cell('<div class="pk-peg pk-peg--electrified" data-sg-spark="peg"></div>', "Electrified")}
             <div class="gt-sg-plinko-cell" style="grid-column: span 2;">
-              <div class="gt-sg-plinko-stage" style="width: 140px;">
-                <div style="position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:space-between;">
-                  <div class="pk-peg pk-peg--electrified" style="position:relative;margin:0;"></div>
-                  <div class="pk-arc" style="position:absolute;left:7px;top:50%;width:calc(100% - 14px);transform:translateY(-50%);"></div>
-                  <div class="pk-peg pk-peg--electrified" style="position:relative;margin:0;"></div>
+              <div class="gt-sg-plinko-stage gt-sg-plinko-stage--overflow gt-sg-arc-host" style="width: 140px;">
+                <div class="gt-sg-arc-stage" data-sg-arc>
+                  <div class="pk-peg pk-peg--electrified gt-sg-arc-peg gt-sg-arc-peg--left" data-sg-spark="peg"></div>
+                  <div class="pk-peg pk-peg--electrified gt-sg-arc-peg gt-sg-arc-peg--right" data-sg-spark="peg"></div>
                 </div>
               </div>
               <span>Arc<br>between pegs</span>
@@ -249,7 +285,7 @@ export class StyleguideScene {
             ${cell('<div class="pk-ball pk-ball--fire"></div>', "Fire<br>burns pegs")}
             ${cell('<div class="pk-ball pk-ball--glass"></div>', "Glass<br>20-hit life")}
             ${cell('<div class="pk-ball pk-ball--black"></div>', "Black<br>no score")}
-            ${cell('<div class="pk-ball pk-ball--electrical"></div>', "Electrical<br>combo arcs")}
+            ${cell('<div class="pk-ball pk-ball--electrical" data-sg-spark="ball"></div>', "Electrical<br>combo arcs")}
           </div>
         </div>
 
@@ -325,7 +361,9 @@ export class StyleguideScene {
 
   #refresh() {
     if (!this.#el) return;
+    this.#unmountSparks();
     this.#el.innerHTML = this.#renderInner();
+    this.#mountSparks();
   }
 
   /** @param {PointerEvent} event */
@@ -354,6 +392,7 @@ export class StyleguideScene {
   };
 
   destroy() {
+    this.#unmountSparks();
     this.#bag.dispose();
     this.#el?.remove();
     this.#el = null;
