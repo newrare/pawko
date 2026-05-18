@@ -25,9 +25,9 @@ describe("optionsManager", () => {
 
   it("emits typed change:<key> events", () => {
     const fn = vi.fn();
-    optionsManager.on("change:animSkip", fn);
-    optionsManager.set("animSkip", true);
-    expect(fn).toHaveBeenCalledWith(true);
+    optionsManager.on("change:sound", fn);
+    optionsManager.set("sound", false);
+    expect(fn).toHaveBeenCalledWith(false);
   });
 
   it("skips emit when value is unchanged", () => {

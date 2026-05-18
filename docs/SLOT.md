@@ -59,14 +59,26 @@ idle and flashing on contact. A floating `+10` label spawns on hit.
 
 ```
 Peg (basic)
-└── Bumper (golden, boosted)
-    └── … (future variants — sticky peg, multiplier, magnet, …)
+├── Bumper  (golden, boosted, opts out of PEG_SCORE_MULTIPLIER)
+└── CoinPeg (one-shot, awards coins via `consumeReward()`)
+        └── … (future variants — sticky peg, multiplier, magnet, …)
 ```
 
+Each peg participates in the contact pipeline through a small contract,
+mirroring the [Ball variants](BALL.md):
+
+| Hook                     | Default                  | Overridden by                                |
+| ------------------------ | ------------------------ | -------------------------------------------- |
+| `score`                  | `PLINKO.SCORE_PEG`       | `Bumper` (SCORE_BUMPER), `CoinPeg` (0)       |
+| `restitution`            | `PLINKO.RESTITUTION_PEG` | `Bumper` (RESTITUTION_BUMPER)                |
+| `appliesPegMultiplier`   | `true`                   | `Bumper` (`false`)                           |
+| `scoreForContact()`      | base, ice=0, burn÷2      | `CoinPeg` (always 0)                         |
+| `consumeReward(ball)`    | `null`                   | `CoinPeg` (returns coin payout directive)    |
+| `onAfterScored()`        | decay one ice charge     | —                                            |
+
 Adding a new family member is as simple as subclassing `Peg`, overriding
-`radius` / `score` / `restitution`, and giving it a `type` tag. The
-`Layer` factory will pick it up via the existing rendering path
-(`.pk-peg.pk-peg--<type>`).
+the relevant hooks, and giving it a `type` tag. The `Layer` factory will
+pick it up via the existing rendering path (`.pk-peg.pk-peg--<type>`).
 
 ## Tests
 

@@ -116,7 +116,6 @@ export const SHOP_SLOT_COUNT = 10;
 export const DEFAULT_OPTIONS = {
   music: true,
   sound: true,
-  animSkip: false,
 };
 
 // ─── Audio ─────────────────────────────────────────────────────────────────
@@ -166,7 +165,7 @@ export const PLINKO = {
   /* Launch zone */
   SUBLAUNCH_COUNT: 3,
   /** Base ball count per sublaunch at round start. */
-  STARTING_BALLS_PER_SUBLAUNCH: 5,
+  STARTING_BALLS_PER_SUBLAUNCH: 2,
   /** Delay between consecutive ball drops from the same sublaunch. */
   LAUNCH_DELAY_MS: 80,
   /** Anti-loop cap on how many times a ball may go through the recycle gate. */
@@ -174,8 +173,8 @@ export const PLINKO = {
 
   /* Pinboard sizing (CSS px). Pegs/bumpers/balls share the pinboard
      coordinate space (origin = pinboard top-left). */
-  PEG_RADIUS: 7,
-  BUMPER_RADIUS: 11,
+  PEG_RADIUS: 10,
+  BUMPER_RADIUS: 10,
   BALL_RADIUS: 9,
   /** Vertical distance between two layers. */
   LAYER_HEIGHT: 56,
@@ -213,6 +212,27 @@ export const PLINKO = {
   /* Collection gates — 5 equal-width zones (sum = 1). */
   GATE_WIDTHS: { recycle: 0.20, x2: 0.20, x10: 0.20, x5: 0.20, malus: 0.20 },
   GATE_ORDER: ["recycle", "x2", "x10", "x5", "malus"],
+};
+
+// ─── Ball effects ─────────────────────────────────────────────────────────
+/* Ball kinds (the string ids) live next to the factory in
+   `src/entities/ball-factory.js` — see `BALL_KINDS` there. */
+
+export const BALL_EFFECTS = {
+  /** Number of subsequent hits a peg remains frozen after an ice-ball touch. */
+  ICE_FREEZE_HITS: 3,
+  /** Base-score divisor applied while a peg is burned. */
+  FIRE_SCORE_DIVISOR: 2,
+  /** Hits a glass ball can sustain before it shatters. */
+  GLASS_MAX_HITS: 20,
+  /** Glass crack stages (1..N) shown as the ball nears destruction. */
+  GLASS_CRACK_STAGES: 4,
+  /** Max gap (px) under which two same-layer electrified pegs form an arc. */
+  ELECTRIC_ARC_MAX_DIST: 80,
+  /** Pixel half-thickness of the live arc segment used for combo detection. */
+  ELECTRIC_ARC_THICKNESS: 14,
+  /** ms a "Combo ×N" banner stays on-screen after triggering. */
+  COMBO_BANNER_DURATION_MS: 1200,
 };
 
 // ─── Level definitions ────────────────────────────────────────────────────

@@ -1,7 +1,10 @@
 # Ball
 
 A **ball** is the physical bead the player drops from the launch zone.
-Implementation: [`src/entities/ball.js`](../src/entities/ball.js).
+Base class: [`src/entities/ball-classic.js`](../src/entities/ball-classic.js).
+The variant zoo (ice / fire / glass / black / electrical) lives in
+sibling files; spawn the right one through
+[`createBall(kind, opts)`](../src/entities/ball-factory.js).
 
 ## Pure data
 
@@ -18,6 +21,25 @@ Like every other entity, `Ball` carries zero DOM dependency. It owns:
 
 Convenience: `ball.canRecycle()` returns `true` while
 `ball.recycles < PLINKO.MAX_RECYCLES` (8 by default).
+
+## Variants
+
+Each variant overrides a small contract instead of being branched on with
+a `switch (ball.kind)` from the controller:
+
+| Hook                  | Default              | Overridden by                                                           |
+| --------------------- | -------------------- | ----------------------------------------------------------------------- |
+| `kind`                | `"classic"`          | every subclass                                                          |
+| `cssModifier`         | `""`                 | every subclass — appended to `pk-ball--<modifier>`                      |
+| `onBeforeContact(p)`  | `"alive"`            | `GlassBall` — increments `glassHits`, returns `"shatter"` at the cap    |
+| `consumesPeg(p)`      | `false`              | `BlackBall` — destroys the peg, no score                                |
+| `applyEffectTo(p)`    | no-op, returns false | `IceBall` (freeze), `FireBall` (burn + melt ice), `ElectricalBall`      |
+| `triggersArcRefresh`  | `false`              | `ElectricalBall`                                                        |
+
+Adding a new ball type = one new file in `src/entities/`, plus the entry
+in [ball-factory.js](../src/entities/ball-factory.js) and the
+`BALL_KINDS` constant. No controller changes needed unless the new
+variant introduces a brand-new hook.
 
 ## Physics
 
@@ -60,5 +82,7 @@ There is no canvas; the browser compositor takes care of GPU acceleration.
 
 ## Tests
 
-[`tests/entities/ball.test.js`](../tests/entities/ball.test.js) covers the
-recycle counter, default state, and constants binding.
+[`tests/entities/ball.test.js`](../tests/entities/ball.test.js) covers
+the base class. Each variant has its own sibling test file
+(`ball-ice.test.js`, `ball-fire.test.js`, …) and the factory is covered
+by [`ball-factory.test.js`](../tests/entities/ball-factory.test.js).

@@ -165,11 +165,13 @@
 
 .pk-peg {
   position: absolute;
-  width: 14px;
-  height: 14px;
-  margin: -7px 0 0 -7px;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
   border-radius: 50%;
-  background: var(--pk-peg-bg);
+  background: transparent;
+  border: var(--pk-peg-ring-width) solid var(--pk-peg-ring);
+  box-sizing: border-box;
   box-shadow: var(--pk-peg-shadow);
 }
 
@@ -177,7 +179,8 @@
   width: 22px;
   height: 22px;
   margin: -11px 0 0 -11px;
-  background: var(--pk-bumper-bg);
+  background: transparent;
+  border: var(--pk-bumper-ring-width) solid var(--pk-bumper-ring);
   box-shadow: var(--pk-bumper-shadow);
   animation: pk-bumper-idle 2.4s ease-in-out infinite;
 }
@@ -186,13 +189,14 @@
 .pk-peg--bumper.pk-flash { animation: pk-bumper-flash 0.22s ease-out; }
 
 .pk-peg--coin {
-  width: 16px;
-  height: 16px;
-  margin: -8px 0 0 -8px;
-  background: linear-gradient(180deg, #facc15, #b45309);
-  color: #2d1208;
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+  background: transparent;
+  border: 2.5px solid #facc15;
+  color: #facc15;
   font-weight: 900;
-  font-size: 0.7rem;
+  font-size: 0.6rem;
   display: flex;
   align-items: center;
   justify-content: center;

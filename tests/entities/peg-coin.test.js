@@ -23,4 +23,20 @@ describe("CoinPeg", () => {
   it("exposes COIN_VALUE as coinValue", () => {
     expect(new CoinPeg().coinValue).toBe(PLINKO.COIN_VALUE);
   });
+
+  it("scoreForContact always returns 0", () => {
+    const c = new CoinPeg();
+    expect(c.scoreForContact()).toBe(0);
+    c.burned = true;
+    expect(c.scoreForContact()).toBe(0);
+  });
+
+  it("consumeReward describes a coin payout that the controller executes", () => {
+    const c = new CoinPeg();
+    const reward = c.consumeReward(null);
+    expect(reward).not.toBeNull();
+    expect(reward.coins).toBe(PLINKO.COIN_VALUE);
+    expect(reward.popText).toBe(`+${PLINKO.COIN_VALUE}`);
+    expect(reward.popClass).toBe("pk-popup pk-popup--coin");
+  });
 });

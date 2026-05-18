@@ -3,7 +3,7 @@ import { EventEmitter } from "../utils/event-emitter.js";
 
 /**
  * OptionsManager — single source of truth for user preferences persisted in
- * `STORAGE_KEYS.OPTIONS` (music, sound, animSkip, …). Side-effect-free: side-
+ * `STORAGE_KEYS.OPTIONS` (music, sound, …). Side-effect-free: side-
  * effecting managers (audio, theme) read/write through this singleton but
  * keep their own reactions (pause/resume music, etc.) wired via `onChange`.
  */
@@ -52,10 +52,7 @@ class OptionsManager extends EventEmitter {
     return this.#options.sound;
   }
 
-  /** True when swipes may interrupt ongoing animations. */
-  get animSkipEnabled() {
-    return this.#options.animSkip;
-  }
+
 
   // ─── Persistence ─────────────────────────────────────
 

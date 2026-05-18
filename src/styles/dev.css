@@ -108,9 +108,44 @@
 .pk-dev-admin-btn:hover { background: rgba(0, 255, 136, 0.2); }
 .pk-dev-admin-btn:active { background: rgba(0, 255, 136, 0.35); }
 
+.pk-dev-admin-btn--classic {
+  background: rgba(212, 175, 55, 0.12);
+  color: #f5d77a;
+}
+.pk-dev-admin-btn--classic:hover { background: rgba(212, 175, 55, 0.25); }
+.pk-dev-admin-btn--classic:active { background: rgba(212, 175, 55, 0.4); }
+
 .pk-dev-admin-btn--ice {
   background: rgba(125, 211, 252, 0.15);
   color: #bae6fd;
 }
 .pk-dev-admin-btn--ice:hover { background: rgba(125, 211, 252, 0.3); }
 .pk-dev-admin-btn--ice:active { background: rgba(125, 211, 252, 0.45); }
+
+.pk-dev-admin-btn--fire {
+  background: rgba(249, 115, 22, 0.18);
+  color: #fed7aa;
+}
+.pk-dev-admin-btn--fire:hover { background: rgba(249, 115, 22, 0.32); }
+.pk-dev-admin-btn--fire:active { background: rgba(249, 115, 22, 0.5); }
+
+.pk-dev-admin-btn--glass {
+  background: rgba(186, 230, 253, 0.1);
+  color: #e0f2fe;
+}
+.pk-dev-admin-btn--glass:hover { background: rgba(186, 230, 253, 0.2); }
+.pk-dev-admin-btn--glass:active { background: rgba(186, 230, 253, 0.35); }
+
+.pk-dev-admin-btn--black {
+  background: rgba(64, 64, 64, 0.4);
+  color: #d4d4d8;
+}
+.pk-dev-admin-btn--black:hover { background: rgba(64, 64, 64, 0.6); }
+.pk-dev-admin-btn--black:active { background: rgba(64, 64, 64, 0.8); }
+
+.pk-dev-admin-btn--electrical {
+  background: rgba(250, 204, 21, 0.18);
+  color: #fef3c7;
+}
+.pk-dev-admin-btn--electrical:hover { background: rgba(250, 204, 21, 0.32); }
+.pk-dev-admin-btn--electrical:active { background: rgba(250, 204, 21, 0.5); }

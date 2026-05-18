@@ -3,7 +3,7 @@ import { i18n } from "../managers/i18n-manager.js";
 import { layout } from "../managers/layout-manager.js";
 import { buttonHtml } from "../components/ui/button.js";
 import { toggleRowHtml } from "../components/ui/toggle-row.js";
-import { OptionsModal } from "../components/options-modal.js";
+
 import { TitleScene } from "./title-scene.js";
 import { vfx } from "../utils/vfx.js";
 
@@ -21,8 +21,7 @@ export class StyleguideScene {
   /** @type {ListenerBag} */
   #bag = new ListenerBag();
 
-  /** @type {OptionsModal | null} */
-  #sampleModal = null;
+
 
   /** @param {import('./scene-router.js').SceneRouter} router */
   constructor(router) {
@@ -50,12 +49,6 @@ export class StyleguideScene {
       ${this.#renderToggles()}
       ${this.#renderPegs()}
       ${this.#renderBalls()}
-      ${this.#renderPinboard()}
-      ${this.#renderLaunchZone()}
-      ${this.#renderGates()}
-      ${this.#renderStatusBar()}
-      ${this.#renderBonusCards()}
-      ${this.#renderModals()}
       ${this.#renderAnimations()}
       ${this.#renderVfx()}
     `;
@@ -102,7 +95,7 @@ export class StyleguideScene {
 
     return `
       <section class="gt-sg-section">
-        <h2 class="gt-sg-h2">01 · ${i18n.t("styleguide.colors")}</h2>
+        <h2 class="gt-sg-h2">${i18n.t("styleguide.colors")}</h2>
         <div class="gt-sg-swatches">${swatches}</div>
       </section>
     `;
@@ -111,7 +104,7 @@ export class StyleguideScene {
   #renderTypography() {
     return `
       <section class="gt-sg-section">
-        <h2 class="gt-sg-h2">02 · Typography</h2>
+        <h2 class="gt-sg-h2">Typography</h2>
         <div style="display:flex;flex-direction:column;gap:1.1rem;">
           <div>
             <span class="gt-sg-sub-label">Game title · 3rem · 14px tracking</span>
@@ -178,7 +171,7 @@ export class StyleguideScene {
 
     return `
       <section class="gt-sg-section">
-        <h2 class="gt-sg-h2">03 · ${i18n.t("styleguide.buttons")}</h2>
+        <h2 class="gt-sg-h2">${i18n.t("styleguide.buttons")}</h2>
         <div class="gt-btn-group">${buttons}</div>
       </section>
     `;
@@ -187,12 +180,11 @@ export class StyleguideScene {
   #renderToggles() {
     const toggles =
       toggleRowHtml({ action: "noop", label: i18n.t("options.music"), checked: true }) +
-      toggleRowHtml({ action: "noop", label: i18n.t("options.sound"), checked: true }) +
-      toggleRowHtml({ action: "noop", label: i18n.t("options.anim_skip"), checked: false });
+      toggleRowHtml({ action: "noop", label: i18n.t("options.sound"), checked: true });
 
     return `
       <section class="gt-sg-section">
-        <h2 class="gt-sg-h2">04 · ${i18n.t("styleguide.toggles")}</h2>
+        <h2 class="gt-sg-h2">${i18n.t("styleguide.toggles")}</h2>
         <div class="gt-stack" style="max-width:320px;">${toggles}</div>
       </section>
     `;
@@ -207,19 +199,33 @@ export class StyleguideScene {
 
     return `
       <section class="gt-sg-section">
-        <h2 class="gt-sg-h2">05 · Pegs</h2>
+        <h2 class="gt-sg-h2">Pegs</h2>
         <div class="gt-sg-plinko">
           <div class="gt-sg-plinko-row gt-sg-plinko-row--4" style="grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));">
-            ${cell('<div class="pk-peg"></div>', "Regular")}
+            ${cell('<div class="pk-peg"></div>', "Classic")}
             ${cell('<div class="pk-peg pk-peg--bumper"></div>', "Bumper<br>×10 pts")}
             ${cell('<div class="pk-peg pk-peg--coin">¢</div>', "Coin Peg")}
-            ${cell('<div class="pk-peg pk-peg--shop pk-peg--shop--common"><span class="pk-shop-peg-counter">2</span></div>', 'Shop<br><span class="gt-sg-rarity gt-sg-rarity--com" style="font-size:.42rem;">Common</span>')}
-            ${cell('<div class="pk-peg pk-peg--shop pk-peg--shop--rare"><span class="pk-shop-peg-counter">4</span></div>', 'Shop<br><span class="gt-sg-rarity gt-sg-rarity--rare" style="font-size:.42rem;">Rare</span>')}
-            ${cell('<div class="pk-peg pk-peg--shop pk-peg--shop--epic"><span class="pk-shop-peg-counter">7</span></div>', 'Shop<br><span class="gt-sg-rarity gt-sg-rarity--epic" style="font-size:.42rem;">Epic</span>')}
-            ${cell('<div class="pk-peg pk-peg--shop pk-peg--shop--legendary"><span class="pk-shop-peg-counter">12</span></div>', 'Shop<br><span class="gt-sg-rarity gt-sg-rarity--leg" style="font-size:.42rem;">Legendary</span>')}
-            ${cell('<div class="pk-peg pk-peg--frozen-3"></div>', "Frozen ③<br>intact")}
-            ${cell('<div class="pk-peg pk-peg--frozen-2"></div>', "Frozen ②<br>cracking")}
-            ${cell('<div class="pk-peg pk-peg--frozen-1"></div>', "Frozen ①<br>thawing")}
+          </div>
+        </div>
+
+        <h2 class="gt-sg-h2" style="margin-top:1rem;">Pegs — ball-effect states</h2>
+        <div class="gt-sg-plinko">
+          <div class="gt-sg-plinko-row gt-sg-plinko-row--4" style="grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));">
+            ${cell('<div class="pk-peg pk-peg--frozen-3"></div>', "Frozen ③<br>3 hits left")}
+            ${cell('<div class="pk-peg pk-peg--frozen-2"></div>', "Frozen ②<br>2 hits left")}
+            ${cell('<div class="pk-peg pk-peg--frozen-1"></div>', "Frozen ①<br>1 hit left")}
+            ${cell('<div class="pk-peg pk-peg--burned"></div>', "Burned<br>÷2 score")}
+            ${cell('<div class="pk-peg pk-peg--electrified"></div>', "Electrified")}
+            <div class="gt-sg-plinko-cell" style="grid-column: span 2;">
+              <div class="gt-sg-plinko-stage" style="width: 140px;">
+                <div style="position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:space-between;">
+                  <div class="pk-peg pk-peg--electrified" style="position:relative;margin:0;"></div>
+                  <div class="pk-arc" style="position:absolute;left:7px;top:50%;width:calc(100% - 14px);transform:translateY(-50%);"></div>
+                  <div class="pk-peg pk-peg--electrified" style="position:relative;margin:0;"></div>
+                </div>
+              </div>
+              <span>Arc<br>between pegs</span>
+            </div>
           </div>
         </div>
       </section>
@@ -235,213 +241,26 @@ export class StyleguideScene {
 
     return `
       <section class="gt-sg-section">
-        <h2 class="gt-sg-h2">06 · Balls</h2>
+        <h2 class="gt-sg-h2">Balls — kinds</h2>
         <div class="gt-sg-plinko">
-          <div class="gt-sg-plinko-row" style="grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));">
-            ${cell('<div class="pk-ball"></div>', "Regular")}
-            ${cell('<div class="pk-ball pk-ball--ice"></div>', "Ice Ball<br>freezes pegs")}
-            ${cell('<div class="pk-ball pk-ball--glass"></div>', "Glass<br>intact")}
-            ${cell('<div class="pk-ball pk-ball--glass pk-ball--glass-crack-1"></div>', "Glass<br>crack 1/4")}
-            ${cell('<div class="pk-ball pk-ball--glass pk-ball--glass-crack-2"></div>', "Glass<br>crack 2/4")}
-            ${cell('<div class="pk-ball pk-ball--glass pk-ball--glass-crack-3"></div>', "Glass<br>crack 3/4")}
-            ${cell('<div class="pk-ball pk-ball--glass pk-ball--glass-crack-4"></div>', "Glass<br>shatter soon")}
-          </div>
-        </div>
-      </section>
-    `;
-  }
-
-  #renderPinboard() {
-    return `
-      <section class="gt-sg-section">
-        <h2 class="gt-sg-h2">07 · Pinboard Arena</h2>
-        <div style="position:relative;background:var(--pk-arena-bg);border-top:var(--pk-arena-border);border-bottom:var(--pk-arena-border);border-radius:4px;overflow:hidden;padding:1rem 1.5rem;display:flex;align-items:center;flex-wrap:wrap;gap:12px;min-height:100px;">
-          <span style="position:absolute;top:6px;right:10px;background:rgba(212,175,55,.1);color:var(--pk-gold);border:1px solid rgba(212,175,55,.2);padding:3px 8px;border-radius:2px;font-size:.68rem;font-weight:700;letter-spacing:2px;">LVL 12</span>
-          <span style="font-size:.7rem;color:rgba(212,175,55,.35);font-weight:700;">LVL 11</span>
-          <div class="pk-peg" style="position:relative;margin:0;"></div>
-          <div class="pk-peg" style="position:relative;margin:0;"></div>
-          <div class="pk-peg pk-peg--bumper" style="position:relative;margin:0;"></div>
-          <div class="pk-peg" style="position:relative;margin:0;"></div>
-          <div class="pk-peg pk-peg--shop pk-peg--shop--rare" style="position:relative;margin:0;"><span class="pk-shop-peg-counter">4</span></div>
-          <div class="pk-peg" style="position:relative;margin:0;"></div>
-          <div class="pk-peg pk-peg--coin" style="position:relative;margin:0;">¢</div>
-          <div class="pk-peg pk-peg--frozen-3" style="position:relative;margin:0;"></div>
-          <div class="pk-peg" style="position:relative;margin:0;"></div>
-          <div class="pk-peg pk-peg--shop pk-peg--shop--legendary" style="position:relative;margin:0;"><span class="pk-shop-peg-counter">12</span></div>
-          <div class="pk-peg" style="position:relative;margin:0;"></div>
-          <div class="pk-peg pk-peg--bumper" style="position:relative;margin:0;"></div>
-          <div class="pk-ball" style="position:relative;margin:0;"></div>
-          <div class="pk-ball pk-ball--ice" style="position:relative;margin:0;"></div>
-          <span style="color:var(--pk-gold);background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.2);padding:1px 6px;border-radius:2px;font-size:.7rem;font-weight:700;">LVL 10 ★</span>
-          <div style="position:absolute;right:10px;bottom:8px;display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.22);border-radius:2px;color:var(--pk-gold-light);font-size:.78rem;font-weight:700;">🪙 42</div>
-        </div>
-        <div style="margin-top:.6rem;">
-          <span class="gt-sg-sub-label">Level progress (62%)</span>
-          <div class="gt-sg-progress-wrap"><div class="gt-sg-progress-fill"></div></div>
-        </div>
-      </section>
-    `;
-  }
-
-  #renderLaunchZone() {
-    const dot = `<span class="gt-sg-held-dot"></span>`;
-    return `
-      <section class="gt-sg-section">
-        <h2 class="gt-sg-h2">08 · Launch Zone</h2>
-        <div style="background:var(--pk-bg-surface);border:1px solid var(--pk-crimson-muted);border-radius:4px;padding:1rem;display:flex;flex-direction:column;gap:.75rem;">
-          <div style="display:flex;gap:.5rem;">
-            <div class="pk-sublaunch" data-firing="true" style="width:80px;height:56px;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px;padding-bottom:6px">${dot}${dot}${dot}${dot}${dot}</div>
-            <div class="pk-sublaunch" style="width:80px;height:56px;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px;padding-bottom:6px">${dot}${dot}${dot}${dot}${dot}</div>
-            <div class="pk-sublaunch" style="width:80px;height:56px;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px;padding-bottom:6px">${dot}${dot}${dot}</div>
-            <div class="pk-sublaunch" data-empty="true" style="width:80px;height:56px;"></div>
-          </div>
-          ${buttonHtml({ action: "noop", label: "Saved 12 ↑", variant: "primary" })}
-        </div>
-      </section>
-    `;
-  }
-
-  #renderGates() {
-    return `
-      <section class="gt-sg-section">
-        <h2 class="gt-sg-h2">09 · Collection Gates</h2>
-        <div class="gt-sg-plinko-gates">
-          <div class="pk-gate pk-gate--save"><span class="pk-gate-label">${i18n.t("game.gate.save")}</span></div>
-          <div class="pk-gate pk-gate--recycle"><span class="pk-gate-label">${i18n.t("game.gate.recycle")}</span></div>
-          <div class="pk-gate pk-gate--shop"><span class="pk-gate-label">${i18n.t("game.gate.shop")}</span></div>
-          <div class="pk-gate pk-gate--drain"><span class="pk-gate-label">${i18n.t("game.gate.drain")}</span></div>
-        </div>
-        <div style="font-size:.55rem;color:var(--gt-color-text-dim);letter-spacing:1px;">
-          Save 25% · Recycle 48% · Shop 2% (rare landing) · Drain 25%
-        </div>
-      </section>
-    `;
-  }
-
-  #renderStatusBar() {
-    return `
-      <section class="gt-sg-section">
-        <h2 class="gt-sg-h2">10 · Status Bar</h2>
-        <div class="gt-sg-status">
-          <div class="gt-sg-status-readouts">
-            <span><span class="gt-sg-stat-lbl">Hits</span>1 840</span>
-            <span><span class="gt-sg-stat-lbl">Saved</span>243</span>
-            <span><span class="gt-sg-stat-lbl">Level</span>12</span>
-            <span><span class="gt-sg-stat-lbl">Coins</span>🪙 42</span>
-            <span><span class="gt-sg-stat-lbl">Balls</span>5</span>
-          </div>
-          <div style="display:flex;gap:6px;">
-            ${buttonHtml({ action: "noop", label: "≡", variant: "secondary" })}
-          </div>
-        </div>
-      </section>
-    `;
-  }
-
-  #renderBonusCards() {
-    return `
-      <section class="gt-sg-section">
-        <h2 class="gt-sg-h2">11 · Bonuses — Permanent</h2>
-        <div class="gt-sg-bonus-grid">
-          <div class="gt-sg-bonus-card gt-sg-bonus-card--perm">
-            <span class="gt-sg-bonus-icon">🟢</span>
-            <div class="gt-sg-bonus-name">${i18n.t("bonus.permanent.extra_start_ball")}</div>
-            <div class="gt-sg-bonus-desc">${i18n.t("bonus.permanent.extra_start_ball.desc")}</div>
-            <div class="gt-sg-bonus-footer">
-              <span class="gt-sg-rarity gt-sg-rarity--perm">Permanent</span>
-              <span class="gt-sg-bonus-dur">Unlocks at Level 10</span>
-            </div>
-          </div>
-          <div class="gt-sg-bonus-card gt-sg-bonus-card--perm">
-            <span class="gt-sg-bonus-icon">🧲</span>
-            <div class="gt-sg-bonus-name">${i18n.t("bonus.permanent.shop_magnet")}</div>
-            <div class="gt-sg-bonus-desc">${i18n.t("bonus.permanent.shop_magnet.desc")}</div>
-            <div class="gt-sg-bonus-footer">
-              <span class="gt-sg-rarity gt-sg-rarity--perm">Permanent</span>
-              <span class="gt-sg-bonus-dur">Unlocks at Level 20</span>
-            </div>
+          <div class="gt-sg-plinko-row" style="grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));">
+            ${cell('<div class="pk-ball"></div>', "Classic")}
+            ${cell('<div class="pk-ball pk-ball--ice"></div>', "Ice<br>freezes pegs")}
+            ${cell('<div class="pk-ball pk-ball--fire"></div>', "Fire<br>burns pegs")}
+            ${cell('<div class="pk-ball pk-ball--glass"></div>', "Glass<br>20-hit life")}
+            ${cell('<div class="pk-ball pk-ball--black"></div>', "Black<br>no score")}
+            ${cell('<div class="pk-ball pk-ball--electrical"></div>', "Electrical<br>combo arcs")}
           </div>
         </div>
 
-        <h2 class="gt-sg-h2" style="margin-top:1.5rem;">11 · Bonuses — Session</h2>
-        <div class="gt-sg-bonus-grid">
-          <div class="gt-sg-bonus-card gt-sg-bonus-card--epic">
-            <span class="gt-sg-bonus-icon">🚀</span>
-            <div class="gt-sg-bonus-name">${i18n.t("bonus.session.bonus_launcher")}</div>
-            <div class="gt-sg-bonus-desc">${i18n.t("bonus.session.bonus_launcher.desc")}</div>
-            <div class="gt-sg-bonus-footer">
-              <span class="gt-sg-rarity gt-sg-rarity--epic">Epic</span>
-              <span class="gt-sg-bonus-dur">3 levels</span>
-            </div>
-          </div>
-          <div class="gt-sg-bonus-card gt-sg-bonus-card--leg">
-            <span class="gt-sg-bonus-icon">✨</span>
-            <div class="gt-sg-bonus-name">${i18n.t("bonus.session.score_x2")}</div>
-            <div class="gt-sg-bonus-desc">${i18n.t("bonus.session.score_x2.desc")}</div>
-            <div class="gt-sg-bonus-footer">
-              <span class="gt-sg-rarity gt-sg-rarity--leg">Legendary</span>
-              <span class="gt-sg-bonus-dur">3 levels</span>
-            </div>
-          </div>
-          <div class="gt-sg-bonus-card gt-sg-bonus-card--rare">
-            <span class="gt-sg-bonus-icon">🧊</span>
-            <div class="gt-sg-bonus-name">${i18n.t("bonus.session.ice_ball")}</div>
-            <div class="gt-sg-bonus-desc">${i18n.t("bonus.session.ice_ball.desc")}</div>
-            <div class="gt-sg-bonus-footer">
-              <span class="gt-sg-rarity gt-sg-rarity--rare">Rare</span>
-              <span class="gt-sg-bonus-dur">10 levels</span>
-            </div>
-          </div>
-          <div class="gt-sg-bonus-card gt-sg-bonus-card--rare">
-            <span class="gt-sg-bonus-icon">🔮</span>
-            <div class="gt-sg-bonus-name">${i18n.t("bonus.session.glass_ball")}</div>
-            <div class="gt-sg-bonus-desc">${i18n.t("bonus.session.glass_ball.desc")}</div>
-            <div class="gt-sg-bonus-footer">
-              <span class="gt-sg-rarity gt-sg-rarity--rare">Rare</span>
-              <span class="gt-sg-bonus-dur">15 levels</span>
-            </div>
-          </div>
-        </div>
-      </section>
-    `;
-  }
-
-  #renderModals() {
-    return `
-      <section class="gt-sg-section">
-        <h2 class="gt-sg-h2">12 · ${i18n.t("styleguide.modal")}</h2>
-        <div class="gt-btn-group">
-          ${buttonHtml({ action: "open-modal", label: i18n.t("styleguide.open_modal") })}
-        </div>
-
-        <div style="margin-top:1rem;">
-          <span class="gt-sg-sub-label">Shop Modal (static)</span>
-          <div style="background:#1a060e;border:1px solid var(--pk-crimson-deep);border-radius:4px;padding:1.5rem;max-width:300px;margin-top:.5rem;">
-            <div style="font-size:.9rem;letter-spacing:5px;text-transform:uppercase;color:var(--pk-gold);text-align:center;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid var(--pk-crimson-deep);">${i18n.t("shop.title")}</div>
-            <p style="text-align:center;font-size:.78rem;color:var(--gt-color-text-sec);line-height:1.6;margin-bottom:.75rem;">${i18n.t("shop.peg.intro")}</p>
-            <p style="text-align:center;font-size:.8rem;font-weight:700;color:var(--pk-gold);margin-bottom:.75rem;">🪙 42 coins</p>
-            <div style="display:flex;flex-direction:column;gap:.5rem;">
-              ${buttonHtml({ action: "noop", label: "🧊 Ice Ball", variant: "primary" })}
-              ${buttonHtml({ action: "noop", label: "✨ Score ×2", variant: "primary" })}
-              ${buttonHtml({ action: "noop", label: "+1 Ball — 10 coins", variant: "secondary" })}
-              ${buttonHtml({ action: "noop", label: i18n.t("shop.skip"), variant: "ghost" })}
-            </div>
-          </div>
-        </div>
-
-        <div style="margin-top:1rem;">
-          <span class="gt-sg-sub-label">Game Over Modal (static)</span>
-          <div style="background:#1a060e;border:1px solid var(--pk-crimson-deep);border-radius:4px;padding:1.5rem;max-width:300px;margin-top:.5rem;">
-            <div style="font-size:.9rem;letter-spacing:5px;text-transform:uppercase;color:var(--pk-gold);text-align:center;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid var(--pk-crimson-deep);">${i18n.t("game.over.title")}</div>
-            <div style="text-align:center;font-size:2.2rem;margin-bottom:.75rem;">🎲</div>
-            <div style="text-align:center;font-size:.78rem;color:var(--gt-color-text-sec);line-height:1.6;margin-bottom:1rem;">
-              <p>You reached level <strong style="color:var(--pk-gold);">12</strong> with <strong style="color:var(--pk-gold);">1 840</strong> hits.</p>
-              <p style="margin-top:.4rem;">243 saved · 57 drained</p>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:.5rem;">
-              ${buttonHtml({ action: "noop", label: i18n.t("game.over.replay"), variant: "primary" })}
-              ${buttonHtml({ action: "noop", label: i18n.t("game.over.back"), variant: "ghost" })}
-            </div>
+        <h2 class="gt-sg-h2" style="margin-top:1rem;">Glass ball cracking stages</h2>
+        <div class="gt-sg-plinko">
+          <div class="gt-sg-plinko-row" style="grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));">
+            ${cell('<div class="pk-ball pk-ball--glass"></div>', "Intact<br>>4 hits")}
+            ${cell('<div class="pk-ball pk-ball--glass pk-ball--glass-crack-1"></div>', "Crack 1<br>4 hits left")}
+            ${cell('<div class="pk-ball pk-ball--glass pk-ball--glass-crack-2"></div>', "Crack 2<br>3 hits left")}
+            ${cell('<div class="pk-ball pk-ball--glass pk-ball--glass-crack-3"></div>', "Crack 3<br>2 hits left")}
+            ${cell('<div class="pk-ball pk-ball--glass pk-ball--glass-crack-4"></div>', "Crack 4<br>1 hit left")}
           </div>
         </div>
       </section>
@@ -460,7 +279,7 @@ export class StyleguideScene {
 
     return `
       <section class="gt-sg-section">
-        <h2 class="gt-sg-h2">13 · ${i18n.t("styleguide.animations")}</h2>
+        <h2 class="gt-sg-h2">${i18n.t("styleguide.animations")}</h2>
         <div class="gt-sg-anims">${animSamples}</div>
       </section>
     `;
@@ -492,7 +311,7 @@ export class StyleguideScene {
 
     return `
       <section class="gt-sg-section">
-        <h2 class="gt-sg-h2">14 · VFX Overlay System</h2>
+        <h2 class="gt-sg-h2">VFX Overlay System</h2>
         <p style="font-size:.7rem;color:var(--gt-color-text-sec);margin-bottom:1rem;line-height:1.5;">
           Click any cell to trigger the effect. Use <code style="background:var(--pk-bg-surface);padding:1px 4px;border-radius:2px;">vfx.play('id', element)</code> in code.
         </p>
@@ -519,15 +338,7 @@ export class StyleguideScene {
       case "back":
         this.#router.start(TitleScene);
         break;
-      case "open-modal":
-        if (this.#sampleModal) return;
-        this.#sampleModal = new OptionsModal({
-          onClose: () => {
-            this.#sampleModal = null;
-          },
-        });
-        this.#sampleModal.open();
-        break;
+
       case "play-vfx": {
         const vfxId = /** @type {HTMLElement} */ (actionEl).dataset.vfxId;
         if (!vfxId) break;
@@ -543,8 +354,6 @@ export class StyleguideScene {
   };
 
   destroy() {
-    this.#sampleModal?.destroy();
-    this.#sampleModal = null;
     this.#bag.dispose();
     this.#el?.remove();
     this.#el = null;

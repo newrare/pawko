@@ -65,13 +65,12 @@
   --pk-status-bg: rgba(14, 4, 10, 0.96);
   --pk-status-fg: var(--pk-gold-light);
 
-  --pk-peg-bg: radial-gradient(circle at 35% 28%, #b07080, #6a1828);
-  --pk-peg-fg: var(--pk-gold-light);
-  --pk-peg-shadow: 0 1px 2px rgba(60, 0, 20, 0.5);
-  --pk-bumper-bg: radial-gradient(circle at 30% 30%, #ffd66b, #c08a2a);
-  --pk-bumper-fg: var(--pk-gold-light);
-  --pk-bumper-shadow: 0 0 0 2px rgba(74, 42, 10, 0.35),
-    0 2px 6px rgba(74, 42, 10, 0.4);
+  --pk-peg-ring: #b07080;
+  --pk-peg-ring-width: 2.5px;
+  --pk-peg-shadow: 0 0 3px rgba(176, 112, 128, 0.5);
+  --pk-bumper-ring: #ffd66b;
+  --pk-bumper-ring-width: 3px;
+  --pk-bumper-shadow: 0 0 6px rgba(255, 214, 107, 0.5);
   --pk-ball-bg: radial-gradient(circle at 30% 30%, #c4a0b0, #9a7080);
   --pk-ball-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 

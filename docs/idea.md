@@ -47,30 +47,44 @@
 - fire:
 
 ***hud***
-- avoir un compteur de billes (classique, noire, verre, glace, feu),, un compteur de billes cumulé (tous type) un compteur de launcher, un compteur de clef, un compteur de currency, un compteur de diamond, le score total cumulé de la partie en cours, le level max de pinboard atteint
+- avoir un compteur de billes (classique, noire, verre, glace, feu), un compteur de billes cumulé (tous type) un compteur de launcher, un compteur de clef par rareté, un compteur de currency, un compteur de diamond, le score total cumulé de la partie en cours, le level max de pinboard atteint (toute partie)
 - avoir une modal avant de lancer un level pinboard qui prédit le score total moyen possible avec le nombre de billes actuel
 
 ***grid***
 - case mystère: donne des bonus ou malus de sessions aléatoires
 
 ***peg***
-- classic: score 2pt
-- bumper: score 10pt
-- currency: donne de la currency
-- diamond: donne des diamond (pour le déblocage d'abilité)
-- glue: colle les billes
-- cat: mange une bille (possède 10pv)
-- boss: mange plusieurs billes (possède 100pv)
-- teleport: téléporte les billes vers une autre partie de la grille
-- chest: donne un bonus aléatoire à la destruction (currency, diamond, ability, launcher, etc.)
-- key: donne une clef au joueur puis est détruit (couleur de rarety donc 4 ou 5 types de clefs possible)
-- chester: (4 ou 5 types possibles) donne un gros bonus aléatoire à la destruction: currency, diamond, ability, launcher, (possède 100pv -> si à 0 coffre détruit sans bonus)
-- shield: créer une zone circulaire autour du peg ou les billes ne peuvent pas entrer, le shield à un nombre limite de hit et un délai de réactivation
-- mystery: donne un malus ou bonus aléatoire (possède 10pv)
+- <peg-name> (<pointDeVie>|<frequenceParLayer>): <description>
+
+- classic (1000pv|hight): score 2pt de base par hit de ball
+- bumper (1000pv|low): score 10pt de base par hit de ball
+- currency (1000pv|medium): donne 1 currency de base par hit de ballde la currency
+- diamond (5pv|medium): donne un diamond à chaque hit de ball (les diamonds servirons au déblocage d'abilité)
+- glue (5pv|low): colle une bille (la bille ne pourra jamais arriver sur une gate, il faut considérer qu'elle n'est plus en jeu), si elle est détruite, la bille collée revient en jeu et est libérée
+- cat (20pv|low): mange une bille, si cat est détruit il libère la bille mangée, la bille mangé ne pourra pas arriver sur une gate, sauf si elle est libérée
+- boss (50pv|low): mange plusieurs billes, même comportement que pour cat
+- teleport(2pv|medium): téléporte aléatoirement les billes vers une autre partie de la grille
+- chest (2pv|medium): donne un bonus aléatoire à la destruction (currency fois x, diamond fois x, launcher bonus temporaire ou permanent, + x ball dans chaque launcher)
+- key (1pv|medium): donne une clef de rareté lorsqu'il est détruit (couleur des clef rarety: 'legendary' | 'epic' | 'rare' | 'common'), la clef va dans un inventaire générale à la partie
+- chester (20pv|low): un chester de couleur par rareté 'legendary' | 'epic' | 'rare' | 'common'. au premier hit d'une ball, donne un gros bonus aléatoire si le joueur possède/utilise la bonne clef de couleur de son inventaire. Si le coffre est détruit par pv, donne un bonus comme un chest classique
+- shield (1pv|low): créer une zone circulaire autour du peg, les billes ne peuvent pas entrer, le shield à un nombre limite de 5 hits puis est désactiver pendant 5 secondes puis se réactive
+- mystery (2pv|medium): donne un malus ou un bonus aléatoire
+
+-> visuellement, un peg qui sera détruit au prochain hit tremble légèrement
 
 ***ball***
-- ice: gel n'importe quel peg sauf cat et boss pendant 3 hits
+- ice: gel n'importe quel peg sauf cat et boss pendant 3 hits, si le peg est déjà sous l'influence de ice, on remet le peg à 3 hits, si une fire ball touche un peg iced, la glace disparait immédiatement et le peg revient à son état habituelle.
 - fire: brûle n'importe quel peg (le peg reste actif mais réduit les scores de base par 2)
 - glass: la bille se détruit après 20 hits
-- black: la bille ne rapporte pas de points mais peut lébérer des billes bloquées sur les peg glue, inflige aussi des dégâts sur car et boss
-- electrical: la bille electrifie les peg qu'elle touche, si deux peg électrique sont cote à cote, cela créer un arc et créer un combo x fois du total score du level
+- black: la bille ne rapporte pas de points mais peut lébérer des billes bloquées sur les peg glue, inflige aussi des dégâts à l'ensemble des peg
+- electrical: la bille electrifie les peg qu'elle touche, si deux peg électrique sont cote à cote (même layer), cela créer un gros arc électrique entre les peg. Si une ball passe dans ce gros arc, on écrit en gros sur l'écran  "Combo fois x" (incrémenter), ce multiplicateur s'appliquera à la fin de la run pinboard sur le score total du niveau en cours.
+
+-> visuellement, un peg sous l'influence de ice aura un ring en pointillé bleu autour du peg (beaucoup de pointillé = encore 3 hits, pointillé modéré = 2 hits, très peu de pointillé = 1 hits)
+-> visuellement, un peg sous l'effet fire brulle (rouge)
+-> visuellement, un glass ball est transparent mais 3 hits avant sa destruction, se fissures apparaissent sur la bille (3 hits restant + peu de fisure, 1 hit restant + beaucoup de vissures)
+-> vusuellement, un peg sous l'effet electical possède des arcs electrique autour du peg
+
+Dans le panel d'admin, il faut un bouton pour obtenir une nouvelle bille dans le pinboard en cours (pour chaque type)
+Sur la vue style guide, il faut visuellement voir les différentes ball ainsi que les peg sous les effets des ball
+
+Lorsqu'on débute une partie (nouvelle grille), il faut avoir 3 launchers avec 2 billes classiques dans chaque launcher.

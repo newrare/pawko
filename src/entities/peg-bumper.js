@@ -24,4 +24,9 @@ export class Bumper extends Peg {
   get restitution() {
     return PLINKO.RESTITUTION_BUMPER;
   }
+
+  /** Bumper points already encode the bonus — multipliers don't stack. */
+  get appliesPegMultiplier() {
+    return false;
+  }
 }

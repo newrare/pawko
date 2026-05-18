@@ -46,7 +46,7 @@ export const en = {
   "options.title": "Options",
   "options.music": "Music",
   "options.sound": "Sound",
-  "options.anim_skip": "Skip animations",
+
   "options.language": "Language",
   "options.reset_data": "Reset all data",
   "options.reset_data_confirm": "Delete all saves and rankings?",

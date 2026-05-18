@@ -58,3 +58,29 @@ export function weightedPick(values, weights) {
   }
   return values[values.length - 1];
 }
+
+/**
+ * Shortest distance between point (px, py) and segment a–b.
+ * Used by the electric-arc combo detection.
+ * @param {number} px @param {number} py
+ * @param {number} ax @param {number} ay
+ * @param {number} bx @param {number} by
+ * @returns {number}
+ */
+export function pointSegmentDistance(px, py, ax, ay, bx, by) {
+  const dx = bx - ax;
+  const dy = by - ay;
+  const len2 = dx * dx + dy * dy;
+  if (len2 === 0) {
+    const ex = px - ax;
+    const ey = py - ay;
+    return Math.sqrt(ex * ex + ey * ey);
+  }
+  let t = ((px - ax) * dx + (py - ay) * dy) / len2;
+  t = Math.max(0, Math.min(1, t));
+  const cx = ax + t * dx;
+  const cy = ay + t * dy;
+  const ex = px - cx;
+  const ey = py - cy;
+  return Math.sqrt(ex * ex + ey * ey);
+}

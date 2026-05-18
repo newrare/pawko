@@ -7,6 +7,7 @@ import {
   SESSION_BONUSES,
 } from "../configs/bonus-defs.js";
 import { ABILITY_DEFS } from "../configs/ability-defs.js";
+import { BALL_KINDS } from "../entities/ball-factory.js";
 
 /**
  * Dev-only admin panel. Mounted directly on `document.body` to the right
@@ -34,8 +35,13 @@ export function installDevAdminPanel({ onTitle, onStyleguide, onShop, onAbility 
       <button class="pk-dev-admin-btn" data-dev="nav-ability" data-no-sfx>Ability</button>
     </div>
     <div class="pk-dev-admin-section">
-      <h4>Balls</h4>
-      <button class="pk-dev-admin-btn" data-dev="ball">Spawn</button>
+      <h4>Spawn ball</h4>
+      ${Object.values(BALL_KINDS)
+        .map(
+          (k) =>
+            `<button class="pk-dev-admin-btn pk-dev-admin-btn--${k}" data-dev="spawn-ball" data-kind="${k}" data-no-sfx>+ ${k}</button>`,
+        )
+        .join("")}
     </div>
     <div class="pk-dev-admin-section">
       <h4>Rogue-lite</h4>
@@ -59,7 +65,10 @@ export function installDevAdminPanel({ onTitle, onStyleguide, onShop, onAbility 
       else if (action === "nav-styleguide") onStyleguide?.();
       else if (action === "nav-shop") onShop?.();
       else if (action === "nav-ability") onAbility?.();
-      else if (action === "ball") gameEvents.emit("dev:spawnBall");
+      else if (action === "spawn-ball") {
+        const kind = /** @type {HTMLElement} */ (btn).dataset.kind || "classic";
+        gameEvents.emit("dev:spawnBall", kind);
+      }
       else if (action === "add-coins") currencyManager.add(100);
       else if (action === "unlock-abilities") {
         for (const a of ABILITY_DEFS) abilityManager.unlock(a.id);

@@ -6,11 +6,19 @@ import { saveManager } from "../managers/save-manager.js";
 import { audioManager } from "../managers/audio-manager.js";
 import { currencyManager } from "../managers/currency-manager.js";
 import { bonusManager } from "../managers/bonus-manager.js";
+import { gameEvents } from "../utils/event-emitter.js";
+import { pointSegmentDistance } from "../utils/math.js";
 import { collideCircles, reflect, clampVelocity, collideBalls } from "../utils/physics.js";
-import { Ball } from "../entities/ball.js";
+import { Ball } from "../entities/ball-classic.js";
+import { GlassBall } from "../entities/ball-glass.js";
+import { createBall, BALL_KINDS } from "../entities/ball-factory.js";
 import { Layer, bumperChanceForLevel } from "../entities/layer.js";
 import { Slot } from "../entities/slot.js";
-import { PLINKO, LEVELS } from "../configs/constants.js";
+import {
+  PLINKO,
+  LEVELS,
+  BALL_EFFECTS,
+} from "../configs/constants.js";
 import { PARAM_KEYS } from "../configs/bonus-defs.js";
 import { buttonHtml } from "../components/ui/button.js";
 import { LevelSelectorScene } from "../scenes/level-selector-scene.js";
@@ -60,6 +68,13 @@ export class GameController {
 
   /** @type {import('../components/modal-base.js').BaseModal | null} */ #overModal = null;
   /** @type {BackgroundAnimator | null} */ #bg = null;
+
+  /* --- Ball-effect state --- */
+  /** @type {Map<string, { el: HTMLElement, ax: number, ay: number, bx: number, by: number }>} Active electric arcs keyed by "pegA-pegB". */
+  #arcs = new Map();
+  /** @type {number} Combo multiplier accumulated by ball-arc passes. */
+  #comboMultiplier = 1;
+  /** @type {HTMLElement | null} */ #comboHudEl = null;
 
   /**
    * @param {{ root: HTMLElement,
@@ -112,12 +127,23 @@ export class GameController {
     this.#refreshSublaunches();
     this.#updateScoreGauge();
     this.#renderHudBonuses();
+
+    /* Dev-admin spawn (kind passed as event arg). */
+    this.#bag.add(
+      gameEvents.on("dev:spawnBall", (kind = BALL_KINDS.CLASSIC) =>
+        this.#devSpawnBall(kind),
+      ),
+    );
   }
 
   destroy() {
     this.#stopLoop();
     this.#overModal?.destroy();
     this.#overModal = null;
+    for (const { el } of this.#arcs.values()) el.remove();
+    this.#arcs.clear();
+    this.#comboHudEl?.remove();
+    this.#comboHudEl = null;
     this.#bag.dispose();
     this.#balls.clear();
     this.#ballIdleTracker.clear();
@@ -215,6 +241,7 @@ export class GameController {
       }
     }
     this.#recalcLayerPositions();
+    this.#refreshArcs();
   }
 
   #measure() {
@@ -362,8 +389,7 @@ export class GameController {
         const ball = new Ball({ x: cx + jx, y: box.top + 4 + b * 4 });
         ball.state = "held";
         ball.sublaunchIdx = i;
-        const el = document.createElement("div");
-        el.className = "pk-ball";
+        const el = this.#createBallEl(ball);
         const oy = this.#pinboardOffsetTop;
         el.style.transform = `translate(${ball.x}px, ${ball.y + oy}px)`;
         this.#ballLayerEl.appendChild(el);
@@ -454,6 +480,7 @@ export class GameController {
     for (let s = 0; s < PLINKO.SUBSTEPS; s++) this.#substep(subDt);
     this.#renderBalls();
     this.#checkStuckBalls();
+    this.#checkArcCombo();
     if (!this.#hasSimulatedBalls()) this.#checkEndOfRound();
   }
 
@@ -543,28 +570,55 @@ export class GameController {
 
   /** @param {import('../entities/peg-classic.js').Peg} peg @param {Ball} ball */
   #registerHit(peg, ball) {
-    /* Coin peg: credit currency, pop a coin label, consume the peg. */
-    if (peg.type === "coin") {
-      const coinValue = /** @type {any} */ (peg).coinValue ?? PLINKO.COIN_VALUE;
-      currencyManager.add(coinValue);
+    /* 1) Ball-side pre-contact bookkeeping (glass tracks its hits and
+          asks for shatter when it reaches the cap). */
+    const pre = ball.onBeforeContact(peg);
+    if (ball instanceof GlassBall) this.#updateBallEl(ball);
+    if (pre === "shatter") {
+      this.#destroyBall(ball, { reason: "shatter" });
+      return;
+    }
+
+    /* 2) Peg self-destruct with a reward directive (coin peg → coins).
+          Runs before black-ball consumption so coin pegs still pay out. */
+    const reward = peg.consumeReward(ball);
+    if (reward) {
+      if (reward.coins) currencyManager.add(reward.coins);
       audioManager.playSfx("click");
-      this.#popText(`+${coinValue}`, peg.x, peg.y, "pk-popup pk-popup--coin");
+      if (reward.popText) {
+        this.#popText(reward.popText, peg.x, peg.y, reward.popClass ?? "pk-popup");
+      }
       this.#destroyPeg(peg, ball);
       return;
     }
 
-    /* Score peg / bumper. Apply pegScoreMultiplier only to non-bumpers
-       since `score_x2` is documented as classic-peg only. */
-    const baseScore = peg.score;
-    const score =
-      peg.type === "bumper"
-        ? baseScore
-        : Math.round(
-            bonusManager.resolve(PARAM_KEYS.PEG_SCORE_MULTIPLIER, 1) * baseScore,
-          );
+    /* 3) Ball consumes the peg without scoring (black ball). */
+    if (ball.consumesPeg(peg)) {
+      audioManager.playSfx("click");
+      this.#destroyPeg(peg, ball);
+      return;
+    }
+
+    /* 4) Apply the ball's side-effect to the peg (ice / fire / electrify). */
+    const pegChanged = ball.applyEffectTo(peg);
+    if (pegChanged) {
+      this.#updatePegEl(peg);
+      if (ball.triggersArcRefresh) this.#refreshArcs();
+    }
+
+    /* 5) Score the contact. The peg encodes ice/burn rules; bumpers opt
+          out of the PEG_SCORE_MULTIPLIER (they already encode the boost). */
+    const baseScore = peg.scoreForContact();
+    const score = peg.appliesPegMultiplier
+      ? Math.round(bonusManager.resolve(PARAM_KEYS.PEG_SCORE_MULTIPLIER, 1) * baseScore)
+      : baseScore;
     ball.score += score;
     this.#updateScoreGauge();
     audioManager.playSfx("click");
+
+    /* 6) Peg-side bookkeeping: ice decays one charge per scored contact
+          so the contact itself awards no points but still thaws the peg. */
+    if (peg.onAfterScored()) this.#updatePegEl(peg);
 
     const el = this.#pegEls.get(peg.id);
     if (el) {
@@ -573,12 +627,14 @@ export class GameController {
       el.classList.add("pk-flash");
     }
 
-    this.#popText(
-      `+${score}`,
-      peg.x,
-      peg.y,
-      `pk-popup${peg.type === "bumper" ? " pk-popup--big" : ""}`,
-    );
+    if (score > 0) {
+      this.#popText(
+        `+${score}`,
+        peg.x,
+        peg.y,
+        `pk-popup${peg.type === "bumper" ? " pk-popup--big" : ""}`,
+      );
+    }
   }
 
   /** @param {string} text @param {number} x @param {number} y @param {string} cls */
@@ -846,6 +902,14 @@ export class GameController {
         if (speed > 5) return;
       }
     }
+    /* Apply the electrical-arc combo multiplier on the level score
+       before deciding victory (doc: "ce multiplicateur s'appliquera à
+       la fin de la run pinboard sur le score total du niveau en cours"). */
+    if (this.#comboMultiplier > 1) {
+      this.#levelScore = Math.round(this.#levelScore * this.#comboMultiplier);
+      this.#updateScoreGauge();
+    }
+
     const victory = this.#levelScore >= this.#targetScore;
     this.#bag.timeout(() => this.#endRound({ victory }), 2000);
     this.#ended = true;
@@ -923,4 +987,215 @@ export class GameController {
       })
       .join("");
   }
+
+  /* ──────────────────────────────────────────────────────────────────────
+     Ball-effect helpers
+     ────────────────────────────────────────────────────────────────────── */
+
+  /** @param {Ball} ball */
+  #createBallEl(ball) {
+    const el = document.createElement("div");
+    const mod = ball.cssModifier;
+    el.className = `pk-ball${mod ? ` pk-ball--${mod}` : ""}`;
+    return el;
+  }
+
+  /** @param {Ball} ball */
+  #updateBallEl(ball) {
+    const entry = this.#balls.get(ball.id);
+    if (!entry) return;
+    const el = entry.el;
+    /* For glass balls, dial the crack overlay based on remaining hits. */
+    if (ball instanceof GlassBall) {
+      for (let s = 1; s <= BALL_EFFECTS.GLASS_CRACK_STAGES; s++) {
+        el.classList.remove(`pk-ball--glass-crack-${s}`);
+      }
+      const stage = ball.crackStage;
+      if (stage > 0 && stage < BALL_EFFECTS.GLASS_CRACK_STAGES + 1) {
+        el.classList.add(`pk-ball--glass-crack-${stage}`);
+      }
+    }
+  }
+
+  /** @param {import('../entities/peg-classic.js').Peg} peg */
+  #updatePegEl(peg) {
+    const el = this.#pegEls.get(peg.id);
+    if (!el) return;
+    el.classList.remove(
+      "pk-peg--frozen-3",
+      "pk-peg--frozen-2",
+      "pk-peg--frozen-1",
+      "pk-peg--burned",
+      "pk-peg--electrified",
+    );
+    if (peg.iceHits > 0) el.classList.add(`pk-peg--frozen-${peg.iceHits}`);
+    if (peg.burned) el.classList.add("pk-peg--burned");
+    if (peg.electrified) el.classList.add("pk-peg--electrified");
+  }
+
+  /**
+   * Recompute the set of live electric arcs. An arc spans two electrified
+   * pegs on the same layer whose centres are within
+   * `ELECTRIC_ARC_MAX_DIST` of each other. Arc DOM elements are kept in
+   * `#arcs` keyed by the sorted peg-id pair so they can be reused across
+   * frames and torn down when pegs lose their charge.
+   */
+  #refreshArcs() {
+    if (!this.#stackEl) return;
+    /** @type {Set<string>} */
+    const live = new Set();
+
+    for (const layer of this.#layers) {
+      const charged = layer.pegs.filter((p) => p.electrified);
+      for (let i = 0; i < charged.length; i++) {
+        for (let j = i + 1; j < charged.length; j++) {
+          const a = charged[i];
+          const b = charged[j];
+          const dx = b.x - a.x;
+          const dy = b.y - a.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist > BALL_EFFECTS.ELECTRIC_ARC_MAX_DIST) continue;
+          const lo = Math.min(a.id, b.id);
+          const hi = Math.max(a.id, b.id);
+          const key = `${lo}-${hi}`;
+          live.add(key);
+
+          let entry = this.#arcs.get(key);
+          if (!entry) {
+            const el = document.createElement("div");
+            el.className = "pk-arc";
+            this.#stackEl.appendChild(el);
+            entry = { el, ax: a.x, ay: a.y, bx: b.x, by: b.y };
+            this.#arcs.set(key, entry);
+          } else {
+            entry.ax = a.x; entry.ay = a.y; entry.bx = b.x; entry.by = b.y;
+          }
+          const angle = Math.atan2(dy, dx);
+          /* Layer DOM is positioned at the layer's y; the arc is mounted
+             on the stack so absolute pinboard coordinates are correct. */
+          entry.el.style.left = `${a.x}px`;
+          entry.el.style.top = `${a.y}px`;
+          entry.el.style.width = `${dist}px`;
+          entry.el.style.transform = `rotate(${angle}rad)`;
+        }
+      }
+    }
+
+    /* Garbage-collect arcs whose endpoints no longer qualify. */
+    for (const [key, entry] of [...this.#arcs]) {
+      if (!live.has(key)) {
+        entry.el.remove();
+        this.#arcs.delete(key);
+      }
+    }
+  }
+
+  /**
+   * Detect balls passing through live electric arcs. Each ball/arc pair
+   * only fires the combo once per pass (debounced via `ball.recentArcs`).
+   */
+  #checkArcCombo() {
+    if (this.#arcs.size === 0) return;
+    const thickness = BALL_EFFECTS.ELECTRIC_ARC_THICKNESS;
+    for (const { ball } of this.#balls.values()) {
+      if (!ball.alive || ball.state !== "active") continue;
+      const inside = new Set();
+      for (const [key, arc] of this.#arcs) {
+        const dist = pointSegmentDistance(
+          ball.x, ball.y,
+          arc.ax, arc.ay,
+          arc.bx, arc.by,
+        );
+        if (dist <= thickness) {
+          inside.add(key);
+          if (!ball.recentArcs.has(key)) {
+            this.#triggerCombo(ball.x, ball.y);
+            ball.recentArcs.add(key);
+          }
+        }
+      }
+      /* Forget arcs the ball has left so the next pass re-fires. */
+      for (const key of [...ball.recentArcs]) {
+        if (!inside.has(key)) ball.recentArcs.delete(key);
+      }
+    }
+  }
+
+  /** @param {number} x @param {number} y */
+  #triggerCombo(x, y) {
+    this.#comboMultiplier += 1;
+    audioManager.playSfx("click");
+    if (!this.#stackEl) return;
+    const banner = document.createElement("div");
+    banner.className = "pk-combo-banner";
+    banner.textContent = `Combo ×${this.#comboMultiplier}`;
+    banner.style.left = `${x}px`;
+    banner.style.top = `${y}px`;
+    this.#stackEl.appendChild(banner);
+    this.#bag.timeout(() => banner.remove(), BALL_EFFECTS.COMBO_BANNER_DURATION_MS);
+    this.#updateComboHud();
+  }
+
+  #updateComboHud() {
+    if (!this.#pinboardEl) return;
+    if (this.#comboMultiplier <= 1) {
+      this.#comboHudEl?.remove();
+      this.#comboHudEl = null;
+      return;
+    }
+    if (!this.#comboHudEl) {
+      this.#comboHudEl = document.createElement("div");
+      this.#comboHudEl.className = "pk-combo-multiplier-hud";
+      this.#pinboardEl.appendChild(this.#comboHudEl);
+    }
+    this.#comboHudEl.textContent = `Combo ×${this.#comboMultiplier}`;
+  }
+
+  /**
+   * Destroy a ball mid-flight (currently used by glass shatter).
+   * @param {Ball} ball
+   * @param {{ reason?: string }} [opts]
+   */
+  #destroyBall(ball, { reason = "destroyed" } = {}) {
+    const entry = this.#balls.get(ball.id);
+    if (!entry) return;
+    ball.alive = false;
+    /* Forfeit the ball's accumulated score — it never reaches a gate. */
+    ball.score = 0;
+    if (reason === "shatter") {
+      this.#popText("💥", ball.x, ball.y, "pk-popup pk-popup--big");
+    }
+    entry.el.remove();
+    this.#balls.delete(ball.id);
+    this.#ballIdleTracker.delete(ball.id);
+  }
+
+  /**
+   * Spawn an extra ball of a given kind into the running round. Used by
+   * the dev admin panel. The ball is dropped from the top of the
+   * pinboard above a random sublauncher so it enters play immediately.
+   * @param {string} kind
+   */
+  #devSpawnBall(kind) {
+    if (this.#ended || !this.#ballLayerEl) return;
+    const w = this.#pinboardWidth || 1;
+    const subCount = Math.max(1, this.#sublaunchEls.length);
+    const sub = Math.floor(Math.random() * subCount);
+    const x = (w * (sub + 0.5)) / subCount + (Math.random() - 0.5) * 16;
+    const ball = createBall(kind, {
+      x,
+      y: -PLINKO.BALL_RADIUS * 2,
+      vx: (Math.random() - 0.5) * 60,
+      vy: 0,
+    });
+    ball.state = "active";
+    const el = this.#createBallEl(ball);
+    const oy = this.#pinboardOffsetTop;
+    el.style.transform = `translate(${ball.x}px, ${ball.y + oy}px)`;
+    this.#ballLayerEl.appendChild(el);
+    this.#balls.set(ball.id, { ball, el });
+    this.#updateBallEl(ball);
+    this.#startLoop();
+  }
 }
+

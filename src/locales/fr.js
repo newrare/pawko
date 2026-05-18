@@ -45,7 +45,7 @@ export const fr = {
   "options.title": "Options",
   "options.music": "Musique",
   "options.sound": "Son",
-  "options.anim_skip": "Sauter les animations",
+
   "options.language": "Langue",
   "options.reset_data": "Réinitialiser les données",
   "options.reset_data_confirm":

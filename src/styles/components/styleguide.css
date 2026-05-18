@@ -191,37 +191,8 @@
   text-transform: uppercase; letter-spacing: 3px;
   margin: 4px 0 0;
 }
-.gt-sg-held-dot {
-  display: block; width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
-  background: var(--pk-ball-bg); box-shadow: var(--pk-ball-shadow);
-}
 
-/* --- Bonus cards in styleguide --- */
-.gt-sg-bonus-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 1rem;
-}
 
-.gt-sg-bonus-card {
-  background: var(--pk-bg-card);
-  border: 1px solid var(--pk-crimson-deep);
-  border-radius: 4px;
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-.gt-sg-bonus-card--perm { border-color: var(--pk-gold-dim); }
-.gt-sg-bonus-card--leg  { border-color: #d97706; box-shadow: 0 0 14px rgba(217, 119, 6, 0.18); }
-.gt-sg-bonus-card--epic { border-color: #9333ea; box-shadow: 0 0 12px rgba(147, 51, 234, 0.15); }
-.gt-sg-bonus-card--rare { border-color: #2563eb; box-shadow: 0 0 10px rgba(37, 99, 235, 0.15); }
-
-.gt-sg-bonus-icon { font-size: 1.4rem; line-height: 1; }
-.gt-sg-bonus-name { font-size: 0.85rem; color: var(--gt-color-text); letter-spacing: 1px; }
-.gt-sg-bonus-desc { font-size: 0.7rem; color: var(--gt-color-text-sec); line-height: 1.55; }
-.gt-sg-bonus-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 0.25rem; }
-.gt-sg-bonus-dur { font-size: 0.55rem; color: var(--gt-color-text-dim); letter-spacing: 1px; }
 
 .gt-sg-rarity {
   font-size: 0.5rem;
@@ -237,31 +208,4 @@
 .gt-sg-rarity--rare { color: #93c5fd; border: 1px solid #2563eb; }
 .gt-sg-rarity--com  { color: #86efac; border: 1px solid #16a34a; }
 
-/* --- Status bar sample --- */
-.gt-sg-status {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 8px 12px;
-  background: rgba(14, 4, 10, 0.96);
-  border: 1px solid var(--pk-crimson-deep);
-  border-radius: 4px;
-  font-weight: 700;
-}
-.gt-sg-status-readouts { display: flex; gap: 16px; flex-wrap: wrap; font-size: 0.82rem; }
-.gt-sg-stat-lbl { font-size: 0.65rem; font-weight: 500; color: var(--gt-color-text-sec); letter-spacing: 1px; text-transform: uppercase; margin-right: 3px; }
 
-/* --- Progress bar --- */
-.gt-sg-progress-wrap {
-  background: var(--pk-crimson-muted);
-  border-radius: 0;
-  height: 8px;
-  border: 1px solid var(--pk-crimson-deep);
-  overflow: hidden;
-}
-.gt-sg-progress-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--pk-crimson-deep), var(--pk-crimson), var(--pk-gold));
-  width: 62%;
-}
