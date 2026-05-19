@@ -11,6 +11,7 @@ export class Bumper extends Peg {
   constructor(opts = {}) {
     super(opts);
     this.type = "bumper";
+    this._resolveHp();
   }
 
   get radius() {

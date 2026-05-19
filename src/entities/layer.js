@@ -1,9 +1,7 @@
 import { Entity } from "./entity.js";
-import { Peg } from "./peg-classic.js";
-import { Bumper } from "./peg-bumper.js";
-import { CoinPeg } from "./peg-coin.js";
 import { Slot } from "./slot.js";
-import { PLINKO } from "../configs/constants.js";
+import { PLINKO, PEG_DEFS, PEG_FREQUENCY_WEIGHTS } from "../configs/constants.js";
+import { createPeg, PEG_TYPES } from "./peg-factory.js";
 
 /**
  * Layer — one horizontal plank holding up to `SLOTS_PER_LAYER` pegs.
@@ -12,9 +10,8 @@ import { PLINKO } from "../configs/constants.js";
  *   - one slot out of two is filled (alternating pattern);
  *   - the first filled slot (`startSlot`) is randomly picked from
  *     `START_SLOT_CHOICES` so consecutive layers shift the staggered grid;
- *   - each filled slot is rolled with a single uniform random in [0,1):
- *     bumper if roll < bumperChance, coin peg if roll < bumperChance + coinChance,
- *     otherwise a classic peg.
+ *   - each filled slot is rolled against a weighted probability table
+ *     built from `PEG_DEFS` frequency tags.
  */
 export class Layer extends Entity {
   /** @type {number} */
@@ -23,7 +20,7 @@ export class Layer extends Entity {
   /** @type {number} 0,1,2 — picks the first filled slot. */
   startSlot = 0;
 
-  /** @type {Peg[]} Pegs, bumpers and coin pegs, positioned in pinboard space. */
+  /** @type {Peg[]} All peg instances positioned in pinboard space. */
   pegs = [];
 
   /**
@@ -31,8 +28,6 @@ export class Layer extends Entity {
    *   level: number,
    *   width: number,
    *   y: number,
-   *   bumperChance?: number,
-   *   coinChance?: number,
    *   rng?: () => number,
    * }} args
    */
@@ -40,8 +35,6 @@ export class Layer extends Entity {
     level,
     width,
     y,
-    bumperChance = 0.05,
-    coinChance = PLINKO.COIN_CHANCE_BASE,
     rng = Math.random,
   }) {
     super({ type: "layer" });
@@ -52,14 +45,12 @@ export class Layer extends Entity {
         Math.floor(rng() * PLINKO.START_SLOT_CHOICES.length)
       ];
 
+    const table = buildSpawnTable(level);
+
     for (let i = this.startSlot; i < Slot.count; i += 2) {
       const x = Slot.xFor(i, width);
-      const roll = rng();
-      let Cls;
-      if (roll < bumperChance) Cls = Bumper;
-      else if (roll < bumperChance + coinChance) Cls = CoinPeg;
-      else Cls = Peg;
-      this.pegs.push(new Cls({ x, y, slot: i }));
+      const type = rollPegType(table, rng);
+      this.pegs.push(createPeg(type, { x, y, slot: i }));
     }
 
     /* Guarantee at least one coin peg per layer (random position). */
@@ -67,9 +58,56 @@ export class Layer extends Entity {
     if (!hasCoin && this.pegs.length > 0) {
       const idx = Math.floor(rng() * this.pegs.length);
       const old = this.pegs[idx];
-      this.pegs[idx] = new CoinPeg({ x: old.x, y: old.y, slot: old.slot });
+      this.pegs[idx] = createPeg(PEG_TYPES.COIN, { x: old.x, y: old.y, slot: old.slot });
     }
   }
+}
+
+/**
+ * Build a cumulative probability table from PEG_DEFS frequencies.
+ * Classic pegs fill whatever probability remains unassigned.
+ * @param {number} _level - reserved for future level-scaling
+ * @returns {Array<{ type: string, cumulative: number }>}
+ */
+function buildSpawnTable(_level) {
+  const entries = [];
+  let totalWeight = 0;
+
+  for (const [type, def] of Object.entries(PEG_DEFS)) {
+    if (type === PEG_TYPES.CLASSIC) continue; // classic is the fallback
+    const w = PEG_FREQUENCY_WEIGHTS[def.frequency] || 0;
+    entries.push({ type, weight: w });
+    totalWeight += w;
+  }
+
+  // Normalize: non-classic types share a portion of the probability space;
+  // classic takes whatever is left. Non-classic total is capped at 40%.
+  const nonClassicCap = 0.40;
+  const scale = totalWeight > 0 ? nonClassicCap / totalWeight : 0;
+
+  const table = [];
+  let cumulative = 0;
+  for (const entry of entries) {
+    cumulative += entry.weight * scale;
+    table.push({ type: entry.type, cumulative });
+  }
+  // Classic fills the rest (cumulative to 1.0)
+  table.push({ type: PEG_TYPES.CLASSIC, cumulative: 1.0 });
+  return table;
+}
+
+/**
+ * Roll a peg type from the spawn table.
+ * @param {Array<{ type: string, cumulative: number }>} table
+ * @param {() => number} rng
+ * @returns {string}
+ */
+function rollPegType(table, rng) {
+  const r = rng();
+  for (const entry of table) {
+    if (r < entry.cumulative) return entry.type;
+  }
+  return PEG_TYPES.CLASSIC;
 }
 
 /**

@@ -5,6 +5,7 @@ import { layout } from "./managers/layout-manager.js";
 import { audioManager } from "./managers/audio-manager.js";
 import { SceneRouter } from "./scenes/scene-router.js";
 import { TitleScene } from "./scenes/title-scene.js";
+import { GameScene } from "./scenes/game-scene.js";
 
 document.title = APP_NAME;
 
@@ -38,6 +39,7 @@ if (import.meta.env.DEV) {
         onStyleguide: () => router.start(StyleguideScene),
         onShop: () => router.start(ShopScene),
         onAbility: () => router.start(AbilityScene),
+        onTestPegs: (type) => router.start(GameScene, { testPegs: type ?? "all" }),
       });
     };
     if (document.body) install();

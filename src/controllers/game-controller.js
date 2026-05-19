@@ -13,16 +13,19 @@ import { collideCircles, reflect, clampVelocity, collideBalls } from "../utils/p
 import { Ball } from "../entities/ball-classic.js";
 import { GlassBall } from "../entities/ball-glass.js";
 import { createBall, BALL_KINDS } from "../entities/ball-factory.js";
-import { Layer, bumperChanceForLevel } from "../entities/layer.js";
+import { Layer } from "../entities/layer.js";
 import { Slot } from "../entities/slot.js";
 import {
   PLINKO,
   LEVELS,
   BALL_EFFECTS,
+  PEG_SAVE,
 } from "../configs/constants.js";
 import { PARAM_KEYS } from "../configs/bonus-defs.js";
 import { buttonHtml } from "../components/ui/button.js";
 import { LevelSelectorScene } from "../scenes/level-selector-scene.js";
+import { PegSaveSystem } from "../utils/peg-save-system.js";
+import { createPeg, PEG_TYPES } from "../entities/peg-factory.js";
 
 /**
  * GameController — wires a single Plinko level.
@@ -77,6 +80,11 @@ export class GameController {
   #comboMultiplier = 1;
   /** @type {HTMLElement | null} */ #comboHudEl = null;
 
+  /* --- Peg Save System --- */
+  /** @type {PegSaveSystem} */
+  #pegSave = new PegSaveSystem();
+  /** @type {HTMLElement | null} */ #saveComboHudEl = null;
+
   /**
    * @param {{ root: HTMLElement,
    *   router?: import('../scenes/scene-router.js').SceneRouter,
@@ -123,7 +131,11 @@ export class GameController {
     this.#bag.add(layout.onChange(() => this.#onResize()));
     this.#bag.add(i18n.onChange(() => this.#refreshLabels()));
 
-    this.#loadAllLayers();
+    if (this.#data?.testPegs) {
+      this.#devLoadTestPegs(this.#data.testPegs);
+    } else {
+      this.#loadAllLayers();
+    }
     this.#spawnHeldBalls();
     this.#refreshSublaunches();
     this.#updateScoreGauge();
@@ -145,6 +157,9 @@ export class GameController {
     this.#arcs.clear();
     this.#comboHudEl?.remove();
     this.#comboHudEl = null;
+    this.#pegSave.dispose();
+    this.#saveComboHudEl?.remove();
+    this.#saveComboHudEl = null;
     this.#bag.dispose();
     this.#balls.clear();
     this.#ballIdleTracker.clear();
@@ -215,6 +230,31 @@ export class GameController {
 
   #onPointer = (event) => {
     const target = /** @type {HTMLElement} */ (event.target);
+
+    /* Peg save: coordinate-based hit test against all active rescue windows.
+       The visible ring extends well beyond the 22 px peg DOM box, so
+       target.closest() is unreliable — we project the pointer into pinboard
+       space and accept any tap within the initial ring radius (3× peg radius). */
+    if (this.#pegSave.rescuableCount > 0 && this.#pinboardEl) {
+      const rect = this.#pinboardEl.getBoundingClientRect();
+      const px = event.clientX - rect.left;
+      const py = event.clientY - rect.top;
+      const hitRadius = PLINKO.PEG_RADIUS * 3;
+      for (const pegId of this.#pegSave.rescuableIds) {
+        const peg = this.#findPegById(pegId);
+        if (!peg) continue;
+        const dx = px - peg.x;
+        const dy = py - peg.y;
+        if (dx * dx + dy * dy <= hitRadius * hitRadius) {
+          if (this.#pegSave.trySave(pegId)) {
+            const el = this.#pegEls.get(pegId);
+            if (el) this.#onPegSaved(pegId, peg, el);
+          }
+          return;
+        }
+      }
+    }
+
     const sub = target.closest("[data-sublaunch]");
     if (sub) {
       const i = Number(/** @type {HTMLElement} */ (sub).dataset.sublaunch);
@@ -293,7 +333,6 @@ export class GameController {
         level: this.#levelId,
         width: this.#pinboardWidth || 320,
         y: 0,
-        bumperChance: bumperChanceForLevel(this.#levelId),
       });
       this.#layers.push(layer);
     }
@@ -325,10 +364,25 @@ export class GameController {
       peg.y = layer.y;
       const p = document.createElement("div");
       let extra = "";
-      if (peg.type === "bumper") extra = " pk-peg--bumper";
-      else if (peg.type === "coin") extra = " pk-peg--coin";
+      let text = "";
+      switch (peg.type) {
+        case "bumper": extra = " pk-peg--bumper"; break;
+        case "coin": extra = " pk-peg--coin"; text = "¢"; break;
+        case "diamond": extra = " pk-peg--diamond"; text = "💎"; break;
+        case "glue": extra = " pk-peg--glue"; break;
+        case "cat": extra = " pk-peg--cat"; text = "🐱"; break;
+        case "boss": extra = " pk-peg--boss"; text = "👹"; break;
+        case "teleport": extra = " pk-peg--teleport"; break;
+        case "chest": extra = " pk-peg--chest"; text = "📦"; break;
+        case "key": extra = " pk-peg--key"; text = "🔑"; break;
+        case "chester": extra = " pk-peg--chester"; text = "🗝"; break;
+        case "shield": extra = " pk-peg--shield"; break;
+        case "mystery": extra = " pk-peg--mystery"; text = "?"; break;
+      }
       p.className = `pk-peg${extra}`;
-      if (peg.type === "coin") p.textContent = "¢";
+      if (text) p.textContent = text;
+      if (peg.type === "chester" && peg.rarity) p.dataset.rarity = peg.rarity;
+      if (peg.type === "shield" && peg.shieldActive) p.classList.add("pk-peg--shield-active");
       p.style.left = `${peg.x}px`;
       p.style.top = "0px";
       p.dataset.pegId = String(peg.id);
@@ -482,6 +536,7 @@ export class GameController {
     this.#renderBalls();
     this.#checkStuckBalls();
     this.#checkArcCombo();
+    this.#tickShields();
     if (!this.#hasSimulatedBalls()) this.#checkEndOfRound();
   }
 
@@ -551,6 +606,26 @@ export class GameController {
     for (const layer of this.#layers) {
       if (Math.abs(layer.y - ball.y) > window) continue;
       for (const peg of layer.pegs) {
+        /* Shield peg: deflect off the shield radius first. */
+        if (peg.type === "shield" && peg.shieldActive) {
+          const sc = collideCircles(ball.x, ball.y, r, peg.x, peg.y, peg.shieldRadius);
+          if (sc) {
+            ball.x += sc.nx * sc.depth;
+            ball.y += sc.ny * sc.depth;
+            const rv = reflect(ball.vx, ball.vy, sc.nx, sc.ny, PLINKO.RESTITUTION_PEG);
+            ball.vx = rv.vx;
+            ball.vy = rv.vy;
+            if (!ball.recentPegs.has(peg.id)) {
+              ball.recentPegs.add(peg.id);
+              const shieldDown = peg.hitShield();
+              if (shieldDown) this.#updatePegEl(peg);
+            }
+            continue;
+          }
+          ball.recentPegs.delete(peg.id);
+          continue;
+        }
+
         const c = collideCircles(ball.x, ball.y, r, peg.x, peg.y, peg.radius);
         if (!c) {
           ball.recentPegs.delete(peg.id);
@@ -581,22 +656,32 @@ export class GameController {
     }
 
     /* 2) Peg self-destruct with a reward directive (coin peg → coins).
-          Runs before black-ball consumption so coin pegs still pay out. */
+          Also handles teleport, glue, cat, boss, chester. */
     const reward = peg.consumeReward(ball);
     if (reward) {
       if (reward.coins) currencyManager.add(reward.coins);
+      if (reward.diamonds) gameEvents.emit("diamonds", reward.diamonds);
+      if (reward.teleport) this.#teleportBall(ball);
+      if (reward.trapped) this.#trapBall(ball, peg);
+      if (reward.eaten) this.#eatBall(ball);
+      if (reward.chesterCheck) this.#handleChesterCheck(peg, ball);
       audioManager.playSfx("click");
       if (reward.popText) {
         this.#popText(reward.popText, peg.x, peg.y, reward.popClass ?? "pk-popup");
       }
-      this.#destroyPeg(peg, ball);
+      /* Only destroy peg if it was a one-shot consume (coin, etc.) */
+      if (reward.coins && !reward.teleport && !reward.trapped && !reward.eaten && !reward.chesterCheck) {
+        this.#destroyPeg(peg, ball);
+      }
       return;
     }
 
-    /* 3) Ball consumes the peg without scoring (black ball). */
+    /* 3) Ball consumes the peg without scoring (black ball).
+          Route through rescue like HP death so the player can save it. */
     if (ball.consumesPeg(peg)) {
       audioManager.playSfx("click");
-      this.#destroyPeg(peg, ball);
+      const deathReward = peg.onDestroyed(ball);
+      this.#startPegRescue(peg, ball, deathReward);
       return;
     }
 
@@ -621,8 +706,18 @@ export class GameController {
           so the contact itself awards no points but still thaws the peg. */
     if (peg.onAfterScored()) this.#updatePegEl(peg);
 
+    /* 7) HP damage — one hit = one damage. Destroy if depleted. */
+    const died = peg.takeDamage(1);
+    if (died) {
+      const deathReward = peg.onDestroyed(ball);
+      this.#startPegRescue(peg, ball, deathReward);
+      return;
+    }
+
+    /* Update visual: tremble if next hit kills, flash otherwise. */
     const el = this.#pegEls.get(peg.id);
     if (el) {
+      el.classList.toggle("pk-tremble", peg.isLastHit);
       el.classList.remove("pk-flash");
       void el.offsetWidth;
       el.classList.add("pk-flash");
@@ -851,6 +946,20 @@ export class GameController {
     return closest;
   }
 
+  /**
+   * Look up a peg entity by id across all layers.
+   * @param {number} id
+   * @returns {import('../entities/peg-classic.js').Peg | null}
+   */
+  #findPegById(id) {
+    for (const layer of this.#layers) {
+      for (const peg of layer.pegs) {
+        if (peg.id === id) return peg;
+      }
+    }
+    return null;
+  }
+
   /** @param {import('../entities/peg-classic.js').Peg} peg @param {Ball} ball */
   #destroyPeg(peg, ball) {
     if (this.#stackEl) {
@@ -878,6 +987,186 @@ export class GameController {
       ball.recentPegs.clear();
     }
     this.#ballIdleTracker.delete(ball?.id);
+  }
+
+  /* --- Peg Save System helpers --- */
+
+  /**
+   * Start a rescue window for a peg that just died. Instead of destroying
+   * immediately, the peg enters a "rescuable" state with a shrinking ring.
+   * @param {import('../entities/peg-classic.js').Peg} peg
+   * @param {Ball} ball
+   * @param {object | null} deathReward
+   */
+  #startPegRescue(peg, ball, deathReward) {
+    const el = this.#pegEls.get(peg.id);
+    if (!el) {
+      /* No DOM element — skip rescue, destroy directly. */
+      if (deathReward) this.#applyDestroyReward(deathReward, peg, ball);
+      this.#destroyPeg(peg, ball);
+      return;
+    }
+
+    /* Visual: mark peg as rescuable (triggers CSS ring + pulse). */
+    el.classList.remove("pk-tremble", "pk-flash");
+    el.classList.add("pk-peg--rescuable");
+
+    /* Kick ball away so it doesn't stick on the dead peg. */
+    if (ball) {
+      ball.vx = (Math.random() - 0.5) * 150;
+      ball.vy = Math.max(ball.vy, 80);
+      ball.recentPegs.clear();
+    }
+
+    this.#pegSave.startRescue(peg, {
+      onExpire: () => {
+        /* Timer ran out — destroy for real. */
+        if (deathReward) this.#applyDestroyReward(deathReward, peg, ball);
+        this.#destroyPeg(peg, null);
+      },
+      onSave: () => {
+        /* Player tapped in time — handled in #onPegSaved. */
+      },
+    });
+  }
+
+  /**
+   * Called when a peg is successfully saved by the player.
+   * @param {number} pegId
+   * @param {HTMLElement} el
+   */
+  /**
+   * @param {number} pegId
+   * @param {import('../entities/peg-classic.js').Peg} peg
+   * @param {HTMLElement} el
+   */
+  #onPegSaved(pegId, peg, el) {
+    audioManager.playSfx("click");
+    el.classList.remove("pk-peg--rescuable", "pk-tremble");
+    el.classList.add("pk-peg--saved");
+    this.#bag.timeout(() => el.classList.remove("pk-peg--saved"), 400);
+
+    /* Big combo banner at the peg position. */
+    const mult = this.#pegSave.comboMultiplier;
+    if (this.#stackEl) {
+      const banner = document.createElement("div");
+      banner.className = "pk-save-banner";
+      banner.textContent = `💾 SAVED! ×${mult.toFixed(1)}`;
+      banner.style.left = `${peg.x}px`;
+      banner.style.top = `${peg.y - 16}px`;
+      this.#stackEl.appendChild(banner);
+      this.#bag.timeout(() => banner.remove(), 1400);
+    }
+
+    this.#updateSaveComboHud();
+    /* Schedule a HUD refresh after the combo might decay. */
+    this.#bag.timeout(() => this.#updateSaveComboHud(), PEG_SAVE.COMBO_DECAY_MS + 50);
+  }
+
+  /** Update or create the save combo HUD badge. */
+  #updateSaveComboHud() {
+    if (!this.#pinboardEl) return;
+    const mult = this.#pegSave.comboMultiplier;
+    if (mult <= 1) {
+      this.#saveComboHudEl?.remove();
+      this.#saveComboHudEl = null;
+      return;
+    }
+    if (!this.#saveComboHudEl) {
+      this.#saveComboHudEl = document.createElement("div");
+      this.#saveComboHudEl.className = "pk-save-combo-hud";
+      this.#pinboardEl.appendChild(this.#saveComboHudEl);
+    }
+    this.#saveComboHudEl.textContent = `Save ×${mult.toFixed(1)}`;
+  }
+
+  /* --- New peg behaviour helpers --- */
+
+  /**
+   * Apply a destruction reward from peg.onDestroyed().
+   * @param {object} reward
+   * @param {import('../entities/peg-classic.js').Peg} peg
+   * @param {Ball} _ball
+   */
+  #applyDestroyReward(reward, peg, _ball) {
+    if (reward.coins) currencyManager.add(reward.coins);
+    if (reward.diamonds) gameEvents.emit("diamonds", reward.diamonds);
+    if (reward.key) gameEvents.emit("key-obtained", reward.key);
+    if (reward.extraBalls) this.#addExtraBalls(reward.extraBalls);
+    if (reward.releaseBall) this.#releaseBall(reward.releaseBall);
+    if (reward.scoreMultiplier) gameEvents.emit("score-multiplier", reward.scoreMultiplier);
+    if (reward.scorePenalty) gameEvents.emit("score-penalty", reward.scorePenalty);
+    if (reward.freezeAll) this.#freezeAllPegs();
+    if (reward.popText) {
+      this.#popText(reward.popText, peg.x, peg.y, reward.popClass ?? "pk-popup");
+    }
+  }
+
+  /** Teleport a ball to a random position within the pinboard. */
+  #teleportBall(ball) {
+    const margin = PLINKO.BALL_RADIUS * 2;
+    ball.x = margin + Math.random() * (this.#pinboardWidth - margin * 2);
+    ball.y = PLINKO.LAYER_TOP_PADDING + Math.random() * (this.#pinboardHeight * 0.6);
+    ball.vx = (Math.random() - 0.5) * 200;
+    ball.vy = 50 + Math.random() * 100;
+    ball.recentPegs.clear();
+  }
+
+  /** Trap a ball on a glue peg — immobilize it. */
+  #trapBall(ball, _peg) {
+    ball.vx = 0;
+    ball.vy = 0;
+    ball.state = "captured";
+  }
+
+  /** Eat a ball (cat/boss) — remove it from play permanently. */
+  #eatBall(ball) {
+    this.#destroyBall(ball, { reason: "eaten" });
+  }
+
+  /** Release a previously trapped ball back into play. */
+  #releaseBall(ball) {
+    if (!ball || !this.#balls.has(ball.id)) return;
+    ball.state = "active";
+    ball.vy = 50 + Math.random() * 100;
+    ball.vx = (Math.random() - 0.5) * 100;
+  }
+
+  /** Handle chester key-check: emit event for inventory check. */
+  #handleChesterCheck(peg, _ball) {
+    gameEvents.emit("chester-check", { peg, rarity: peg.rarity });
+  }
+
+  /** Add extra balls to a random sublaunch. */
+  #addExtraBalls(count) {
+    for (let i = 0; i < count; i++) {
+      const idx = Math.floor(Math.random() * this.#sublaunchBalls.length);
+      this.#sublaunchBalls[idx]++;
+    }
+    this.#refreshSublaunches();
+  }
+
+  /** Freeze all pegs in active layers (mystery malus). */
+  #freezeAllPegs() {
+    for (const layer of this.#layers) {
+      for (const peg of layer.pegs) {
+        if (peg.iceHits === 0) {
+          peg.iceHits = BALL_EFFECTS.ICE_FREEZE_HITS;
+          this.#updatePegEl(peg);
+        }
+      }
+    }
+  }
+
+  /** Reactivate shields whose cooldown has elapsed. */
+  #tickShields() {
+    for (const layer of this.#layers) {
+      for (const peg of layer.pegs) {
+        if (peg.type === "shield" && peg.tickShield()) {
+          this.#updatePegEl(peg);
+        }
+      }
+    }
   }
 
   #renderBalls() {
@@ -908,6 +1197,12 @@ export class GameController {
        la fin de la run pinboard sur le score total du niveau en cours"). */
     if (this.#comboMultiplier > 1) {
       this.#levelScore = Math.round(this.#levelScore * this.#comboMultiplier);
+      this.#updateScoreGauge();
+    }
+
+    /* Apply the peg-save combo multiplier (stacks with arc combo). */
+    if (this.#pegSave.comboMultiplier > 1) {
+      this.#levelScore = Math.round(this.#levelScore * this.#pegSave.comboMultiplier);
       this.#updateScoreGauge();
     }
 
@@ -1033,10 +1328,19 @@ export class GameController {
       "pk-peg--frozen-1",
       "pk-peg--burned",
       "pk-peg--electrified",
+      "pk-peg--shield-active",
+      "pk-peg--shield-down",
+      "pk-tremble",
     );
     if (peg.iceHits > 0) el.classList.add(`pk-peg--frozen-${peg.iceHits}`);
     if (peg.burned) el.classList.add("pk-peg--burned");
     if (peg.electrified) el.classList.add("pk-peg--electrified");
+    if (peg.isLastHit) el.classList.add("pk-tremble");
+
+    /* Shield visual states. */
+    if (peg.type === "shield") {
+      el.classList.add(peg.shieldActive ? "pk-peg--shield-active" : "pk-peg--shield-down");
+    }
 
     /* Spark web is JS-driven; mount it lazily on first electrification and
        keep the unmount fn on the element so we can tear it down if the peg
@@ -1210,6 +1514,47 @@ export class GameController {
     this.#balls.set(ball.id, { ball, el });
     this.#updateBallEl(ball);
     this.#startLoop();
+  }
+
+  /**
+   * Dev: clear layers and build a test pinboard using the real slot grid.
+   * Rows alternate startSlot (0/1) to produce the staggered pattern that
+   * forces ball/peg collisions.
+   *
+   * @param {string} filter — "all" gives one row per peg type; any specific
+   *                          PEG_TYPES value fills INITIAL_LAYERS rows with
+   *                          only that peg.
+   */
+  #devLoadTestPegs(filter = "all") {
+    if (!this.#stackEl) return;
+    for (const el of this.#layerEls.values()) el.remove();
+    this.#layerEls.clear();
+    this.#pegEls.clear();
+    this.#layers = [];
+
+    const allTypes = Object.values(PEG_TYPES);
+    const isSingle = filter !== "all" && allTypes.includes(filter);
+    const w = this.#pinboardWidth || 320;
+    const rowCount = isSingle ? PLINKO.INITIAL_LAYERS : allTypes.length;
+
+    for (let row = 0; row < rowCount; row++) {
+      const type = isSingle ? filter : allTypes[row];
+      const layer = new Layer({ level: 1, width: w, y: 0 });
+      layer.pegs = [];
+      /* Alternate start slot (0 / 1) between rows for the stagger that
+         makes balls weave through the grid and collide naturally. */
+      const startSlot = row % 2;
+      for (let i = startSlot; i < Slot.count; i += 2) {
+        const x = Slot.xFor(i, w);
+        layer.pegs.push(createPeg(type, { x, y: 0, slot: i }));
+      }
+      this.#layers.push(layer);
+    }
+
+    this.#recalcLayerPositions();
+    for (const layer of this.#layers) {
+      this.#renderLayer(layer);
+    }
   }
 }
 

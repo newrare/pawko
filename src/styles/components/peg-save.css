@@ -1,0 +1,118 @@
+/* --- Peg Save System — rescue ring, pulse, save flash, combo HUD --- */
+
+/* Rescuable state: peg is dying but player can tap to save it */
+.pk-peg--rescuable {
+  cursor: pointer;
+  z-index: 10;
+  animation: pk-rescue-pulse 0.6s ease-in-out infinite alternate;
+}
+
+/* Shrinking ring via ::before pseudo-element */
+.pk-peg--rescuable::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid var(--gt-accent, #22d3ee);
+  box-shadow: 0 0 8px var(--gt-accent, #22d3ee), inset 0 0 4px var(--gt-accent, #22d3ee);
+  transform: translate(-50%, -50%) scale(3);
+  animation: pk-rescue-shrink 2000ms linear forwards;
+  pointer-events: none;
+}
+
+/* Pulse on the peg body to attract attention */
+@keyframes pk-rescue-pulse {
+  from {
+    filter: brightness(1) drop-shadow(0 0 4px var(--gt-accent, #22d3ee));
+  }
+  to {
+    filter: brightness(1.3) drop-shadow(0 0 10px var(--gt-accent, #22d3ee));
+  }
+}
+
+/* Ring shrinks from 3× peg size down to the peg center */
+@keyframes pk-rescue-shrink {
+  from {
+    transform: translate(-50%, -50%) scale(3);
+    opacity: 1;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0.3;
+  }
+}
+
+/* Flash on successful save */
+.pk-peg--saved {
+  animation: pk-saved-flash 0.4s ease-out forwards;
+}
+
+@keyframes pk-saved-flash {
+  0% {
+    filter: brightness(2) drop-shadow(0 0 12px #4ade80);
+  }
+  50% {
+    filter: brightness(1.5) drop-shadow(0 0 8px #4ade80);
+  }
+  100% {
+    filter: brightness(1) drop-shadow(0 0 0px transparent);
+  }
+}
+
+/* Remove the ring when save is complete */
+.pk-peg--saved::before {
+  display: none;
+}
+
+/* Save combo HUD badge */
+.pk-save-combo-hud {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 2px 8px;
+  border-radius: var(--gt-radius-sm, 4px);
+  background: rgba(74, 222, 128, 0.15);
+  border: 1px solid rgba(74, 222, 128, 0.5);
+  color: #4ade80;
+  font-size: 0.7rem;
+  font-weight: 700;
+  pointer-events: none;
+  animation: gt-fade-in 0.2s ease-out;
+  z-index: 20;
+}
+
+/* Big save banner shown at peg position on successful rescue */
+.pk-save-banner {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-weight: 900;
+  font-size: 1.4rem;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  color: #4ade80;
+  text-shadow:
+    0 0 10px rgba(74, 222, 128, 0.9),
+    0 0 20px rgba(74, 222, 128, 0.5),
+    0 2px 0 rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  animation: pk-save-banner-rise 1.4s ease-out forwards;
+  z-index: 30;
+}
+
+@keyframes pk-save-banner-rise {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 1;
+  }
+  30% {
+    transform: translate(-50%, -80%) scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -160%) scale(0.9);
+    opacity: 0;
+  }
+}

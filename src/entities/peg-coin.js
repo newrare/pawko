@@ -14,6 +14,7 @@ export class CoinPeg extends Peg {
   constructor(opts = {}) {
     super(opts);
     this.type = "coin";
+    this._resolveHp();
   }
 
   get score() {

@@ -1,14 +1,14 @@
 import { Entity } from "./entity.js";
-import { PLINKO, BALL_EFFECTS } from "../configs/constants.js";
+import { PLINKO, BALL_EFFECTS, PEG_DEFS } from "../configs/constants.js";
 
 /**
- * Peg — basic metallic clou. Score +1 per ball contact.
+ * Peg — basic metallic clou. Score +2 per ball contact.
  *
  * Pure data: position is set by the layer that owns this peg, in the
  * pinboard coordinate space. No DOM dependency — the controller renders
  * the corresponding `.gt-peg` element.
  *
- * Subclasses (Bumper, CoinPeg) override `score`, `restitution` and the
+ * Subclasses (Bumper, CoinPeg, etc.) override `score`, `restitution` and the
  * scoring / reward hooks. See `docs/SLOT.md` for the family hierarchy.
  */
 export class Peg extends Entity {
@@ -16,6 +16,10 @@ export class Peg extends Entity {
   x = 0;
   /** @type {number} */
   y = 0;
+  /** @type {number} Max hit points before destruction. */
+  maxHp;
+  /** @type {number} Current hit points remaining. */
+  hp;
   /** @type {number} Remaining hits before the ice melts (0 = not frozen). */
   iceHits = 0;
   /** @type {boolean} Burning pegs score half their base value. */
@@ -31,6 +35,20 @@ export class Peg extends Entity {
     this.x = x;
     this.y = y;
     this.slot = slot;
+    // HP is initialized in #initHp() — subclasses call it after setting type.
+    this.#initHp();
+  }
+
+  /** Resolve HP from PEG_DEFS based on current this.type. */
+  #initHp() {
+    const def = PEG_DEFS[this.type] || PEG_DEFS.peg;
+    this.maxHp = def.hp;
+    this.hp = def.hp;
+  }
+
+  /** Re-initialize HP after subclass has overridden this.type. */
+  _resolveHp() {
+    this.#initHp();
   }
 
   get radius() {
@@ -70,10 +88,31 @@ export class Peg extends Entity {
    * Reward directive returned when this peg consumes itself on contact
    * (CoinPeg). `null` means scoring proceeds normally.
    * @param {import('./ball-classic.js').Ball} _ball
-   * @returns {null | { coins?: number, popText?: string, popClass?: string }}
+   * @returns {null | { coins?: number, diamonds?: number, popText?: string, popClass?: string }}
    */
   consumeReward(_ball) {
     return null;
+  }
+
+  /**
+   * Apply 1 point of damage to this peg. Returns true if the peg just died.
+   * @param {number} [amount=1]
+   * @returns {boolean}
+   */
+  takeDamage(amount = 1) {
+    if (this.hp <= 0) return false;
+    this.hp = Math.max(0, this.hp - amount);
+    return this.hp === 0;
+  }
+
+  /** Whether this peg has been destroyed (hp depleted). */
+  get isDestroyed() {
+    return this.hp <= 0;
+  }
+
+  /** Whether the next hit will destroy this peg (triggers tremble visual). */
+  get isLastHit() {
+    return this.hp === 1;
   }
 
   /**
@@ -88,5 +127,15 @@ export class Peg extends Entity {
       return true;
     }
     return false;
+  }
+
+  /**
+   * Hook called when this peg is destroyed (hp reaches 0).
+   * Subclasses override to return destruction rewards.
+   * @param {import('./ball-classic.js').Ball} _ball
+   * @returns {null | object}
+   */
+  onDestroyed(_ball) {
+    return null;
   }
 }

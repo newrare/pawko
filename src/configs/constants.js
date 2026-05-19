@@ -158,6 +158,8 @@ export const PLINKO = {
   BUMPER_CHANCE_BASE: 0.05,
   BUMPER_CHANCE_PER_LEVEL: 0.005,
   BUMPER_CHANCE_MAX: 0.35,
+  /** Probability a filled slot becomes a coin peg. */
+  COIN_CHANCE_BASE: 0.04,
 
   /** Number of layers loaded at once at the start of a level. */
   INITIAL_LAYERS: 9,
@@ -195,14 +197,12 @@ export const PLINKO = {
   SUBSTEPS: 3,
 
   /* Scoring */
-  SCORE_PEG: 1,
+  SCORE_PEG: 2,
   SCORE_BUMPER: 10,
 
   /* Currency */
   /** Coins awarded when a ball touches a coin peg. */
-  COIN_VALUE: 5,
-  /** Probability a filled slot becomes a coin peg (independent of bumper roll). */
-  COIN_CHANCE_BASE: 0.04,
+  COIN_VALUE: 1,
   /** How long (ms) a ball must be stationary before its blocker is removed. */
   STUCK_TIMEOUT_MS: 3000,
 
@@ -212,7 +212,70 @@ export const PLINKO = {
   /* Collection gates — 5 equal-width zones (sum = 1). */
   GATE_WIDTHS: { recycle: 0.20, x2: 0.20, x10: 0.20, x5: 0.20, malus: 0.20 },
   GATE_ORDER: ["recycle", "x2", "x10", "x5", "malus"],
+
+  /* Shield peg */
+  SHIELD_MAX_HITS: 5,
+  SHIELD_COOLDOWN_MS: 5000,
+  SHIELD_RADIUS_MULTIPLIER: 3,
 };
+
+// ─── Peg Save System ──────────────────────────────────────────────────────
+
+/**
+ * Tuning for the peg rescue mechanic. When a peg reaches 0 HP a rescue
+ * ring appears; if the player taps it in time the peg is restored.
+ * See `docs/PEG-SAVE.md` for the full design.
+ */
+export const PEG_SAVE = {
+  /** Duration (ms) of the rescue window / shrinking ring animation. */
+  RESCUE_DURATION_MS: 2000,
+  /** HP restored to a successfully saved peg. */
+  SAVED_HP: 1,
+  /** Combo multiplier increment per consecutive save. */
+  COMBO_INCREMENT: 0.1,
+  /** Idle time (ms) after the last save before the combo resets. */
+  COMBO_DECAY_MS: 5000,
+};
+
+// ─── Peg definitions ──────────────────────────────────────────────────────
+
+/**
+ * Configuration for each peg type.
+ * Each peg type has a base HP (hits before destruction), a frequency tag
+ * controlling spawn rate in layers, and a base score or behaviour description.
+ * Frequency: 'high' → ~60%, 'medium' → ~25%, 'low' → ~10%
+ * @type {Record<string, { hp: number, frequency: 'high'|'medium'|'low' }>}
+ */
+export const PEG_DEFS = {
+  peg: { hp: 1000, frequency: "high" },
+  bumper: { hp: 1000, frequency: "low" },
+  coin: { hp: 1000, frequency: "medium" },
+  diamond: { hp: 5, frequency: "medium" },
+  glue: { hp: 5, frequency: "low" },
+  cat: { hp: 20, frequency: "low" },
+  boss: { hp: 50, frequency: "low" },
+  teleport: { hp: 2, frequency: "medium" },
+  chest: { hp: 2, frequency: "medium" },
+  key: { hp: 1, frequency: "medium" },
+  chester: { hp: 20, frequency: "low" },
+  shield: { hp: 1, frequency: "low" },
+  mystery: { hp: 2, frequency: "medium" },
+};
+
+/** Spawn weight lookup based on frequency tag. */
+export const PEG_FREQUENCY_WEIGHTS = {
+  high: 0.60,
+  medium: 0.25,
+  low: 0.10,
+};
+
+/** Key rarity tiers (ordered most → least rare). */
+export const KEY_RARITIES = /** @type {const} */ ([
+  "legendary",
+  "epic",
+  "rare",
+  "common",
+]);
 
 // ─── Ball effects ─────────────────────────────────────────────────────────
 /* Ball kinds (the string ids) live next to the factory in

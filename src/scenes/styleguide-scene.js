@@ -236,12 +236,26 @@ export class StyleguideScene {
 
     return `
       <section class="gt-sg-section">
-        <h2 class="gt-sg-h2">Pegs</h2>
+        <h2 class="gt-sg-h2">Pegs — all types</h2>
         <div class="gt-sg-plinko">
           <div class="gt-sg-plinko-row gt-sg-plinko-row--4" style="grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));">
-            ${cell('<div class="pk-peg"></div>', "Classic")}
+            ${cell('<div class="pk-peg"></div>', "Classic<br>+2 pts")}
             ${cell('<div class="pk-peg pk-peg--bumper"></div>', "Bumper<br>×10 pts")}
-            ${cell('<div class="pk-peg pk-peg--coin">¢</div>', "Coin Peg")}
+            ${cell('<div class="pk-peg pk-peg--coin">¢</div>', "Coin<br>+1 coin")}
+            ${cell('<div class="pk-peg pk-peg--diamond">💎</div>', "Diamond<br>5 HP")}
+            ${cell('<div class="pk-peg pk-peg--glue"></div>', "Glue<br>5 HP")}
+            ${cell('<div class="pk-peg pk-peg--cat">🐱</div>', "Cat<br>20 HP")}
+            ${cell('<div class="pk-peg pk-peg--boss">👹</div>', "Boss<br>50 HP")}
+            ${cell('<div class="pk-peg pk-peg--teleport"></div>', "Teleport<br>2 HP")}
+            ${cell('<div class="pk-peg pk-peg--chest">📦</div>', "Chest<br>2 HP")}
+            ${cell('<div class="pk-peg pk-peg--key">🔑</div>', "Key<br>1 HP")}
+            ${cell('<div class="pk-peg pk-peg--chester" data-rarity="common">🗝</div>', "Chester<br>Common")}
+            ${cell('<div class="pk-peg pk-peg--chester" data-rarity="rare">🗝</div>', "Chester<br>Rare")}
+            ${cell('<div class="pk-peg pk-peg--chester" data-rarity="epic">🗝</div>', "Chester<br>Epic")}
+            ${cell('<div class="pk-peg pk-peg--chester" data-rarity="legendary">🗝</div>', "Chester<br>Legendary")}
+            ${cell('<div class="pk-peg pk-peg--shield pk-peg--shield-active"></div>', "Shield<br>Active")}
+            ${cell('<div class="pk-peg pk-peg--shield pk-peg--shield-down"></div>', "Shield<br>Down")}
+            ${cell('<div class="pk-peg pk-peg--mystery">?</div>', "Mystery<br>2 HP")}
           </div>
         </div>
 
@@ -253,6 +267,7 @@ export class StyleguideScene {
             ${cell('<div class="pk-peg pk-peg--frozen-1"></div>', "Frozen ①<br>1 hit left")}
             ${cell('<div class="pk-peg pk-peg--burned"></div>', "Burned<br>÷2 score")}
             ${cell('<div class="pk-peg pk-peg--electrified" data-sg-spark="peg"></div>', "Electrified")}
+            ${cell('<div class="pk-peg pk-tremble"></div>', "Tremble<br>1 HP left")}
             <div class="gt-sg-plinko-cell" style="grid-column: span 2;">
               <div class="gt-sg-plinko-stage gt-sg-plinko-stage--overflow gt-sg-arc-host" style="width: 140px;">
                 <div class="gt-sg-arc-stage" data-sg-arc>

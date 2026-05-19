@@ -149,3 +149,10 @@
 }
 .pk-dev-admin-btn--electrical:hover { background: rgba(250, 204, 21, 0.32); }
 .pk-dev-admin-btn--electrical:active { background: rgba(250, 204, 21, 0.5); }
+
+.pk-dev-admin-btn--test {
+  border-color: #a78bfa;
+  color: #ddd6fe;
+}
+.pk-dev-admin-btn--test:hover { background: rgba(167, 139, 250, 0.25); }
+.pk-dev-admin-btn--test:active { background: rgba(167, 139, 250, 0.4); }

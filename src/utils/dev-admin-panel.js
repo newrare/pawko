@@ -8,6 +8,7 @@ import {
 } from "../configs/bonus-defs.js";
 import { ABILITY_DEFS } from "../configs/ability-defs.js";
 import { BALL_KINDS } from "../entities/ball-factory.js";
+import { PEG_TYPES } from "../entities/peg-factory.js";
 
 /**
  * Dev-only admin panel. Mounted directly on `document.body` to the right
@@ -15,9 +16,9 @@ import { BALL_KINDS } from "../entities/ball-factory.js";
  * fast-forwarding the rogue-lite progression while testing.
  *
  * Communicates with GameController via gameEvents — no direct coupling.
- * @param {{ onTitle?: () => void, onStyleguide?: () => void, onShop?: () => void, onAbility?: () => void }} [hooks]
+ * @param {{ onTitle?: () => void, onStyleguide?: () => void, onShop?: () => void, onAbility?: () => void, onTestPegs?: (type: string) => void }} [hooks]
  */
-export function installDevAdminPanel({ onTitle, onStyleguide, onShop, onAbility } = {}) {
+export function installDevAdminPanel({ onTitle, onStyleguide, onShop, onAbility, onTestPegs } = {}) {
   if (document.getElementById("pk-dev-admin")) return;
 
   const panel = document.createElement("div");
@@ -51,6 +52,16 @@ export function installDevAdminPanel({ onTitle, onStyleguide, onShop, onAbility 
       <button class="pk-dev-admin-btn" data-dev="activate-session">Activate all session</button>
       <button class="pk-dev-admin-btn" data-dev="reset-roguelite">Reset rogue-lite</button>
     </div>
+    <div class="pk-dev-admin-section">
+      <h4>Test Level</h4>
+      <button class="pk-dev-admin-btn pk-dev-admin-btn--test" data-dev="test-pegs" data-peg-type="all" data-no-sfx>All pegs pinboard</button>
+      ${Object.values(PEG_TYPES)
+        .map(
+          (t) =>
+            `<button class="pk-dev-admin-btn pk-dev-admin-btn--test" data-dev="test-pegs" data-peg-type="${t}" data-no-sfx>Only ${t}</button>`,
+        )
+        .join("")}
+    </div>
   `;
 
   panel.addEventListener(
@@ -80,6 +91,9 @@ export function installDevAdminPanel({ onTitle, onStyleguide, onShop, onAbility 
         currencyManager.reset();
         abilityManager.reset();
         bonusManager.resetAll();
+      } else if (action === "test-pegs") {
+        const type = /** @type {HTMLElement} */ (btn).dataset.pegType || "all";
+        onTestPegs?.(type);
       }
     },
     true,

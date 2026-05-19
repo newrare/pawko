@@ -58,15 +58,15 @@
 
 - classic (1000pv|hight): score 2pt de base par hit de ball
 - bumper (1000pv|low): score 10pt de base par hit de ball
-- currency (1000pv|medium): donne 1 currency de base par hit de ballde la currency
+- coin (1000pv|medium): donne 1 currency de base par hit de ball
 - diamond (5pv|medium): donne un diamond à chaque hit de ball (les diamonds servirons au déblocage d'abilité)
-- glue (5pv|low): colle une bille (la bille ne pourra jamais arriver sur une gate, il faut considérer qu'elle n'est plus en jeu), si elle est détruite, la bille collée revient en jeu et est libérée
-- cat (20pv|low): mange une bille, si cat est détruit il libère la bille mangée, la bille mangé ne pourra pas arriver sur une gate, sauf si elle est libérée
+- glue (5pv|low): colle une bille (la bille ne pourra jamais arriver sur une gate, il faut considérer qu'elle n'est plus en jeu), si le peg est détruit, la bille collée revient en jeu et est libérée
+- cat (20pv|low): mange une bille, si cat est détruit il ne libère pas la bille mangée, un cat ne peu manger qu'une seule bille par partie
 - boss (50pv|low): mange plusieurs billes, même comportement que pour cat
-- teleport(2pv|medium): téléporte aléatoirement les billes vers une autre partie de la grille
-- chest (2pv|medium): donne un bonus aléatoire à la destruction (currency fois x, diamond fois x, launcher bonus temporaire ou permanent, + x ball dans chaque launcher)
+- teleport(2pv|medium): au contact de ball sur ce peg, la ball se téléporte aléatoirement vers une autre partie de la grille
+- chest (2pv|medium): donne un bonus aléatoire à la destruction (coin fois x, diamond fois x, launcher bonus temporaire ou permanent, + x ball dans chaque launcher, etc)
 - key (1pv|medium): donne une clef de rareté lorsqu'il est détruit (couleur des clef rarety: 'legendary' | 'epic' | 'rare' | 'common'), la clef va dans un inventaire générale à la partie
-- chester (20pv|low): un chester de couleur par rareté 'legendary' | 'epic' | 'rare' | 'common'. au premier hit d'une ball, donne un gros bonus aléatoire si le joueur possède/utilise la bonne clef de couleur de son inventaire. Si le coffre est détruit par pv, donne un bonus comme un chest classique
+- chester (20pv|low): un chester de couleur par rareté 'legendary' | 'epic' | 'rare' | 'common'. au premier hit d'une ball, donne un gros bonus aléatoire si le joueur possède/utilise la bonne clef de couleur dans son inventaire. Si le coffre est détruit par pv, donne un bonus plus simple comme un chest classique
 - shield (1pv|low): créer une zone circulaire autour du peg, les billes ne peuvent pas entrer, le shield à un nombre limite de 5 hits puis est désactiver pendant 5 secondes puis se réactive
 - mystery (2pv|medium): donne un malus ou un bonus aléatoire
 
