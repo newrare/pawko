@@ -1,9 +1,17 @@
 # Currency System
 
-Pawko has a single soft-currency: **coins**. They are persistent across
-runs and spent at the [Ability](ABILITY.md) and [Shop](BONUS.md) scenes.
+Pawko has two currencies, both persistent across runs:
 
-## Earning coins
+| Currency        | Manager            | Storage key              | Spent at        |
+| --------------- | ------------------ | ------------------------ | --------------- |
+| **Coins** 🪙    | `currencyManager`  | `STORAGE_KEYS.CURRENCY`  | Shop scene      |
+| **Diamonds** 💎 | `diamondManager`   | `STORAGE_KEYS.DIAMONDS`  | Ability scene   |
+
+Coins fund **session bonuses** (one-shot or N-level buffs sold in the
+shop). Diamonds fund **abilities** — permanent gates that unlock new
+bonuses, ball kinds, and reveal flags.
+
+## Earning coins 🪙
 
 Coins drop from the `CoinPeg` entity. A coin peg is rendered with the
 `.pk-peg pk-peg--coin` class and shows the cent glyph (`¢`). The first
@@ -18,31 +26,53 @@ Coin pegs spawn alongside regular pegs in `Layer.constructor`. Their
 spawn probability uses `PLINKO.COIN_CHANCE_BASE` and follows the same
 "alternating slot" rule as bumpers.
 
-## Spending coins
+## Earning diamonds 💎
 
-Coins are spent through `currencyManager.spend(amount)`. The function
-returns `true` and emits `change` if the balance was sufficient,
-`false` otherwise — callers are expected to gate the UI on this return
-value.
+Diamonds drop from rarer pegs: `DiamondPeg`, `ChestPeg`, and as one of
+the random outcomes of `MysteryPeg`. The reward payload contains a
+`diamonds` field, e.g. `{ diamonds: 1, popText: "+1💎" }`. The
+controller routes any `diamonds` value into `diamondManager.add(n)` via
+the global `gameEvents` channel — peg code never imports the manager
+directly.
 
-`currencyManager.add(amount)` always succeeds and emits `change`.
+## Spending
+
+```js
+currencyManager.spend(amount); // returns boolean
+diamondManager.spend(amount);  // returns boolean
+```
+
+Both refuse non-positive amounts and return `false` when the balance is
+insufficient. Callers must gate the UI on the return value.
+
+`currencyManager.add(amount)` and `diamondManager.add(amount)` always
+succeed and emit `change`.
 
 ## Public API
 
 ```js
-currencyManager.get()          // current balance
-currencyManager.add(amount)    // credit, emits change
-currencyManager.spend(amount)  // returns boolean
-currencyManager.reset()        // sets to 0
-currencyManager.on('change', cb)
+currencyManager.get();
+currencyManager.add(amount);
+currencyManager.spend(amount); // boolean
+currencyManager.reset();
+currencyManager.on("change", cb);
+
+diamondManager.get();
+diamondManager.add(amount);
+diamondManager.spend(amount); // boolean
+diamondManager.reset();
+diamondManager.on("change", cb);
 ```
 
 ## Persistence
 
-`STORAGE_KEYS.CURRENCY` stores `{ coins: number }`. The
-`currencyManager` is the only writer — never write to this key directly.
+- `STORAGE_KEYS.CURRENCY` → `{ coins: number }` — owned by `currencyManager`.
+- `STORAGE_KEYS.DIAMONDS` → `{ diamonds: number }` — owned by `diamondManager`.
+
+Never write to either key directly — go through the managers.
 
 ## Dev affordances
 
-The dev admin panel exposes a **+100 coins** button in DEV builds for
-fast iteration on the Shop and Ability scenes.
+The dev admin panel exposes both **+100 coins** and **+50 diamonds**
+buttons in DEV builds for fast iteration on the Shop and Ability scenes.
+The roguelite reset button also resets both currencies.

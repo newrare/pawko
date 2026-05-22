@@ -267,22 +267,26 @@
   opacity: 0.7;
 }
 
-/* Used shop / ability — show icon in green instead of checkmark */
-.pk-map-cell--used.pk-map-cell--type-shop .pk-map-cell-icon,
-.pk-map-cell--used.pk-map-cell--type-ability .pk-map-cell-icon {
+/* Used / completed icons — green.
+   Level number and · dot are plain text → CSS color works.
+   Shop 💰, ability ⚡, mystery ❓ are emoji → CSS color has no effect on them;
+   filter converts them to a flat green silhouette that is still recognisable. */
+
+.pk-map-cell--used.pk-map-cell--type-level .pk-map-cell-icon,
+.pk-map-cell--used.pk-map-cell--type-empty .pk-map-cell-icon,
+.pk-map-cell--current.pk-map-cell--completed.pk-map-cell--type-level .pk-map-cell-icon {
   color: var(--gt-color-success);
   opacity: 0.85;
 }
 
-/* Used-cell checkmark overlay */
-.pk-map-cell-used-mark {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.8rem;
-  color: var(--gt-color-success);
+.pk-map-cell--used.pk-map-cell--type-shop .pk-map-cell-icon,
+.pk-map-cell--used.pk-map-cell--type-ability .pk-map-cell-icon,
+.pk-map-cell--used.pk-map-cell--type-mystery .pk-map-cell-icon,
+.pk-map-cell--current.pk-map-cell--completed.pk-map-cell--type-shop .pk-map-cell-icon,
+.pk-map-cell--current.pk-map-cell--completed.pk-map-cell--type-ability .pk-map-cell-icon {
+  /* brightness(0) → black silhouette, invert(1) → white, then sepia+hue-rotate → green */
+  filter: brightness(0) invert(1) sepia(1) saturate(4) hue-rotate(85deg) brightness(0.85);
+  opacity: 0.85;
 }
 
 /* Newly revealed cells — pop-in */

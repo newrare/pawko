@@ -12,6 +12,7 @@ export const CELL_TYPES = /** @type {const} */ ({
   LEVEL: "level",
   SHOP: "shop",
   ABILITY: "ability",
+  MYSTERY: "mystery",
   START: "start",
 });
 
@@ -46,9 +47,10 @@ const TYPE_VALUES = [
   CELL_TYPES.LEVEL,
   CELL_TYPES.SHOP,
   CELL_TYPES.ABILITY,
+  CELL_TYPES.MYSTERY,
   CELL_TYPES.EMPTY,
 ];
-const TYPE_WEIGHTS = [0.35, 0.22, 0.2, 0.23];
+const TYPE_WEIGHTS = [0.33, 0.2, 0.18, 0.08, 0.21];
 
 /**
  * Encode a directed edge between two orthogonal cells as a string key.
@@ -433,11 +435,12 @@ export class LevelGrid {
     );
     const count = nonStart.length;
 
-    /* Guaranteed minimums: 10 levels, 4 shops, 4 abilities. */
+    /* Guaranteed minimums: 10 levels, 4 shops, 4 abilities, 3 mystery. */
     const guaranteed = [
       ...Array(10).fill(CELL_TYPES.LEVEL),
       ...Array(4).fill(CELL_TYPES.SHOP),
       ...Array(4).fill(CELL_TYPES.ABILITY),
+      ...Array(3).fill(CELL_TYPES.MYSTERY),
     ];
     const types = [...guaranteed];
     for (let i = guaranteed.length; i < count; i++) {

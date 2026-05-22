@@ -1,0 +1,104 @@
+/* --- Notification toasts. Stacks vertically from top-right. --- */
+
+.pk-notif-container {
+  position: fixed;
+  top: calc(var(--gt-safe-top, var(--gt-space-4)) + var(--gt-space-2));
+  right: calc(var(--gt-safe-right, var(--gt-space-4)) + var(--gt-space-2));
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gt-space-2);
+  pointer-events: none;
+  max-width: 320px;
+}
+
+.pk-notif {
+  padding: var(--gt-space-3) var(--gt-space-4);
+  border-radius: var(--gt-radius-md);
+  font-family: var(--gt-font-body);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--pk-gold-light);
+  background: var(--pk-bg-surface);
+  border: 1px solid var(--pk-crimson-muted);
+  box-shadow: var(--gt-shadow-md);
+  pointer-events: auto;
+  opacity: 0;
+  transform: translateX(100%);
+  transition: none;
+}
+
+.pk-notif--visible {
+  animation: pk-notif-in 250ms ease-out forwards;
+}
+
+.pk-notif--exit {
+  animation: pk-notif-out 200ms ease-in forwards;
+}
+
+/* --- Type variants --- */
+
+.pk-notif--success {
+  border-color: var(--gt-color-success);
+  background: linear-gradient(
+    135deg,
+    rgba(34, 197, 94, 0.12) 0%,
+    var(--pk-bg-surface) 100%
+  );
+  color: #86efac;
+}
+
+.pk-notif--error {
+  border-color: var(--gt-color-danger);
+  background: linear-gradient(
+    135deg,
+    rgba(239, 68, 68, 0.12) 0%,
+    var(--pk-bg-surface) 100%
+  );
+  color: #fca5a5;
+}
+
+.pk-notif--warning {
+  border-color: var(--gt-color-warning);
+  background: linear-gradient(
+    135deg,
+    rgba(217, 119, 6, 0.12) 0%,
+    var(--pk-bg-surface) 100%
+  );
+  color: #fcd34d;
+}
+
+.pk-notif--info {
+  border-color: var(--pk-gold-dim);
+  background: linear-gradient(
+    135deg,
+    rgba(212, 175, 55, 0.08) 0%,
+    var(--pk-bg-surface) 100%
+  );
+  color: var(--pk-gold-light);
+}
+
+/* --- Keyframes --- */
+
+@keyframes pk-notif-in {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pk-notif-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}

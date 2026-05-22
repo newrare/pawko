@@ -16,6 +16,8 @@
  * across all screens.
  */
 import { HudBar } from "../components/hud-bar.js";
+import { LevelSelectorScene } from "./level-selector-scene.js";
+import { gameEvents } from "../utils/event-emitter.js";
 
 export class SceneRouter {
   /** @type {HTMLElement} */
@@ -51,8 +53,15 @@ export class SceneRouter {
     this.#current = scene;
     this.#currentEl = el;
 
-    this.#hud = new HudBar();
-    this.#hud.mount(el);
+    if (!SceneClass.hideHud) {
+      this.#hud = new HudBar();
+      this.#hud.mount(el, {
+        showHome: !SceneClass.hideHudHome,
+        onHomeClick: () => this.start(LevelSelectorScene),
+      });
+    }
+
+    gameEvents.emit("scene:change", { name: SceneClass.name });
   }
 
   /** Tear down the active scene without mounting another. */

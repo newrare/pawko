@@ -1,9 +1,14 @@
 import { ListenerBag } from "../utils/listener-bag.js";
 import { i18n } from "../managers/i18n-manager.js";
 import { currencyManager } from "../managers/currency-manager.js";
+import { diamondManager } from "../managers/diamond-manager.js";
 import { saveManager } from "../managers/save-manager.js";
+import { bonusManager } from "../managers/bonus-manager.js";
+import { abilityManager } from "../managers/ability-manager.js";
 import { KEY_RARITIES } from "../configs/constants.js";
 import { BALL_KINDS } from "../entities/ball-factory.js";
+import { BONUS_CATEGORIES, findBonus } from "../configs/bonus-defs.js";
+import { findAbility } from "../configs/ability-defs.js";
 
 export const INFO_BAR_MODES = /** @type {const} */ ({
   EXPLORATION: "exploration",
@@ -55,8 +60,12 @@ export class InfoBar {
     root.appendChild(this.#el);
 
     this.#bag.on(this.#el, "click", this.#onClick);
+    this.#bag.on(document, "pointerdown", this.#onOutsidePointer, true);
     this.#bag.add(i18n.onChange(() => this.#refresh()));
     this.#bag.add(currencyManager.on("change", () => this.#refresh()));
+    this.#bag.add(diamondManager.on("change", () => this.#refresh()));
+    this.#bag.add(bonusManager.on("change", () => this.#refresh()));
+    this.#bag.add(abilityManager.on("change", () => this.#refresh()));
   }
 
   destroy() {
@@ -146,11 +155,21 @@ export class InfoBar {
         id: "progress",
         icon: "🗺️",
         getCount: () => {
-          const grid = saveManager.loadGridState();
-          if (!grid?.cells) return "0";
-          const completed = grid.cells.filter((c) => c.state === "used" && c.type === "level").length;
-          const total = grid.cells.filter((c) => c.type === "level").length;
-          return `${completed}/${total}`;
+          const cells = this.#flattenGridCells();
+          let levelsDone = 0;
+          let shopsDone = 0;
+          let abilitiesDone = 0;
+          let mysteriesDone = 0;
+          let mysteriesTotal = 0;
+          for (const c of cells) {
+            if (c.type === "mystery") mysteriesTotal++;
+            if (c.state !== "used") continue;
+            if (c.type === "level") levelsDone++;
+            else if (c.type === "shop") shopsDone++;
+            else if (c.type === "ability") abilitiesDone++;
+            else if (c.type === "mystery") mysteriesDone++;
+          }
+          return `${levelsDone} | ${shopsDone} | ${abilitiesDone} | ${mysteriesDone}`;
         },
         renderDrawer: () => this.#renderProgressDrawer(),
       },
@@ -166,17 +185,45 @@ export class InfoBar {
       {
         id: "resources",
         icon: "💰",
-        getCount: () => currencyManager.get(),
+        getCount: () => `${currencyManager.get()} | ${diamondManager.get()}`,
         renderDrawer: () => this.#renderResourcesDrawer(),
       },
       {
         id: "arsenal",
         icon: "🎱",
         getCount: () => {
-          const balls = this.#data.arsenal?.balls ?? {};
-          return Object.values(balls).reduce((a, b) => a + b, 0);
+          const arsenal = this.#data.arsenal ?? {};
+          const launchers = arsenal.launchers ?? 0;
+          const balls = arsenal.balls ?? {};
+          const totalBalls = Object.values(balls).reduce((a, b) => a + b, 0);
+          return `${launchers} | ${totalBalls}`;
         },
         renderDrawer: () => this.#renderArsenalDrawer(),
+      },
+      {
+        id: "session",
+        icon: "⏳",
+        getCount: () => {
+          const active = bonusManager.getActiveSession();
+          let bonuses = 0;
+          let maluses = 0;
+          for (const e of active) {
+            if (e.def.category === BONUS_CATEGORIES.MALUS) maluses++;
+            else bonuses++;
+          }
+          return `${bonuses} | ${maluses}`;
+        },
+        renderDrawer: () => this.#renderSessionDrawer(),
+      },
+      {
+        id: "permanent",
+        icon: "🏆",
+        getCount: () => {
+          const abilities = abilityManager.getUnlocked().length;
+          const bonuses = bonusManager.getUnlockedPermanent().length;
+          return `${abilities} | ${bonuses}`;
+        },
+        renderDrawer: () => this.#renderPermanentDrawer(),
       },
     ];
   }
@@ -231,16 +278,31 @@ export class InfoBar {
     ];
   }
 
-  #renderProgressDrawer() {
+  /**
+   * Flatten the serialized grid cells (stored as a 2D rows × cols array)
+   * into a single list of cells. Returns [] if no grid is saved.
+   * @returns {Array<{type: string, state: string}>}
+   */
+  #flattenGridCells() {
     const grid = saveManager.loadGridState();
-    if (!grid?.cells) {
+    if (!grid?.cells) return [];
+    const cells = [];
+    for (const row of grid.cells) {
+      if (Array.isArray(row)) cells.push(...row);
+      else cells.push(row);
+    }
+    return cells;
+  }
+
+  #renderProgressDrawer() {
+    const cells = this.#flattenGridCells();
+    if (cells.length === 0) {
       return `<div class="pk-info-drawer-empty">${i18n.t("info_bar.no_progress")}</div>`;
     }
-
-    const cells = grid.cells;
     const levels = { done: 0, total: 0 };
     const shops = { done: 0, total: 0 };
     const abilities = { done: 0, total: 0 };
+    const mysteries = { done: 0, total: 0 };
 
     for (const c of cells) {
       if (c.type === "level") {
@@ -252,6 +314,9 @@ export class InfoBar {
       } else if (c.type === "ability") {
         abilities.total++;
         if (c.state === "used") abilities.done++;
+      } else if (c.type === "mystery") {
+        mysteries.total++;
+        if (c.state === "used") mysteries.done++;
       }
     }
 
@@ -268,6 +333,10 @@ export class InfoBar {
         <div class="pk-info-drawer-progress-item">
           <span>${i18n.t("info_bar.abilities")}</span>
           <span>${abilities.done}/${abilities.total}</span>
+        </div>
+        <div class="pk-info-drawer-progress-item">
+          <span>${i18n.t("info_bar.mysteries")}</span>
+          <span>${mysteries.done}/${mysteries.total}</span>
         </div>
       </div>
     `;
@@ -299,7 +368,7 @@ export class InfoBar {
 
   #renderResourcesDrawer() {
     const coins = currencyManager.get();
-    const diamonds = this.#data.resources?.diamonds ?? 0;
+    const diamonds = diamondManager.get();
 
     return `
       <div class="pk-info-drawer-grid">
@@ -340,6 +409,90 @@ export class InfoBar {
           <span class="pk-info-drawer-label">${i18n.t("info_bar.launchers")}</span>
           <span class="pk-info-drawer-value">${launchers}</span>
         </div>
+      </div>
+    `;
+  }
+
+  #renderSessionDrawer() {
+    const active = bonusManager.getActiveSession();
+    if (active.length === 0) {
+      return `<div class="pk-info-drawer-empty">${i18n.t("info_bar.no_session")}</div>`;
+    }
+
+    const bonuses = active.filter((e) => e.def.category !== BONUS_CATEGORIES.MALUS);
+    const maluses = active.filter((e) => e.def.category === BONUS_CATEGORIES.MALUS);
+
+    const renderEntry = (entry) => {
+      const isMalus = entry.def.category === BONUS_CATEGORIES.MALUS;
+      const nameKey = isMalus
+        ? `bonus.malus.${entry.id}`
+        : `bonus.session.${entry.id}`;
+      const remainingLabel = Number.isFinite(entry.remaining)
+        ? i18n.t("info_bar.remaining_levels", { n: entry.remaining })
+        : i18n.t("info_bar.run_scoped");
+      const modClass = isMalus ? "pk-info-entry--malus" : "pk-info-entry--bonus";
+      return `
+        <div class="pk-info-entry ${modClass}">
+          <span class="pk-info-entry-icon">${entry.def.icon}</span>
+          <span class="pk-info-entry-name">${i18n.t(nameKey)}</span>
+          <span class="pk-info-entry-meta">${remainingLabel}</span>
+        </div>
+      `;
+    };
+
+    return `
+      <div class="pk-info-drawer-list">
+        ${bonuses.map(renderEntry).join("")}
+        ${maluses.map(renderEntry).join("")}
+      </div>
+    `;
+  }
+
+  #renderPermanentDrawer() {
+    const abilityIds = abilityManager.getUnlocked();
+    const bonusIds = bonusManager.getUnlockedPermanent();
+    if (abilityIds.length === 0 && bonusIds.length === 0) {
+      return `<div class="pk-info-drawer-empty">${i18n.t("info_bar.no_permanent")}</div>`;
+    }
+
+    const abilityRows = abilityIds
+      .map((id) => {
+        const def = findAbility(id);
+        if (!def) return "";
+        return `
+          <div class="pk-info-entry">
+            <span class="pk-info-entry-icon">⚡</span>
+            <span class="pk-info-entry-name">${i18n.t(`ability.${id}`)}</span>
+            <span class="pk-info-entry-meta">${i18n.t(`ability.category.${def.category}`)}</span>
+          </div>
+        `;
+      })
+      .join("");
+
+    const bonusRows = bonusIds
+      .map((id) => {
+        const def = findBonus(id);
+        if (!def) return "";
+        return `
+          <div class="pk-info-entry">
+            <span class="pk-info-entry-icon">${def.icon}</span>
+            <span class="pk-info-entry-name">${i18n.t(`bonus.permanent.${id}`)}</span>
+          </div>
+        `;
+      })
+      .join("");
+
+    const abilitiesSection = abilityIds.length
+      ? `<div class="pk-info-drawer-subtitle">${i18n.t("info_bar.abilities")}</div>${abilityRows}`
+      : "";
+    const bonusesSection = bonusIds.length
+      ? `<div class="pk-info-drawer-subtitle">${i18n.t("info_bar.permanent_bonuses")}</div>${bonusRows}`
+      : "";
+
+    return `
+      <div class="pk-info-drawer-list">
+        ${abilitiesSection}
+        ${bonusesSection}
       </div>
     `;
   }
@@ -402,7 +555,7 @@ export class InfoBar {
   #renderLootDrawer() {
     const loot = this.#data.loot ?? {};
     const coins = loot.coins ?? 0;
-    const diamonds = loot.diamonds ?? 0;
+    const diamonds = loot.diamonds ?? diamondManager.get();
 
     return `
       <div class="pk-info-drawer-grid">
@@ -470,6 +623,20 @@ export class InfoBar {
     const titleHtml = `<div class="pk-info-drawer-title">${i18n.t(`info_bar.${this.#openPillId}`)}</div>`;
     drawerEl.innerHTML = titleHtml + content;
   }
+
+  /**
+   * Close the open drawer when a pointer event hits anything outside the
+   * info-bar. Capture phase so we run before the outside target's own
+   * handlers can stop propagation.
+   * @param {Event} e
+   */
+  #onOutsidePointer = (e) => {
+    if (!this.#openPillId || !this.#el) return;
+    const target = /** @type {Node | null} */ (e.target);
+    if (target && this.#el.contains(target)) return;
+    this.#openPillId = null;
+    this.#refresh();
+  };
 
   /** @param {Event} e */
   #onClick = (e) => {

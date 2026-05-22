@@ -50,7 +50,8 @@
   position: fixed;
   left: calc(var(--gt-safe-left, 0px) + var(--gt-safe-width, 0px) + 12px);
   top: var(--gt-safe-top, 0px);
-  width: 160px;
+  width: max-content;
+  max-width: calc(100vw - var(--gt-safe-left, 0px) - var(--gt-safe-width, 0px) - 24px);
   max-height: var(--gt-safe-height, 80vh);
   overflow-y: auto;
   z-index: 99999;
@@ -78,6 +79,11 @@
   margin-bottom: 8px;
 }
 
+/* --- Sections that only make sense inside GameScene (pinboard live). --- */
+.pk-dev-admin:not([data-scene="GameScene"]) .pk-dev-admin-section--game-only {
+  display: none;
+}
+
 .pk-dev-admin-section h4 {
   margin: 0 0 4px;
   font-size: 10px;
@@ -100,8 +106,6 @@
   background: rgba(0, 255, 136, 0.08);
   text-align: left;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   transition: background 120ms ease;
 }
 
@@ -156,3 +160,10 @@
 }
 .pk-dev-admin-btn--test:hover { background: rgba(167, 139, 250, 0.25); }
 .pk-dev-admin-btn--test:active { background: rgba(167, 139, 250, 0.4); }
+
+.pk-dev-admin-btn--malus {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fecaca;
+}
+.pk-dev-admin-btn--malus:hover { background: rgba(239, 68, 68, 0.3); }
+.pk-dev-admin-btn--malus:active { background: rgba(239, 68, 68, 0.45); }

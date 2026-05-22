@@ -1,7 +1,18 @@
 import { i18n } from "../managers/i18n-manager.js";
 import { saveManager } from "../managers/save-manager.js";
 import { currencyManager } from "../managers/currency-manager.js";
+import { bonusManager } from "../managers/bonus-manager.js";
+import { layout } from "../managers/layout-manager.js";
+import { PLINKO } from "../configs/constants.js";
+import { BALL_KINDS } from "../entities/ball-factory.js";
+import {
+  PARAM_KEYS,
+  SESSION_BONUSES,
+  SESSION_MALUSES,
+  BONUS_CATEGORIES,
+} from "../configs/bonus-defs.js";
 import { ListenerBag } from "../utils/listener-bag.js";
+import { notify } from "../managers/notification-manager.js";
 import { BackgroundAnimator } from "../utils/background-animator.js";
 import { InfoBar, INFO_BAR_MODES } from "../components/info-bar.js";
 import {
@@ -21,6 +32,9 @@ import { AbilityScene } from "./ability-scene.js";
  * (1–4 links per cell) creating unique paths and forks.
  */
 export class LevelSelectorScene {
+  /** Hide the level-home HUD button when already on this scene. */
+  static hideHudHome = true;
+
   /** @type {import('./scene-router.js').SceneRouter} */
   #router;
 
@@ -74,16 +88,10 @@ export class LevelSelectorScene {
 
     this.#infoBar = new InfoBar({ mode: INFO_BAR_MODES.EXPLORATION });
     this.#infoBar.mount(this.#el);
+    this.#refreshArsenal();
 
     this.#bag.on(this.#el, "click", (e) => {
       const target = /** @type {HTMLElement} */ (e.target);
-
-      const action = target.closest("[data-action]");
-      if (action) {
-        const name = /** @type {HTMLElement} */ (action).dataset.action;
-        if (name === "new-run") this.#startNewRun();
-        return;
-      }
 
       const cellEl = target.closest(".pk-map-cell--revealed");
       if (!cellEl) return;
@@ -97,6 +105,41 @@ export class LevelSelectorScene {
 
     this.#bag.add(i18n.onChange(() => this.#refresh()));
     this.#bag.add(currencyManager.on("change", () => this.#refresh()));
+    this.#bag.raf(() => this.#updateCellSize());
+    this.#bag.add(layout.onChange(() => this.#updateCellSize()));
+  }
+
+  /**
+   * Compute the largest cell size that fits the visible area:
+   * width  → safe-zone minus grid horizontal padding
+   * height → safe-zone minus info bar (absolute overlay on top) minus HUD
+   *          buttons (bottom) minus grid padding.
+   * Applies the result as --pk-cell-size on the map grid element.
+   */
+  #updateCellSize() {
+    const scrollEl = this.#el?.querySelector(".pk-map-scroll");
+    const gridEl = this.#el?.querySelector(".pk-map-grid");
+    if (!scrollEl || !gridEl) return;
+
+    const GAP = 8;
+    const GRID_PAD_H = 16;  // --gt-space-2 (8px) × 2
+    const GRID_PAD_V = 40;  // grid top(12) + bottom(12) + scroll bottom-pad(16)
+    // HUD buttons at bottom: 40px height + 8px offset + 8px extra clearance
+    const HUD_BOTTOM = 56;
+
+    // Info bar is position:absolute over the scene — measure its actual height
+    const infoBarEl = this.#el.querySelector(".pk-info-bar");
+    const infoBarH = infoBarEl ? infoBarEl.offsetHeight : 44;
+
+    const availW = scrollEl.clientWidth - GRID_PAD_H;
+    // Use layout.safe.height (total safe zone) since scrollEl fills it all
+    const availH = layout.safe.height - infoBarH - HUD_BOTTOM - GRID_PAD_V;
+
+    const cellFromW = (availW - 6 * GAP) / 7;
+    const cellFromH = (availH - 11 * GAP) / 12;
+    const cellSize = Math.max(20, Math.min(cellFromW, cellFromH, 52));
+
+    gridEl.style.setProperty("--pk-cell-size", `${Math.floor(cellSize)}px`);
   }
 
   // ─── Cell interaction ───────────────────────────────
@@ -118,12 +161,44 @@ export class LevelSelectorScene {
       case CELL_TYPES.ABILITY:
         this.#router.start(AbilityScene);
         break;
+      case CELL_TYPES.MYSTERY:
+        this.#rollMystery();
+        break;
       case CELL_TYPES.EMPTY:
         this.#onEmptyCell();
         break;
       default:
         break;
     }
+  }
+
+  /**
+   * 70% bonus, 30% malus. The picked entry is activated immediately and a
+   * transient banner shows the outcome. Cell is already marked USED by
+   * `selectCell`.
+   */
+  #rollMystery() {
+    const rollMalus = Math.random() < 0.3;
+    const pool = rollMalus ? SESSION_MALUSES : SESSION_BONUSES;
+    if (!pool.length) {
+      this.#refresh();
+      return;
+    }
+    const def = pool[Math.floor(Math.random() * pool.length)];
+    bonusManager.activateSession(def.id);
+    const nameKey =
+      def.category === BONUS_CATEGORIES.MALUS
+        ? `bonus.malus.${def.id}`
+        : `bonus.session.${def.id}`;
+    const titleKey =
+      def.category === BONUS_CATEGORIES.MALUS
+        ? "level_selector.mystery_malus"
+        : "level_selector.mystery_bonus";
+    const isMalus = def.category === BONUS_CATEGORIES.MALUS;
+    const message = i18n.t(titleKey, { name: `${def.icon} ${i18n.t(nameKey)}` });
+    notify.show(message, { type: isMalus ? "warning" : "success" });
+    this.#refresh();
+    this.#refreshArsenal();
   }
 
   #onEmptyCell() {
@@ -133,19 +208,50 @@ export class LevelSelectorScene {
     this.#refresh();
   }
 
+  /**
+   * Compute the predicted loadout for the next round (launchers + balls per
+   * kind, resolved via bonusManager) and push it into the InfoBar arsenal
+   * pill. Mirrors what GameController does at round start so the count is
+   * consistent between scenes.
+   */
+  #refreshArsenal() {
+    if (!this.#infoBar) return;
+    const launchers = Math.max(
+      1,
+      Math.floor(
+        bonusManager.resolve(
+          PARAM_KEYS.SUBLAUNCH_COUNT,
+          PLINKO.SUBLAUNCH_COUNT,
+        ),
+      ),
+    );
+    const ballsPerLauncher = Math.max(
+      1,
+      Math.floor(
+        bonusManager.resolve(
+          PARAM_KEYS.STARTING_BALLS_PER_SUBLAUNCH,
+          PLINKO.STARTING_BALLS_PER_SUBLAUNCH,
+        ),
+      ),
+    );
+    const balls = { [BALL_KINDS.CLASSIC]: launchers * ballsPerLauncher };
+    this.#infoBar.setData("arsenal", { balls, launchers });
+  }
+
   #startNewRun() {
+    /* New run: clear session bonuses/maluses; permanent unlocks survive. */
+    bonusManager.clearSession();
     this.#grid = new LevelGrid();
     this.#grid.init();
     this.#newlyRevealed = new Set();
     saveManager.saveGridState(this.#grid.serialize());
     this.#refresh();
+    this.#refreshArsenal();
   }
 
   // ─── Rendering ──────────────────────────────────────
 
   #render() {
-    const hasMovesLeft = this.#grid.hasAvailableMoves();
-
     let gridHtml = "";
     for (let r = 0; r < GRID_ROWS; r++) {
       for (let c = 0; c < GRID_COLS; c++) {
@@ -164,19 +270,9 @@ export class LevelSelectorScene {
       }
     }
 
-    const noMoves = !hasMovesLeft
-      ? `<div class="pk-map-nomoves">
-           <p>${i18n.t("level_selector.no_moves")}</p>
-           <button class="gt-btn gt-btn--primary" data-action="new-run">
-             <span class="gt-btn-label">${i18n.t("level_selector.new_run")}</span>
-           </button>
-         </div>`
-      : "";
-
     return `
       <div class="pk-map-scroll">
         <div class="pk-map-grid">${gridHtml}</div>
-        ${noMoves}
       </div>
     `;
   }
@@ -204,12 +300,21 @@ export class LevelSelectorScene {
 
     let content = "";
     if (cell.state === CELL_STATES.USED) {
-      content = '<span class="pk-map-cell-used-mark">✓</span>';
+      content = this.#renderCellContent(cell);
     } else if (cell.state === CELL_STATES.HIDDEN) {
-      /* Faint icon hint for shop and ability cells only */
+      /* Reveal flags promote a HIDDEN cell to a full preview. */
+      const reveal =
+        (cell.type === CELL_TYPES.SHOP &&
+          bonusManager.resolve(PARAM_KEYS.REVEAL_SHOPS, false)) ||
+        (cell.type === CELL_TYPES.ABILITY &&
+          bonusManager.resolve(PARAM_KEYS.REVEAL_ABILITIES, false)) ||
+        (cell.type === CELL_TYPES.MYSTERY &&
+          bonusManager.resolve(PARAM_KEYS.REVEAL_MYSTERY, false));
       if (
+        reveal ||
         cell.type === CELL_TYPES.SHOP ||
-        cell.type === CELL_TYPES.ABILITY
+        cell.type === CELL_TYPES.ABILITY ||
+        cell.type === CELL_TYPES.MYSTERY
       ) {
         content = this.#renderCellContent(cell);
       }
@@ -231,12 +336,20 @@ export class LevelSelectorScene {
   /** @param {object} cell */
   #renderCellContent(cell) {
     switch (cell.type) {
-      case CELL_TYPES.LEVEL:
-        return `<span class="pk-map-cell-icon">${cell.levelId}</span>`;
+      case CELL_TYPES.LEVEL: {
+        const obfuscate = !bonusManager.resolve(
+          PARAM_KEYS.REVEAL_LEVEL_NUMBER,
+          true,
+        );
+        const label = obfuscate ? "?" : cell.levelId;
+        return `<span class="pk-map-cell-icon">${label}</span>`;
+      }
       case CELL_TYPES.SHOP:
         return '<span class="pk-map-cell-icon">💰</span>';
       case CELL_TYPES.ABILITY:
         return '<span class="pk-map-cell-icon">⚡</span>';
+      case CELL_TYPES.MYSTERY:
+        return '<span class="pk-map-cell-icon">❓</span>';
       case CELL_TYPES.EMPTY:
         return '<span class="pk-map-cell-icon">·</span>';
       case CELL_TYPES.START:
@@ -288,7 +401,15 @@ export class LevelSelectorScene {
   #refresh() {
     if (!this.#el) return;
     this.#newlyRevealed.clear();
-    this.#el.innerHTML = this.#render();
+    const mapEl = this.#el.querySelector(".pk-map-scroll");
+    if (mapEl) {
+      const tmp = document.createElement("div");
+      tmp.innerHTML = this.#render();
+      mapEl.replaceWith(tmp.firstElementChild);
+    } else {
+      this.#el.innerHTML = this.#render();
+    }
+    this.#updateCellSize();
   }
 
   /**

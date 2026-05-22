@@ -1,78 +1,111 @@
 # Ability System
 
-Abilities are the **unlock layer** of Pawko's rogue-lite progression.
-Buying an ability is a one-time, persistent purchase paid in coins. Once
-owned, an ability stays unlocked across runs and across data resets that
-go through the `Reset all data` action only.
+**Abilities** are permanent unlocks bought with **diamonds** 💎 in the
+Ability scene. They never affect gameplay directly — instead they act as
+**gates** that make new bonuses, ball kinds, and reveal flags available
+in the shop and on the level map.
 
-## What an ability does
+Definitions live in [`src/configs/ability-defs.js`](../src/configs/ability-defs.js)
+and are accessed through `abilityManager`.
 
-An ability does **not** affect gameplay directly. It unlocks one or more
-bonus IDs in the [Shop](BONUS.md). A bonus whose `abilityRequired` is
-not yet unlocked is hidden from the Shop list.
+## Categories
 
-This split keeps the rogue-lite curve readable:
+Abilities are grouped into six categories. Each category is a vertical
+progression: `level 2` requires `level 1`, etc.
 
-- **Ability tree** answers *"what categories of bonus can the player ever
-  buy?"*
-- **Shop** answers *"which of those, this run, can the player afford?"*
+| Category   | Theme                                          |
+| ---------- | ---------------------------------------------- |
+| `BALL`     | Extra starting balls per sublauncher           |
+| `LUKY`     | Score multipliers on pegs                      |
+| `GATE`     | Gate reveal & gate-multiplier upgrades         |
+| `LAUNCHER` | Extra sublaunchers (run-scoped, fed by shop)   |
+| `PINBOARD` | One-shot pinboard score bonuses                |
+| `AVANTAGE` | Quality-of-life reveals (shops, mystery, boss) |
 
-## Ability definition shape
+## Diamond cost
+
+Cost grows exponentially with level inside a category:
+
+$$ \text{cost}(level) = 2^{level-1} $$
+
+| Level | Cost (💎) |
+| ----- | --------- |
+| 1     | 1         |
+| 2     | 2         |
+| 3     | 4         |
+| 4     | 8         |
+| 5     | 16        |
+| 6     | 32        |
+
+Use the helper `diamondCost(level)` rather than hard-coding.
+
+## Catalogue
+
+| id              | Cat      | Lvl | Unlocks (bonus id)                                     |
+| --------------- | -------- | --- | ------------------------------------------------------ |
+| `ball_1`        | BALL     | 1   | `perm_extra_ball_1`                                    |
+| `ball_2`        | BALL     | 2   | `perm_extra_ball_2`, `session_extra_black_ball_one`    |
+| `ball_3`        | BALL     | 3   | `perm_extra_ball_3`, `session_extra_black_ball_all`    |
+| `luky_1`        | LUKY     | 1   | `session_peg_score_x` (×3 / 3 lvls)                    |
+| `luky_2`        | LUKY     | 2   | stronger peg score modifiers                           |
+| `gate_1`        | GATE     | 1   | `session_gate_malus_reduce`                            |
+| `gate_2`        | GATE     | 2   | `session_gate_x_boost` (×1.5 on every gate multiplier) |
+| `gate_3`        | GATE     | 3   | `session_gate_x_double`                                |
+| `launcher_1`    | LAUNCHER | 1   | nothing (gate only)                                    |
+| `launcher_2`    | LAUNCHER | 2   | shop now lists `session_launcher_4` (+1 sublauncher)   |
+| `launcher_3..6` | LAUNCHER | 3-6 | unlock `session_launcher_5..9` progressively           |
+| `pinboard_2`    | PINBOARD | 2   | shop now lists +50% next-pinboard score bonus          |
+| `pinboard_3`    | PINBOARD | 3   | +100% next-pinboard score bonus                        |
+| `avantage_1`    | AVANTAGE | 1   | `perm_reveal_shops`                                    |
+| `avantage_2`    | AVANTAGE | 2   | `perm_reveal_abilities`                                |
+| `avantage_3`    | AVANTAGE | 3   | `perm_reveal_mystery`, `perm_reveal_paths`             |
+| `avantage_4`    | AVANTAGE | 4   | `perm_reveal_boss`                                     |
+
+## Anatomy of a def
 
 ```js
 {
-  id: 'start_ball_up',
-  cost: 80,                       // coins to unlock
-  unlocks: ['extra_start_ball'],  // bonus IDs gated by this ability
+  id: "ball_2",
+  category: ABILITY_CATEGORIES.BALL,
+  level: 2,
+  cost: diamondCost(2),   // 2
+  unlocks: ["perm_extra_ball_2", "session_extra_black_ball_one"],
 }
 ```
 
-Locale strings for an ability live under:
+`abilityManager.canBuyBonus(bonusId)` walks the catalogue and returns
+`true` if any unlocked ability lists `bonusId` in its `unlocks` array
+(or if no ability mentions the bonus at all). The shop card uses this
+to lock-out ungated buttons.
 
-- `ability.<id>` — short name shown in the list
-- `ability.<id>.desc` — one-sentence description shown below the name
-
-## Ability list (ships in v0.1)
-
-| ID              | Cost | Unlocks bonuses    |
-| --------------- | ---- | ------------------ |
-| `start_ball_up` | 80   | `extra_start_ball` |
-| `magnet`        | 150  | `shop_magnet`      |
-| `extra_launch`  | 70   | `bonus_launcher`   |
-| `score_boost`   | 60   | `score_x2`         |
-
-The mapping from ability → bonuses is one-to-many on purpose: a future
-`magnet` upgrade could unlock both `shop_magnet` and a stronger
-`shop_magnet_xl`.
-
-## Persistence
-
-`STORAGE_KEYS.ABILITIES` stores `{ unlocked: string[] }`. The
-`abilityManager` is the only writer — never write to this key directly.
-
-## Public API
+## Manager API
 
 ```js
-abilityManager.isUnlocked(id)   // boolean
-abilityManager.unlock(id)       // persists, emits 'change'
-abilityManager.getUnlocked()    // string[] — owned ability IDs
-abilityManager.getAll()         // ABILITY_DEFS (pure data)
-abilityManager.canBuyBonus(id)  // does any unlocked ability gate this bonus?
-abilityManager.reset()          // clears every unlock (used by reset-all)
-abilityManager.on('change', cb) // subscribe
+abilityManager.getAll();           // ABILITY_DEFS
+abilityManager.getUnlocked();      // [ids]
+abilityManager.isUnlocked(id);     // boolean
+abilityManager.unlock(id);         // boolean; spends nothing — caller pays
+abilityManager.canBuyBonus(bonusId);
+abilityManager.reset();
+abilityManager.on("change", cb);
 ```
 
-## Ability scene
+The Ability scene is the only place that wires the payment:
 
-Reachable from the **Ability** button on the [Level Selector](../src/scenes/level-selector-scene.js).
+```js
+if (diamondManager.spend(def.cost)) abilityManager.unlock(def.id);
+```
 
-- Each row shows the ability name, description, cost, and an unlock
-  button.
-- Owned abilities are checked and disabled.
-- Locked abilities the player cannot afford are dimmed.
-- A coin balance is shown at the top.
+`saveManager.resetAll()` also wipes ability unlocks and diamonds.
 
-## Dev shortcut
+## Adding a new ability
 
-The dev admin panel (DEV builds only) has an **Unlock all abilities**
-button to fast-forward the rogue-lite tree while testing.
+1. **Add to `ABILITY_DEFS`** with the right category and level. Costs
+   come from `diamondCost(level)`.
+2. **Wire the unlocks**: if it gates a new bonus, list its id in
+   `unlocks`. If it just enables a feature (e.g. a reveal flag), the
+   matching `perm_reveal_*` bonus must exist in `PERMANENT_BONUSES`.
+3. **Localize**: add `ability.<id>` and `ability.<id>.desc` to both
+   `en.js` and `fr.js`. Category headers live under
+   `ability.category.<cat>`.
+4. **Test** in `tests/managers/ability-manager.test.js`.

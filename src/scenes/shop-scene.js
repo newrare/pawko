@@ -4,7 +4,7 @@ import { abilityManager } from "../managers/ability-manager.js";
 import { bonusManager } from "../managers/bonus-manager.js";
 import { ListenerBag } from "../utils/listener-bag.js";
 import { BackgroundAnimator } from "../utils/background-animator.js";
-import { BONUS_TYPES } from "../configs/bonus-defs.js";
+import { BONUS_TYPES, PARAM_KEYS } from "../configs/bonus-defs.js";
 import { SHOP_SLOT_COUNT, SWIPE_THRESHOLD } from "../configs/constants.js";
 import { LevelSelectorScene } from "./level-selector-scene.js";
 
@@ -219,7 +219,8 @@ export class ShopScene {
     const nameKey = isPermanent
       ? `bonus.permanent.${b.id}`
       : `bonus.session.${b.id}`;
-    const priceLbl = `<img src="images/coin.png" class="pk-coin-icon" alt="" /> ${b.cost}`;
+    const displayCost = this.#priceFor(b.cost);
+    const priceLbl = `<img src="images/coin.png" class="pk-coin-icon" alt="" /> ${displayCost}`;
     const rarityClass = `pk-shop-rarity-${rarity}`;
     const isSelected = this.#selectedIds.has(b.id);
 
@@ -258,10 +259,12 @@ export class ShopScene {
     // Full card
     const descKey = `${nameKey}.desc`;
     const owned = isPermanent && bonusManager.isPermanentUnlocked(b.id);
-    const canAfford = currencyManager.get() >= b.cost;
+    const canAfford = currencyManager.get() >= displayCost;
     const durText = isPermanent
       ? i18n.t("shop.duration_permanent")
-      : i18n.t("shop.duration_levels", { n: b.durationLevels });
+      : b.durationLevels == null
+        ? i18n.t("shop.duration_run")
+        : i18n.t("shop.duration_levels", { n: b.durationLevels });
 
     const cls = [
       "pk-shop-card-full",
@@ -369,12 +372,25 @@ export class ShopScene {
     if (coinEl) coinEl.textContent = String(balance);
   }
 
+  /**
+   * Resolve the shop discount (clamped to 0–0.9) and apply it to a cost.
+   * @param {number} baseCost
+   * @returns {number}
+   */
+  #priceFor(baseCost) {
+    const discount = Math.min(
+      0.9,
+      Math.max(0, bonusManager.resolve(PARAM_KEYS.SHOP_DISCOUNT, 0)),
+    );
+    return Math.ceil(baseCost * (1 - discount));
+  }
+
   #selectedCost() {
     let total = 0;
     const all = bonusManager.getAll();
     for (const id of this.#selectedIds) {
       const def = all.find((b) => b.id === id);
-      if (def) total += def.cost;
+      if (def) total += this.#priceFor(def.cost);
     }
     return total;
   }
@@ -415,9 +431,10 @@ export class ShopScene {
     if (!def) return;
     const owned = def.type === BONUS_TYPES.PERMANENT && bonusManager.isPermanentUnlocked(def.id);
     if (owned) return;
-    if (currencyManager.get() < def.cost) return;
+    const cost = this.#priceFor(def.cost);
+    if (currencyManager.get() < cost) return;
     if (!abilityManager.canBuyBonus(def.id)) return;
-    if (!currencyManager.spend(def.cost)) return;
+    if (!currencyManager.spend(cost)) return;
     if (def.type === BONUS_TYPES.PERMANENT) {
       bonusManager.unlockPermanent(def.id);
     } else {
@@ -432,7 +449,7 @@ export class ShopScene {
     const defs = Array.from(this.#selectedIds)
       .map((id) => all.find((b) => b.id === id))
       .filter(Boolean);
-    const totalCost = defs.reduce((sum, def) => sum + def.cost, 0);
+    const totalCost = defs.reduce((sum, def) => sum + this.#priceFor(def.cost), 0);
     if (currencyManager.get() < totalCost) return;
     for (const def of defs) {
       if (!abilityManager.canBuyBonus(def.id)) return;

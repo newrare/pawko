@@ -1,5 +1,4 @@
 import { ListenerBag } from "../utils/listener-bag.js";
-import { ActiveListModal } from "./active-list-modal.js";
 import { RankingModal } from "./ranking-modal.js";
 import { SaveLoadModal } from "./save-load-modal.js";
 import { OptionsModal } from "./options-modal.js";
@@ -8,7 +7,7 @@ import { OptionsModal } from "./options-modal.js";
  * HudBar — persistent floating buttons visible on every scene inside the safe zone.
  *
  * Layout:
- *   - top-right: menu-list (active bonuses/abilities)
+ *   - top-right: menu-level (go to level selector) — hidden when showHome is false
  *   - bottom-left: menu-ranking (rankings)
  *   - bottom-right: menu-folder (save/load) + menu-setting (options)
  *
@@ -26,14 +25,21 @@ export class HudBar {
   /** @type {import('./modal-base.js').BaseModal | null} */
   #openModal = null;
 
-  /** @param {HTMLElement} root */
-  mount(root) {
+  /** @type {(() => void) | null} */
+  #onHomeClick = null;
+
+  /**
+   * @param {HTMLElement} root
+   * @param {{ showHome?: boolean, onHomeClick?: () => void }} [options]
+   */
+  mount(root, { showHome = true, onHomeClick = null } = {}) {
+    this.#onHomeClick = onHomeClick;
     const el = document.createElement("div");
     el.className = "pk-hud-bar";
     el.innerHTML = `
-      <button class="pk-hud-btn pk-hud-btn--top-right gt-btn gt-clickable" data-action="active-list" aria-label="Active bonuses">
-        <img src="images/menu-list.svg" alt="" class="pk-hud-icon" />
-      </button>
+      ${showHome ? `<button class="pk-hud-btn pk-hud-btn--top-right gt-btn gt-clickable" data-action="level-home" aria-label="Level selector">
+        <img src="images/menu-level.svg" alt="" class="pk-hud-icon" />
+      </button>` : ""}
       <button class="pk-hud-btn pk-hud-btn--bottom-left gt-btn gt-clickable" data-action="ranking" aria-label="Rankings">
         <img src="images/menu-ranking.svg" alt="" class="pk-hud-icon" />
       </button>
@@ -68,8 +74,8 @@ export class HudBar {
     e.stopPropagation();
     const action = /** @type {HTMLElement} */ (btn).dataset.action;
     switch (action) {
-      case "active-list":
-        this.#openUniqueModal(ActiveListModal);
+      case "level-home":
+        this.#onHomeClick?.();
         break;
       case "ranking":
         this.#openUniqueModal(RankingModal);

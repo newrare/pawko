@@ -1,8 +1,19 @@
 import { Peg } from "./peg-classic.js";
+import { bonusManager } from "../managers/bonus-manager.js";
+import {
+  SESSION_BONUSES,
+  SESSION_MALUSES,
+  BONUS_CATEGORIES,
+} from "../configs/bonus-defs.js";
 
 /**
- * MysteryPeg — gives a random bonus or malus when destroyed.
- * The outcome is unknown until the peg breaks.
+ * MysteryPeg — when destroyed, rolls a random session entry (70% bonus,
+ * 30% malus) and immediately activates it via `bonusManager`. The
+ * resulting popup tells the player what they got.
+ *
+ * The activation goes through the controller's destroy-reward channel
+ * so the standard peg rescue ring still lets the player cancel the
+ * outcome by tapping in time.
  */
 export class MysteryPeg extends Peg {
   constructor(opts = {}) {
@@ -19,23 +30,20 @@ export class MysteryPeg extends Peg {
     return 0;
   }
 
-  /**
-   * On destruction, roll a random effect — can be positive or negative.
-   * The controller interprets the directive.
-   * @returns {object}
-   */
+  /** @returns {object | null} */
   onDestroyed(_ball) {
-    const effects = [
-      // Bonuses
-      { coins: 15, popText: "+15 🪙", popClass: "pk-popup pk-popup--mystery-good" },
-      { diamonds: 2, popText: "+2 💎", popClass: "pk-popup pk-popup--mystery-good" },
-      { extraBalls: 1, popText: "+1 🔵", popClass: "pk-popup pk-popup--mystery-good" },
-      { scoreMultiplier: 2, popText: "SCORE ×2!", popClass: "pk-popup pk-popup--mystery-good" },
-      // Maluses
-      { scorePenalty: 0.5, popText: "SCORE ÷2!", popClass: "pk-popup pk-popup--mystery-bad" },
-      { freezeAll: true, popText: "❄️ FREEZE!", popClass: "pk-popup pk-popup--mystery-bad" },
-      { speedUp: true, popText: "⚡ SPEED!", popClass: "pk-popup pk-popup--mystery-bad" },
-    ];
-    return effects[Math.floor(Math.random() * effects.length)];
+    const rollMalus = Math.random() < 0.3;
+    const pool = rollMalus ? SESSION_MALUSES : SESSION_BONUSES;
+    if (!pool.length) return null;
+    const def = pool[Math.floor(Math.random() * pool.length)];
+    const isMalus = def.category === BONUS_CATEGORIES.MALUS;
+    return {
+      activate: def.id,
+      popText: `${def.icon} ${isMalus ? "!" : "+"}`,
+      popClass: `pk-popup pk-popup--mystery-${isMalus ? "bad" : "good"}`,
+    };
   }
 }
+
+/* Re-export so the controller can apply activation in #applyDestroyReward. */
+export { bonusManager };

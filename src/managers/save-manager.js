@@ -115,6 +115,7 @@ class SaveManager {
     localStorage.removeItem(STORAGE_KEYS.RANKINGS);
     localStorage.removeItem(STORAGE_KEYS.LEVEL_PROGRESS);
     localStorage.removeItem(STORAGE_KEYS.CURRENCY);
+    localStorage.removeItem(STORAGE_KEYS.DIAMONDS);
     localStorage.removeItem(STORAGE_KEYS.BONUSES);
     localStorage.removeItem(STORAGE_KEYS.ABILITIES);
     localStorage.removeItem(STORAGE_KEYS.GRID_STATE);

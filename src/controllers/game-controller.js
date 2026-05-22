@@ -5,6 +5,7 @@ import { i18n } from "../managers/i18n-manager.js";
 import { saveManager } from "../managers/save-manager.js";
 import { audioManager } from "../managers/audio-manager.js";
 import { currencyManager } from "../managers/currency-manager.js";
+import { diamondManager } from "../managers/diamond-manager.js";
 import { bonusManager } from "../managers/bonus-manager.js";
 import { gameEvents } from "../utils/event-emitter.js";
 import { pointSegmentDistance } from "../utils/math.js";
@@ -21,7 +22,7 @@ import {
   BALL_EFFECTS,
   PEG_SAVE,
 } from "../configs/constants.js";
-import { PARAM_KEYS } from "../configs/bonus-defs.js";
+import { PARAM_KEYS, DIRECTIVE_ACTIONS } from "../configs/bonus-defs.js";
 import { LevelSelectorScene } from "../scenes/level-selector-scene.js";
 import { PegSaveSystem } from "../utils/peg-save-system.js";
 import { createPeg, PEG_TYPES } from "../entities/peg-factory.js";
@@ -145,6 +146,7 @@ export class GameController {
       this.#loadAllLayers();
     }
     this.#spawnHeldBalls();
+    this.#applyRoundDirectives();
     this.#refreshSublaunches();
     this.#updateScoreGauge();
     this.#renderHudBonuses();
@@ -155,6 +157,13 @@ export class GameController {
       gameEvents.on("dev:spawnBall", (kind = BALL_KINDS.CLASSIC) =>
         this.#devSpawnBall(kind),
       ),
+    );
+
+    /* Diamond pegs emit a diamonds event; route into the persistent
+       diamond wallet here so the rest of the code only deals with one
+       channel. */
+    this.#bag.add(
+      gameEvents.on("diamonds", (n) => diamondManager.add(n)),
     );
   }
 
@@ -712,6 +721,16 @@ export class GameController {
     this.#updateScoreGauge();
     audioManager.playSfx("click");
 
+    /* Bumper-releases-glass session bonus: classic bumper contact spawns
+       a glass ball at the bumper position. One ball per contact. */
+    if (
+      peg.type === "bumper" &&
+      (ball.kind ?? "classic") === "classic" &&
+      bonusManager.resolve(PARAM_KEYS.BUMPER_RELEASES_GLASS, false)
+    ) {
+      this.#spawnActiveBall("glass", peg.x, peg.y - PLINKO.BALL_RADIUS * 2);
+    }
+
     /* 6) Peg-side bookkeeping: ice decays one charge per scored contact
           so the contact itself awards no points but still thaws the peg. */
     if (peg.onAfterScored()) this.#updatePegEl(peg);
@@ -810,11 +829,21 @@ export class GameController {
         this.#balls.get(ball.id)?.el ?? null,
       );
     } else {
+      /* Gate-multiplier bonuses: x_boost scales every multiplier by 1.5,
+         x_double doubles every multiplier. They stack. */
+      const xMult =
+        bonusManager.resolve(PARAM_KEYS.GATE_X_MULTIPLIER, 1) *
+        (bonusManager.resolve(PARAM_KEYS.GATE_X_DOUBLE, false) ? 2 : 1);
+      const malusReduction = bonusManager.resolve(
+        PARAM_KEYS.GATE_MALUS_REDUCTION,
+        1,
+      );
       let points = 0;
-      if (gate === "x2") points = ball.score * 2;
-      else if (gate === "x10") points = ball.score * 10;
-      else if (gate === "x5") points = ball.score * 5;
-      else if (gate === "malus") points = -PLINKO.MALUS_POINTS;
+      if (gate === "x2") points = Math.round(ball.score * 2 * xMult);
+      else if (gate === "x10") points = Math.round(ball.score * 10 * xMult);
+      else if (gate === "x5") points = Math.round(ball.score * 5 * xMult);
+      else if (gate === "malus")
+        points = -Math.round(PLINKO.MALUS_POINTS * malusReduction);
       else if (gate === "recycle") points = ball.score;
 
       this.#levelScore = Math.max(0, this.#levelScore + points);
@@ -1151,6 +1180,7 @@ export class GameController {
     if (reward.scoreMultiplier) gameEvents.emit("score-multiplier", reward.scoreMultiplier);
     if (reward.scorePenalty) gameEvents.emit("score-penalty", reward.scorePenalty);
     if (reward.freezeAll) this.#freezeAllPegs();
+    if (reward.activate) bonusManager.activateSession(reward.activate);
     if (reward.popText) {
       this.#popText(reward.popText, peg.x, peg.y, reward.popClass ?? "pk-popup");
     }
@@ -1260,6 +1290,17 @@ export class GameController {
       this.#updateScoreGauge();
     }
 
+    /* Apply any one-round score modifier (e.g. malus_score_reduce_next).
+       Resolved last so it taxes the final figure. */
+    const scoreMult = bonusManager.resolve(
+      PARAM_KEYS.NEXT_PINBOARD_SCORE_MULT,
+      1,
+    );
+    if (scoreMult !== 1) {
+      this.#levelScore = Math.round(this.#levelScore * scoreMult);
+      this.#updateScoreGauge();
+    }
+
     const victory = this.#levelScore >= this.#targetScore;
     this.#bag.timeout(() => this.#endRound({ victory }), 2000);
     this.#ended = true;
@@ -1329,14 +1370,11 @@ export class GameController {
     const el = this.#safeEl?.querySelector('[data-role="hud-bonuses"]');
     if (!el) return;
     const active = bonusManager.getActiveSession();
-    const icons = {
-      bonus_launcher: "🚀",
-      score_x2: "×2",
-    };
     el.innerHTML = active
-      .map((b) => {
-        const icon = icons[b.id] ?? "⭐";
-        return `<span class="pk-hud-bonus" title="${b.id}">${icon}<span class="pk-hud-bonus-dur">${b.remaining}</span></span>`;
+      .map(({ id, remaining, def }) => {
+        const dur = Number.isFinite(remaining) ? remaining : "∞";
+        const isMalus = def.category === "malus";
+        return `<span class="pk-hud-bonus${isMalus ? " pk-hud-bonus--malus" : ""}" title="${id}">${def.icon}<span class="pk-hud-bonus-dur">${dur}</span></span>`;
       })
       .join("");
   }
@@ -1563,6 +1601,124 @@ export class GameController {
       y: -PLINKO.BALL_RADIUS * 2,
       vx: (Math.random() - 0.5) * 60,
       vy: 0,
+    });
+    ball.state = "active";
+    const el = this.#createBallEl(ball);
+    const oy = this.#pinboardOffsetTop;
+    el.style.transform = `translate(${ball.x}px, ${ball.y + oy}px)`;
+    this.#ballLayerEl.appendChild(el);
+    this.#balls.set(ball.id, { ball, el });
+    this.#updateBallEl(ball);
+    this.#startLoop();
+  }
+
+  /**
+   * Drain the bonus-manager directive queue at the start of a round and
+   * apply each action against the held-ball pool. Called once from
+   * start().
+   */
+  #applyRoundDirectives() {
+    const directives = bonusManager.consumeDirectives();
+    if (directives.length === 0) return;
+    const subCount = this.#sublaunchEls.length;
+    if (subCount === 0) return;
+
+    for (const d of directives) {
+      const p = d.payload ?? {};
+      switch (d.action) {
+        case DIRECTIVE_ACTIONS.ADD_BALL: {
+          const kind = p.kind ?? BALL_KINDS.CLASSIC;
+          const count = p.count ?? 1;
+          const targets =
+            p.target === "all"
+              ? Array.from({ length: subCount }, (_, i) => i)
+              : [Math.floor(Math.random() * subCount)];
+          for (const idx of targets) {
+            for (let i = 0; i < count; i++) {
+              this.#spawnHeldBall(idx, kind);
+            }
+          }
+          break;
+        }
+        case DIRECTIVE_ACTIONS.REMOVE_BALL: {
+          const kind = p.kind;
+          let n = p.count ?? 1;
+          for (const [id, entry] of [...this.#balls]) {
+            if (n <= 0) break;
+            if (
+              entry.ball.state === "held" &&
+              (entry.ball.kind ?? "classic") === kind
+            ) {
+              entry.el.remove();
+              this.#balls.delete(id);
+              n--;
+            }
+          }
+          break;
+        }
+        case DIRECTIVE_ACTIONS.TRANSFORM_BALL: {
+          const from = p.from ?? "classic";
+          const to = p.to ?? "glass";
+          for (let i = 0; i < subCount; i++) {
+            for (const [id, entry] of this.#balls) {
+              if (
+                entry.ball.state === "held" &&
+                entry.ball.sublaunchIdx === i &&
+                (entry.ball.kind ?? "classic") === from
+              ) {
+                const { x, y } = entry.ball;
+                entry.el.remove();
+                this.#balls.delete(id);
+                this.#spawnHeldBall(i, to, { x, y });
+                break;
+              }
+            }
+          }
+          break;
+        }
+      }
+    }
+    this.#updateInfoBar();
+  }
+
+  /**
+   * Spawn a held ball of an arbitrary kind into a given sublauncher.
+   * @param {number} subIdx
+   * @param {string} kind
+   * @param {{ x?: number, y?: number }} [opts]
+   */
+  #spawnHeldBall(subIdx, kind, opts = {}) {
+    if (!this.#ballLayerEl) return;
+    this.#computeLaunchWalls();
+    const box = this.#launchWalls[subIdx];
+    if (!box) return;
+    const cx = (box.left + box.right) / 2;
+    const boxW = box.right - box.left;
+    const x = opts.x ?? cx + (Math.random() - 0.5) * (boxW * 0.5);
+    const y = opts.y ?? box.top + 4;
+    const ball = createBall(kind, { x, y, vx: 0, vy: 0 });
+    ball.state = "held";
+    ball.sublaunchIdx = subIdx;
+    const el = this.#createBallEl(ball);
+    const oy = this.#pinboardOffsetTop;
+    el.style.transform = `translate(${ball.x}px, ${ball.y + oy}px)`;
+    this.#ballLayerEl.appendChild(el);
+    this.#balls.set(ball.id, { ball, el });
+  }
+
+  /**
+   * Spawn an already-active ball mid-flight (used by bumper-releases-glass).
+   * @param {string} kind
+   * @param {number} x
+   * @param {number} y
+   */
+  #spawnActiveBall(kind, x, y) {
+    if (!this.#ballLayerEl) return;
+    const ball = createBall(kind, {
+      x,
+      y,
+      vx: (Math.random() - 0.5) * 80,
+      vy: -40,
     });
     ball.state = "active";
     const el = this.#createBallEl(ball);

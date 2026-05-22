@@ -26,7 +26,7 @@ describe("HudBar", () => {
     const actions = [...root.querySelectorAll("[data-action]")].map(
       (b) => b.dataset.action,
     );
-    expect(actions).toContain("active-list");
+    expect(actions).toContain("level-home");
     expect(actions).toContain("ranking");
     expect(actions).toContain("save-load");
     expect(actions).toContain("settings");
@@ -36,7 +36,7 @@ describe("HudBar", () => {
     hud.mount(root);
     const imgs = [...root.querySelectorAll(".pk-hud-icon")];
     const srcs = imgs.map((img) => img.getAttribute("src"));
-    expect(srcs).toContain("images/menu-list.svg");
+    expect(srcs).toContain("images/menu-level.svg");
     expect(srcs).toContain("images/menu-ranking.svg");
     expect(srcs).toContain("images/menu-folder.svg");
     expect(srcs).toContain("images/menu-setting.svg");
@@ -56,11 +56,11 @@ describe("HudBar", () => {
     expect(root.querySelector(".pk-hud-bar")).toBeNull();
   });
 
-  it("top-right button has active-list action", () => {
+  it("top-right button has level-home action", () => {
     hud.mount(root);
     const topRight = root.querySelector(".pk-hud-btn--top-right");
     expect(topRight).not.toBeNull();
-    expect(topRight.dataset.action).toBe("active-list");
+    expect(topRight.dataset.action).toBe("level-home");
   });
 
   it("bottom-left button has ranking action", () => {
@@ -78,5 +78,22 @@ describe("HudBar", () => {
       (b) => b.dataset.action,
     );
     expect(actions).toEqual(["save-load", "settings"]);
+  });
+
+  it("showHome: false hides the top-right level-home button", () => {
+    hud.mount(root, { showHome: false });
+    expect(root.querySelector(".pk-hud-btn--top-right")).toBeNull();
+    const actions = [...root.querySelectorAll("[data-action]")].map(
+      (b) => b.dataset.action,
+    );
+    expect(actions).not.toContain("level-home");
+  });
+
+  it("onHomeClick callback fires when level-home button is clicked", () => {
+    let clicked = false;
+    hud.mount(root, { showHome: true, onHomeClick: () => { clicked = true; } });
+    const btn = root.querySelector("[data-action='level-home']");
+    btn.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true }));
+    expect(clicked).toBe(true);
   });
 });

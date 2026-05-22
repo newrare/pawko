@@ -2,24 +2,30 @@ import { STORAGE_KEYS } from "../configs/constants.js";
 import { EventEmitter } from "../utils/event-emitter.js";
 import {
   BONUS_TYPES,
+  BONUS_CATEGORIES,
   PERMANENT_BONUSES,
   SESSION_BONUSES,
-  ALL_BONUSES,
+  SESSION_MALUSES,
   findBonus,
 } from "../configs/bonus-defs.js";
 
 /**
- * BonusManager — owns two pieces of state:
+ * BonusManager — owns four pieces of state:
  *
  *  1. **unlocked** (persistent): permanent bonuses the player owns.
  *     Persisted under `STORAGE_KEYS.BONUSES`.
- *  2. **active session** (transient): session bonuses currently running,
- *     each with a `remaining` level counter. Cleared on `clearSession()`.
+ *  2. **session** (transient): session bonuses *and* maluses currently
+ *     active. Each entry has a `remaining` counter expressed in levels;
+ *     `Infinity` means run-scoped (only cleared on `clearSession()` /
+ *     `resetAll()` / a new run).
+ *  3. **directive queue** (transient): one-shot actions queued at the
+ *     moment a session entry is activated. Drained by the game
+ *     controller at the start of the next round via
+ *     `consumeDirectives()`.
  *
- * `resolve(paramKey, baseValue)` walks every active modifier (permanent
- * unlocked + session active) and applies them in `add → multiply → set`
- * order. The game controller calls this at the few sites that consume
- * gameplay tuning instead of reading `PLINKO.*` directly.
+ * `resolve(paramKey, baseValue)` walks every active modifier
+ * (permanent + session bonus + session malus) and applies them in
+ * `add → multiply → set` order.
  *
  * Emits `change` on every state mutation.
  */
@@ -27,8 +33,11 @@ class BonusManager extends EventEmitter {
   /** @type {Set<string>} owned permanent bonus IDs */
   #unlocked = new Set();
 
-  /** @type {Map<string, number>} session bonus id -> remaining levels */
+  /** @type {Map<string, number>} session id → remaining levels (Infinity = run-scoped) */
   #session = new Map();
+
+  /** @type {import('../configs/bonus-defs.js').BonusDirective[]} */
+  #directives = [];
 
   constructor() {
     super();
@@ -61,20 +70,36 @@ class BonusManager extends EventEmitter {
     return [...this.#unlocked];
   }
 
-  // ─── Session bonuses ───────────────────────────────────────
+  // ─── Session entries (bonuses + maluses) ───────────────────
 
   /**
-   * Activate a session bonus with its full `durationLevels`. If already
-   * active, refreshes the duration.
+   * Activate a session entry — bonus OR malus. `durationLevels == null`
+   * is stored as Infinity (run-scoped). Refreshes the duration when
+   * already active. Queues every directive carried by the def.
    * @param {string} id
    * @returns {boolean}
    */
   activateSession(id) {
     const def = findBonus(id);
     if (!def || def.type !== BONUS_TYPES.SESSION) return false;
-    this.#session.set(id, def.durationLevels ?? 1);
+    const dur = def.durationLevels == null ? Infinity : def.durationLevels;
+    this.#session.set(id, dur);
+    if (Array.isArray(def.directives)) {
+      for (const d of def.directives) this.#directives.push(d);
+    }
     this.emit("change");
     return true;
+  }
+
+  /**
+   * Convenience wrapper for maluses. Same semantics as activateSession()
+   * but rejects ids that are not maluses.
+   * @param {string} id
+   */
+  activateMalus(id) {
+    const def = findBonus(id);
+    if (!def || def.category !== BONUS_CATEGORIES.MALUS) return false;
+    return this.activateSession(id);
   }
 
   /** @param {string} id */
@@ -95,20 +120,31 @@ class BonusManager extends EventEmitter {
   }
 
   /**
-   * Tick session counters down by one level. Calls each expiring bonus's
-   * `onExpire(ctx)` callback before removing it.
-   * @param {object} [ctx] context passed to onExpire callbacks
+   * Drain and return every pending one-shot directive. Called once per
+   * round by the game controller.
+   * @returns {import('../configs/bonus-defs.js').BonusDirective[]}
+   */
+  consumeDirectives() {
+    if (this.#directives.length === 0) return [];
+    const out = this.#directives;
+    this.#directives = [];
+    return out;
+  }
+
+  /**
+   * Tick session counters down by one level. Entries with Infinity
+   * remaining (run-scoped) are skipped. Expiring entries' `onExpire`
+   * callbacks run before they are removed.
+   * @param {object} [ctx]
    */
   onLevelUp(ctx = {}) {
     if (this.#session.size === 0) return;
     const expired = [];
     for (const [id, remaining] of this.#session) {
+      if (!Number.isFinite(remaining)) continue;
       const next = remaining - 1;
-      if (next <= 0) {
-        expired.push(id);
-      } else {
-        this.#session.set(id, next);
-      }
+      if (next <= 0) expired.push(id);
+      else this.#session.set(id, next);
     }
     for (const id of expired) {
       this.#session.delete(id);
@@ -118,9 +154,11 @@ class BonusManager extends EventEmitter {
     this.emit("change");
   }
 
+  /** Clears every session entry + pending directive (used on game over / new run). */
   clearSession() {
-    if (this.#session.size === 0) return;
+    if (this.#session.size === 0 && this.#directives.length === 0) return;
     this.#session.clear();
+    this.#directives = [];
     this.emit("change");
   }
 
@@ -154,14 +192,10 @@ class BonusManager extends EventEmitter {
       for (const v of muls) n *= Number(v);
       value = /** @type {T} */ (n);
     }
-    if (sets.length) {
-      // Last 'set' wins, matching the order the bonuses are iterated.
-      value = /** @type {T} */ (sets[sets.length - 1]);
-    }
+    if (sets.length) value = /** @type {T} */ (sets[sets.length - 1]);
     return value;
   }
 
-  /** Iterates every currently active bonus def (permanent + session). */
   *#activeDefs() {
     for (const id of this.#unlocked) {
       const def = findBonus(id);
@@ -183,24 +217,81 @@ class BonusManager extends EventEmitter {
     return SESSION_BONUSES;
   }
 
+  getAllMaluses() {
+    return SESSION_MALUSES;
+  }
+
+  /** Shop catalogue — maluses are never sold. */
   getAll() {
-    return ALL_BONUSES;
+    return [...PERMANENT_BONUSES, ...SESSION_BONUSES];
   }
 
   // ─── Reset ─────────────────────────────────────────────────
 
-  /** Wipes everything (unlocked + session). Used by `Reset all data`. */
   resetAll() {
     this.#unlocked.clear();
     this.#session.clear();
+    this.#directives = [];
     this.#save();
     this.emit("change");
+  }
+
+  /**
+   * Remove every owned permanent bonus. Leaves session entries
+   * untouched.
+   * @returns {boolean} true if at least one entry was cleared
+   */
+  clearPermanent() {
+    if (this.#unlocked.size === 0) return false;
+    this.#unlocked.clear();
+    this.#save();
+    this.emit("change");
+    return true;
+  }
+
+  /**
+   * Remove every active session entry whose category matches
+   * `category`. Pending directives are left alone — they were already
+   * queued for the next round and may have come from entries we are
+   * keeping.
+   * @param {'bonus' | 'malus'} category
+   * @returns {boolean} true if at least one entry was cleared
+   */
+  #clearSessionByCategory(category) {
+    const toDelete = [];
+    for (const id of this.#session.keys()) {
+      const def = findBonus(id);
+      if (def?.category === category) toDelete.push(id);
+    }
+    if (toDelete.length === 0) return false;
+    for (const id of toDelete) this.#session.delete(id);
+    this.emit("change");
+    return true;
+  }
+
+  /**
+   * Remove every active session **bonus** (category === 'bonus').
+   * Maluses stay in place.
+   * @returns {boolean} true if at least one entry was cleared
+   */
+  clearSessionBonuses() {
+    return this.#clearSessionByCategory(BONUS_CATEGORIES.BONUS);
+  }
+
+  /**
+   * Remove every active session **malus** (category === 'malus').
+   * Bonuses stay in place.
+   * @returns {boolean} true if at least one entry was cleared
+   */
+  clearSessionMaluses() {
+    return this.#clearSessionByCategory(BONUS_CATEGORIES.MALUS);
   }
 
   /** @internal — for tests */
   _resetForTests() {
     this.#unlocked.clear();
     this.#session.clear();
+    this.#directives = [];
     localStorage.removeItem(STORAGE_KEYS.BONUSES);
     this.clear();
   }

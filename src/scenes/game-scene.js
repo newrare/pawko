@@ -9,6 +9,9 @@ import { GameController } from "../controllers/game-controller.js";
  * controller or a new manager instead.
  */
 export class GameScene {
+  /** Hide the level-home HUD button while in the game (pinboard) scene. */
+  static hideHudHome = true;
+
   /** @type {import('./scene-router.js').SceneRouter} */
   #router;
 

@@ -8,6 +8,8 @@ import { LevelSelectorScene } from "./level-selector-scene.js";
  * to the level selector.
  */
 export class TitleScene {
+  /** No HUD buttons on the title screen. */
+  static hideHud = true;
   /** @type {import('./scene-router.js').SceneRouter} */
   #router;
 

@@ -100,8 +100,8 @@
 
 .pk-info-drawer-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 4px 12px;
+  grid-template-columns: 1fr;
+  gap: 4px;
 }
 
 .pk-info-drawer-row {
@@ -177,18 +177,78 @@
   padding: 4px 0;
 }
 
+/* --- Session / permanent drawer entries --- */
+
+.pk-info-drawer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.pk-info-drawer-subtitle {
+  font-size: 0.58rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gt-color-text-dim);
+  margin: 4px 0 2px;
+}
+
+.pk-info-entry {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(212, 175, 55, 0.12);
+  font-size: 0.7rem;
+}
+
+.pk-info-entry--bonus {
+  border-color: rgba(132, 204, 22, 0.35);
+}
+
+.pk-info-entry--malus {
+  border-color: rgba(248, 113, 113, 0.4);
+}
+
+.pk-info-entry-icon {
+  font-size: 0.85rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.pk-info-entry-name {
+  flex: 1;
+  color: var(--gt-color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pk-info-entry-meta {
+  font-size: 0.6rem;
+  color: var(--gt-color-text-dim);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
 /* --- Progress drawer specific --- */
 
 .pk-info-drawer-progress {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px 16px;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .pk-info-drawer-progress-item {
   display: flex;
+  justify-content: space-between;
   align-items: center;
   gap: 4px;
+  padding: 2px 0;
   font-size: 0.7rem;
 }
 

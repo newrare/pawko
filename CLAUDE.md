@@ -202,6 +202,11 @@ All managers are imported as lowercase named exports — for example
   (arrows / WASD / Escape) directly on `window` and delegates touch to
   `SwipeDetector`. Touches on UI elements matching
   `InputManager.UI_SELECTOR` fall through to the browser.
+- **`notify`** — singleton `NotificationManager`. Displays stacking toast
+  notifications that auto-dismiss after a configurable duration (default
+  3 s). Variants: `success`, `error`, `warning`, `info`. Up to 5 visible
+  at once (oldest evicted). Usage:
+  `notify.success('Done!')` / `notify.show('msg', { type, duration })`.
 
 ### Input / swipe
 

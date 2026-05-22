@@ -1,15 +1,25 @@
 /**
- * Bonus definitions — pure data.
+ * Bonus & malus definitions — pure data.
  *
- * See `docs/BONUS.md` for the full spec. Adding a new bonus is a 5-step
- * checklist that lives in that doc.
+ * Three kinds of entries:
+ *   - **permanent bonus**: unlocked forever, bought in the shop with coins.
+ *   - **session bonus**: active for `durationLevels` levels (or for the
+ *     whole run when `durationLevels === null`). Bought in the shop with
+ *     coins.
+ *   - **session malus**: same lifecycle as a session bonus but applies a
+ *     negative effect. Maluses are NOT sold in the shop — they are rolled
+ *     by the MysteryPeg and by mystery cells on the level grid.
  *
- * Modifier shape: { paramKey, op, value }
- *   - paramKey: one of PARAM_KEYS
- *   - op: 'add' | 'multiply' | 'set'
- *   - value: number (or any value for 'set')
+ * An entry can carry two kinds of effects:
+ *   - **modifiers**: { paramKey, op, value } resolved on every call to
+ *     `bonusManager.resolve(paramKey, baseValue)` while the entry is
+ *     active. Resolution order: add → multiply → set.
+ *   - **directives**: one-shot actions queued at activation time and
+ *     drained by the game controller at the start of the next round
+ *     (e.g. add a ball into a launcher). See `BonusManager.consumeDirectives`.
  *
- * Resolution order in `bonusManager.resolve()`: add -> multiply -> set.
+ * See `docs/BONUS.md` for the design and the 5-step "add a new bonus"
+ * checklist.
  */
 
 export const BONUS_TYPES = /** @type {const} */ ({
@@ -17,15 +27,58 @@ export const BONUS_TYPES = /** @type {const} */ ({
   SESSION: "session",
 });
 
+export const BONUS_CATEGORIES = /** @type {const} */ ({
+  BONUS: "bonus",
+  MALUS: "malus",
+});
+
+/**
+ * Every parameter key consumed by `bonusManager.resolve()`. Magic strings
+ * outside this map are a bug.
+ */
 export const PARAM_KEYS = /** @type {const} */ ({
-  /** Base balls held per sublauncher at round start. */
+  /* Launcher / ball composition */
   STARTING_BALLS_PER_SUBLAUNCH: "startingBallsPerSublaunch",
-  /** Number of sublaunchers shown for the round. */
   SUBLAUNCH_COUNT: "sublaunchCount",
-  /** Multiplier applied to score awarded by classic pegs (not bumpers). */
+  EXTRA_BLACK_BALLS_PER_SUBLAUNCH: "extraBlackBallsPerSublaunch",
+  EXTRA_ICE_BALLS_PER_SUBLAUNCH: "extraIceBallsPerSublaunch",
+  EXTRA_FIRE_BALLS_PER_SUBLAUNCH: "extraFireBallsPerSublaunch",
+  TRANSFORM_CLASSIC_TO_GLASS_PER_SUBLAUNCH:
+    "transformClassicToGlassPerSublaunch",
+
+  /* Scoring */
   PEG_SCORE_MULTIPLIER: "pegScoreMultiplier",
-  /** Truthy: shop pegs attract nearby balls. */
+  NEXT_PINBOARD_SCORE_MULT: "nextPinboardScoreMult",
+
+  /* Gates */
+  GATE_MALUS_REDUCTION: "gateMalusReduction",
+  GATE_X_MULTIPLIER: "gateXMultiplier",
+  GATE_X_DOUBLE: "gateXDouble",
+
+  /* Economy / shop */
+  SHOP_DISCOUNT: "shopDiscount",
+
+  /* Gameplay flags */
+  BUMPER_RELEASES_GLASS: "bumperReleasesGlass",
   SHOP_MAGNET_ENABLED: "shopMagnetEnabled",
+
+  /* Grid visibility */
+  REVEAL_ABILITIES: "revealAbilities",
+  REVEAL_MYSTERY: "revealMystery",
+  REVEAL_SHOPS: "revealShops",
+  REVEAL_PATHS: "revealPaths",
+  REVEAL_BOSS: "revealBoss",
+  REVEAL_LEVEL_NUMBER: "revealLevelNumber",
+});
+
+/**
+ * Directive action types. Drained by the game controller at the start of
+ * each round through `bonusManager.consumeDirectives()`.
+ */
+export const DIRECTIVE_ACTIONS = /** @type {const} */ ({
+  ADD_BALL: "addBall",
+  REMOVE_BALL: "removeBall",
+  TRANSFORM_BALL: "transformBall",
 });
 
 /**
@@ -36,84 +89,416 @@ export const PARAM_KEYS = /** @type {const} */ ({
  */
 
 /**
- * @typedef {'permanent' | 'legendary' | 'epic' | 'rare' | 'common'} BonusRarity
+ * @typedef {object} BonusDirective
+ * @property {string} action  one of DIRECTIVE_ACTIONS
+ * @property {object} payload action-specific payload
+ */
+
+/**
+ * @typedef {'permanent' | 'legendary' | 'epic' | 'rare' | 'common' | 'malus'} BonusRarity
  */
 
 /**
  * @typedef {object} BonusDef
  * @property {string} id
  * @property {'permanent' | 'session'} type
- * @property {number} cost
+ * @property {'bonus' | 'malus'} category
+ * @property {number} cost                 — coins (0 for maluses)
  * @property {string | null} abilityRequired
  * @property {BonusRarity} rarity
- * @property {string} icon — emoji used in the shop card
- * @property {number} [durationLevels] — session only
- * @property {BonusModifier[]} modifiers
- * @property {((ctx: object) => void) | null} [onExpire] — session only
+ * @property {string} icon
+ * @property {number | null} [durationLevels]  — session only; null = whole run
+ * @property {BonusModifier[]} [modifiers]
+ * @property {BonusDirective[]} [directives]   — queued on activation
+ * @property {((ctx: object) => void) | null} [onExpire]
  */
+
+// ────────────────────────────────────────────────────────────────────
+// Permanent bonuses (bought in the shop with coins)
+// ────────────────────────────────────────────────────────────────────
 
 /** @type {BonusDef[]} */
 export const PERMANENT_BONUSES = [
   {
-    id: "extra_start_ball",
+    id: "perm_extra_ball_1",
     type: BONUS_TYPES.PERMANENT,
-    cost: 60,
-    abilityRequired: "start_ball_up",
+    category: BONUS_CATEGORIES.BONUS,
+    cost: 700,
+    abilityRequired: "ball_1",
     rarity: "permanent",
     icon: "🟢",
     modifiers: [
-      {
-        paramKey: PARAM_KEYS.STARTING_BALLS_PER_SUBLAUNCH,
-        op: "add",
-        value: 1,
-      },
+      { paramKey: PARAM_KEYS.STARTING_BALLS_PER_SUBLAUNCH, op: "add", value: 1 },
     ],
   },
   {
-    id: "shop_magnet",
+    id: "perm_extra_ball_2",
     type: BONUS_TYPES.PERMANENT,
-    cost: 120,
-    abilityRequired: "magnet",
+    category: BONUS_CATEGORIES.BONUS,
+    cost: 4000,
+    abilityRequired: "ball_2",
     rarity: "permanent",
-    icon: "🧲",
+    icon: "🟢",
     modifiers: [
-      { paramKey: PARAM_KEYS.SHOP_MAGNET_ENABLED, op: "set", value: true },
+      { paramKey: PARAM_KEYS.STARTING_BALLS_PER_SUBLAUNCH, op: "add", value: 1 },
+    ],
+  },
+  {
+    id: "perm_extra_ball_3",
+    type: BONUS_TYPES.PERMANENT,
+    category: BONUS_CATEGORIES.BONUS,
+    cost: 9000,
+    abilityRequired: "ball_3",
+    rarity: "permanent",
+    icon: "🟢",
+    modifiers: [
+      { paramKey: PARAM_KEYS.STARTING_BALLS_PER_SUBLAUNCH, op: "add", value: 1 },
+    ],
+  },
+  {
+    id: "perm_shop_discount",
+    type: BONUS_TYPES.PERMANENT,
+    category: BONUS_CATEGORIES.BONUS,
+    cost: 5000,
+    abilityRequired: "pinboard_3",
+    rarity: "permanent",
+    icon: "💸",
+    modifiers: [
+      { paramKey: PARAM_KEYS.SHOP_DISCOUNT, op: "add", value: 0.1 },
+    ],
+  },
+  {
+    id: "perm_reveal_abilities",
+    type: BONUS_TYPES.PERMANENT,
+    category: BONUS_CATEGORIES.BONUS,
+    cost: 5000,
+    abilityRequired: "avantage_1",
+    rarity: "permanent",
+    icon: "👁️",
+    modifiers: [
+      { paramKey: PARAM_KEYS.REVEAL_ABILITIES, op: "set", value: true },
+    ],
+  },
+  {
+    id: "perm_reveal_mystery",
+    type: BONUS_TYPES.PERMANENT,
+    category: BONUS_CATEGORIES.BONUS,
+    cost: 7000,
+    abilityRequired: "avantage_2",
+    rarity: "permanent",
+    icon: "👁️",
+    modifiers: [
+      { paramKey: PARAM_KEYS.REVEAL_MYSTERY, op: "set", value: true },
+    ],
+  },
+  {
+    id: "perm_reveal_shops",
+    type: BONUS_TYPES.PERMANENT,
+    category: BONUS_CATEGORIES.BONUS,
+    cost: 10000,
+    abilityRequired: "avantage_2",
+    rarity: "permanent",
+    icon: "👁️",
+    modifiers: [
+      { paramKey: PARAM_KEYS.REVEAL_SHOPS, op: "set", value: true },
+    ],
+  },
+  {
+    id: "perm_reveal_paths",
+    type: BONUS_TYPES.PERMANENT,
+    category: BONUS_CATEGORIES.BONUS,
+    cost: 20000,
+    abilityRequired: "avantage_3",
+    rarity: "permanent",
+    icon: "👁️",
+    modifiers: [
+      { paramKey: PARAM_KEYS.REVEAL_PATHS, op: "set", value: true },
+    ],
+  },
+  {
+    id: "perm_reveal_boss",
+    type: BONUS_TYPES.PERMANENT,
+    category: BONUS_CATEGORIES.BONUS,
+    cost: 25000,
+    abilityRequired: "avantage_4",
+    rarity: "permanent",
+    icon: "👁️",
+    modifiers: [
+      { paramKey: PARAM_KEYS.REVEAL_BOSS, op: "set", value: true },
     ],
   },
 ];
+
+// ────────────────────────────────────────────────────────────────────
+// Session bonuses (bought in the shop with coins)
+// ────────────────────────────────────────────────────────────────────
 
 /** @type {BonusDef[]} */
 export const SESSION_BONUSES = [
   {
-    id: "bonus_launcher",
+    id: "session_extra_classic_ball_one",
     type: BONUS_TYPES.SESSION,
-    cost: 40,
-    abilityRequired: "extra_launch",
-    rarity: "epic",
-    icon: "🚀",
-    durationLevels: 3,
-    modifiers: [
-      { paramKey: PARAM_KEYS.SUBLAUNCH_COUNT, op: "add", value: 1 },
+    category: BONUS_CATEGORIES.BONUS,
+    cost: 100,
+    abilityRequired: "ball_1",
+    rarity: "common",
+    icon: "🔵",
+    durationLevels: 1,
+    directives: [
+      {
+        action: DIRECTIVE_ACTIONS.ADD_BALL,
+        payload: { kind: "classic", count: 1, target: "one" },
+      },
     ],
-    onExpire: null,
   },
   {
-    id: "score_x2",
+    id: "session_extra_black_ball_one",
     type: BONUS_TYPES.SESSION,
-    cost: 30,
-    abilityRequired: "score_boost",
+    category: BONUS_CATEGORIES.BONUS,
+    cost: 500,
+    abilityRequired: null,
+    rarity: "rare",
+    icon: "⚫",
+    durationLevels: 1,
+    directives: [
+      {
+        action: DIRECTIVE_ACTIONS.ADD_BALL,
+        payload: { kind: "black", count: 1, target: "one" },
+      },
+    ],
+  },
+  {
+    id: "session_remove_ice_ball",
+    type: BONUS_TYPES.SESSION,
+    category: BONUS_CATEGORIES.BONUS,
+    cost: 500,
+    abilityRequired: "luky_1",
+    rarity: "rare",
+    icon: "🧊",
+    durationLevels: 1,
+    directives: [
+      {
+        action: DIRECTIVE_ACTIONS.REMOVE_BALL,
+        payload: { kind: "ice", count: 1 },
+      },
+    ],
+  },
+  {
+    id: "session_remove_fire_ball",
+    type: BONUS_TYPES.SESSION,
+    category: BONUS_CATEGORIES.BONUS,
+    cost: 600,
+    abilityRequired: "luky_2",
+    rarity: "rare",
+    icon: "🔥",
+    durationLevels: 1,
+    directives: [
+      {
+        action: DIRECTIVE_ACTIONS.REMOVE_BALL,
+        payload: { kind: "fire", count: 1 },
+      },
+    ],
+  },
+  {
+    id: "session_extra_black_ball_all",
+    type: BONUS_TYPES.SESSION,
+    category: BONUS_CATEGORIES.BONUS,
+    cost: 1000,
+    abilityRequired: null,
+    rarity: "epic",
+    icon: "⚫",
+    durationLevels: 1,
+    directives: [
+      {
+        action: DIRECTIVE_ACTIONS.ADD_BALL,
+        payload: { kind: "black", count: 1, target: "all" },
+      },
+    ],
+  },
+  {
+    id: "session_gate_malus_reduce",
+    type: BONUS_TYPES.SESSION,
+    category: BONUS_CATEGORIES.BONUS,
+    cost: 1000,
+    abilityRequired: "gate_1",
+    rarity: "epic",
+    icon: "🛡️",
+    durationLevels: null,
+    modifiers: [
+      { paramKey: PARAM_KEYS.GATE_MALUS_REDUCTION, op: "multiply", value: 0.5 },
+    ],
+  },
+  {
+    id: "session_gate_x_boost",
+    type: BONUS_TYPES.SESSION,
+    category: BONUS_CATEGORIES.BONUS,
+    cost: 1500,
+    abilityRequired: "gate_2",
+    rarity: "epic",
+    icon: "🚪",
+    durationLevels: null,
+    modifiers: [
+      { paramKey: PARAM_KEYS.GATE_X_MULTIPLIER, op: "multiply", value: 1.5 },
+    ],
+  },
+  {
+    id: "session_gate_x_double",
+    type: BONUS_TYPES.SESSION,
+    category: BONUS_CATEGORIES.BONUS,
+    cost: 10000,
+    abilityRequired: "gate_3",
+    rarity: "legendary",
+    icon: "🚪",
+    durationLevels: null,
+    modifiers: [
+      { paramKey: PARAM_KEYS.GATE_X_DOUBLE, op: "set", value: true },
+    ],
+  },
+  ...buildLauncherBonuses(),
+  {
+    id: "session_peg_score_x",
+    type: BONUS_TYPES.SESSION,
+    category: BONUS_CATEGORIES.BONUS,
+    cost: 2000,
+    abilityRequired: "pinboard_2",
     rarity: "legendary",
     icon: "✨",
     durationLevels: 3,
     modifiers: [
-      { paramKey: PARAM_KEYS.PEG_SCORE_MULTIPLIER, op: "multiply", value: 2 },
+      { paramKey: PARAM_KEYS.PEG_SCORE_MULTIPLIER, op: "multiply", value: 3 },
     ],
-    onExpire: null,
+  },
+  {
+    id: "session_bumper_releases_glass",
+    type: BONUS_TYPES.SESSION,
+    category: BONUS_CATEGORIES.BONUS,
+    cost: 2000,
+    abilityRequired: null,
+    rarity: "epic",
+    icon: "💥",
+    durationLevels: 1,
+    modifiers: [
+      { paramKey: PARAM_KEYS.BUMPER_RELEASES_GLASS, op: "set", value: true },
+    ],
   },
 ];
 
-/** All bonuses, indexed by id. */
-export const ALL_BONUSES = [...PERMANENT_BONUSES, ...SESSION_BONUSES];
+/**
+ * Build the launcher-bonus rows (session_launcher_4 … session_launcher_9).
+ * Each one bumps `SUBLAUNCH_COUNT` by 1 for the rest of the run.
+ */
+function buildLauncherBonuses() {
+  const rows = [
+    { id: "session_launcher_4", cost: 2000, ability: "launcher_1" },
+    { id: "session_launcher_5", cost: 4000, ability: "launcher_2" },
+    { id: "session_launcher_6", cost: 8000, ability: "launcher_3" },
+    { id: "session_launcher_7", cost: 9000, ability: "launcher_4" },
+    { id: "session_launcher_8", cost: 10000, ability: "launcher_5" },
+    { id: "session_launcher_9", cost: 10000, ability: "launcher_6" },
+  ];
+  return rows.map((r) => ({
+    id: r.id,
+    type: BONUS_TYPES.SESSION,
+    category: BONUS_CATEGORIES.BONUS,
+    cost: r.cost,
+    abilityRequired: r.ability,
+    rarity: "epic",
+    icon: "🚀",
+    durationLevels: null,
+    modifiers: [
+      { paramKey: PARAM_KEYS.SUBLAUNCH_COUNT, op: "add", value: 1 },
+    ],
+  }));
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Session maluses (never sold in shop; rolled by mystery cell / peg)
+// ────────────────────────────────────────────────────────────────────
+
+/** @type {BonusDef[]} */
+export const SESSION_MALUSES = [
+  {
+    id: "malus_score_reduce_next",
+    type: BONUS_TYPES.SESSION,
+    category: BONUS_CATEGORIES.MALUS,
+    cost: 0,
+    abilityRequired: null,
+    rarity: "malus",
+    icon: "📉",
+    durationLevels: 1,
+    modifiers: [
+      { paramKey: PARAM_KEYS.NEXT_PINBOARD_SCORE_MULT, op: "multiply", value: 0.8 },
+    ],
+  },
+  {
+    id: "malus_add_ice_ball",
+    type: BONUS_TYPES.SESSION,
+    category: BONUS_CATEGORIES.MALUS,
+    cost: 0,
+    abilityRequired: null,
+    rarity: "malus",
+    icon: "🧊",
+    durationLevels: 1,
+    directives: [
+      {
+        action: DIRECTIVE_ACTIONS.ADD_BALL,
+        payload: { kind: "ice", count: 1, target: "all" },
+      },
+    ],
+  },
+  {
+    id: "malus_add_fire_ball",
+    type: BONUS_TYPES.SESSION,
+    category: BONUS_CATEGORIES.MALUS,
+    cost: 0,
+    abilityRequired: null,
+    rarity: "malus",
+    icon: "🔥",
+    durationLevels: 1,
+    directives: [
+      {
+        action: DIRECTIVE_ACTIONS.ADD_BALL,
+        payload: { kind: "fire", count: 1, target: "all" },
+      },
+    ],
+  },
+  {
+    id: "malus_transform_glass",
+    type: BONUS_TYPES.SESSION,
+    category: BONUS_CATEGORIES.MALUS,
+    cost: 0,
+    abilityRequired: null,
+    rarity: "malus",
+    icon: "🪟",
+    durationLevels: 1,
+    directives: [
+      {
+        action: DIRECTIVE_ACTIONS.TRANSFORM_BALL,
+        payload: { from: "classic", to: "glass", count: 1, target: "all" },
+      },
+    ],
+  },
+  {
+    id: "malus_obfuscate_level_number",
+    type: BONUS_TYPES.SESSION,
+    category: BONUS_CATEGORIES.MALUS,
+    cost: 0,
+    abilityRequired: null,
+    rarity: "malus",
+    icon: "❓",
+    durationLevels: 1,
+    modifiers: [
+      { paramKey: PARAM_KEYS.REVEAL_LEVEL_NUMBER, op: "set", value: false },
+    ],
+  },
+];
+
+/** Every entry, indexed by id. */
+export const ALL_BONUSES = [
+  ...PERMANENT_BONUSES,
+  ...SESSION_BONUSES,
+  ...SESSION_MALUSES,
+];
 
 /**
  * @param {string} id

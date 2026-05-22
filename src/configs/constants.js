@@ -110,6 +110,7 @@ export const STORAGE_KEYS = {
   RANKINGS: `${NS}.rankings`,
   LEVEL_PROGRESS: `${NS}.level_progress`,
   CURRENCY: `${NS}.currency`,
+  DIAMONDS: `${NS}.diamonds`,
   BONUSES: `${NS}.bonuses`,
   ABILITIES: `${NS}.abilities`,
   GRID_STATE: `${NS}.grid_state`,
