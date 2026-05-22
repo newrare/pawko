@@ -73,13 +73,11 @@ export function installDevAdminPanel({
     </div>
     <div class="pk-dev-admin-section">
       <h4>Test Level</h4>
-      <button class="pk-dev-admin-btn pk-dev-admin-btn--test" data-dev="test-pegs" data-peg-type="all" data-no-sfx>All pegs pinboard</button>
-      ${Object.values(PEG_TYPES)
-        .map(
-          (t) =>
-            `<button class="pk-dev-admin-btn pk-dev-admin-btn--test" data-dev="test-pegs" data-peg-type="${t}" data-no-sfx>Only ${t}</button>`,
-        )
-        .join("")}
+      <select class="pk-dev-admin-select" id="pk-dev-test-peg-select" data-no-sfx>
+        <option value="all">All pegs pinboard</option>
+        ${Object.values(PEG_TYPES).map((t) => `<option value="${t}">Only ${t}</option>`).join("")}
+      </select>
+      <button class="pk-dev-admin-btn pk-dev-admin-btn--test" data-dev="test-pegs" data-no-sfx>Run test level</button>
     </div>
   `;
 
@@ -159,7 +157,8 @@ export function installDevAdminPanel({
           notify.success("Session maluses removed");
         else notify.error("No active session maluses");
       } else if (action === "test-pegs") {
-        const type = /** @type {HTMLElement} */ (btn).dataset.pegType || "all";
+        const select = /** @type {HTMLSelectElement | null} */ (panel.querySelector("#pk-dev-test-peg-select"));
+        const type = select?.value || "all";
         onTestPegs?.(type);
         notify.success(`Test level: ${type}`);
       }

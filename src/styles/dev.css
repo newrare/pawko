@@ -50,10 +50,12 @@
   position: fixed;
   left: calc(var(--gt-safe-left, 0px) + var(--gt-safe-width, 0px) + 12px);
   top: var(--gt-safe-top, 0px);
+  min-width: 260px;
   width: max-content;
-  max-width: calc(100vw - var(--gt-safe-left, 0px) - var(--gt-safe-width, 0px) - 24px);
+  max-width: calc((100vw - var(--gt-safe-left, 0px) - var(--gt-safe-width, 0px) - 24px) * 2);
   max-height: var(--gt-safe-height, 80vh);
   overflow-y: auto;
+  overflow-x: hidden;
   z-index: 99999;
   padding: 8px;
   border-radius: 6px;
@@ -160,6 +162,24 @@
 }
 .pk-dev-admin-btn--test:hover { background: rgba(167, 139, 250, 0.25); }
 .pk-dev-admin-btn--test:active { background: rgba(167, 139, 250, 0.4); }
+
+.pk-dev-admin-select {
+  appearance: none;
+  display: block;
+  width: 100%;
+  margin-bottom: 4px;
+  padding: 3px 6px;
+  border: 1px solid rgba(0, 255, 136, 0.4);
+  border-radius: 3px;
+  background: rgba(0, 20, 10, 0.85);
+  color: #d4ffe5;
+  font: 700 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  cursor: pointer;
+}
+.pk-dev-admin-select option {
+  background: #001c0e;
+  color: #d4ffe5;
+}
 
 .pk-dev-admin-btn--malus {
   background: rgba(239, 68, 68, 0.15);

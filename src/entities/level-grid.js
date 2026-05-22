@@ -14,6 +14,7 @@ export const CELL_TYPES = /** @type {const} */ ({
   ABILITY: "ability",
   MYSTERY: "mystery",
   START: "start",
+  BOSS: "boss",
 });
 
 export const CELL_STATES = /** @type {const} */ ({
@@ -305,7 +306,7 @@ export class LevelGrid {
 
     for (const cell of toReveal) {
       cell.state = CELL_STATES.REVEALED;
-      if (cell.type === CELL_TYPES.LEVEL) {
+      if (cell.type === CELL_TYPES.LEVEL || cell.type === CELL_TYPES.BOSS) {
         cell.levelId = this.#nextLevelId++;
       }
     }
@@ -450,5 +451,18 @@ export class LevelGrid {
     for (let i = 0; i < nonStart.length; i++) {
       nonStart[i].type = shuffled[i];
     }
+
+    /* Promote the LEVEL cell furthest from start to BOSS — the final level. */
+    let bossCell = null;
+    let bossDist = -1;
+    for (const cell of nonStart) {
+      if (cell.type !== CELL_TYPES.LEVEL) continue;
+      const d = Math.abs(cell.row - startRow) + Math.abs(cell.col - startCol);
+      if (d > bossDist) {
+        bossDist = d;
+        bossCell = cell;
+      }
+    }
+    if (bossCell) bossCell.type = CELL_TYPES.BOSS;
   }
 }

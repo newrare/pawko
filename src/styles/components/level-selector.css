@@ -249,6 +249,11 @@
   font-size: 0.75rem;
 }
 
+/* Boss — the final level */
+.pk-map-cell--type-boss .pk-map-cell-icon {
+  font-size: 1.05rem;
+}
+
 /* Start marker — green diamond to mark the origin */
 .pk-map-cell--type-start:not(.pk-map-cell--hidden) .pk-map-cell-icon {
   color: var(--gt-color-success);
@@ -282,6 +287,7 @@
 .pk-map-cell--used.pk-map-cell--type-shop .pk-map-cell-icon,
 .pk-map-cell--used.pk-map-cell--type-ability .pk-map-cell-icon,
 .pk-map-cell--used.pk-map-cell--type-mystery .pk-map-cell-icon,
+.pk-map-cell--used.pk-map-cell--type-boss .pk-map-cell-icon,
 .pk-map-cell--current.pk-map-cell--completed.pk-map-cell--type-shop .pk-map-cell-icon,
 .pk-map-cell--current.pk-map-cell--completed.pk-map-cell--type-ability .pk-map-cell-icon {
   /* brightness(0) → black silhouette, invert(1) → white, then sepia+hue-rotate → green */

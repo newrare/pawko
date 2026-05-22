@@ -153,6 +153,7 @@ export class LevelSelectorScene {
 
     switch (cell.type) {
       case CELL_TYPES.LEVEL:
+      case CELL_TYPES.BOSS:
         this.#router.start(GameScene, { levelId: cell.levelId });
         break;
       case CELL_TYPES.SHOP:
@@ -293,29 +294,26 @@ export class LevelSelectorScene {
     const completedClass =
       cell.state === CELL_STATES.CURRENT &&
       (cell.type === CELL_TYPES.LEVEL ||
+        cell.type === CELL_TYPES.BOSS ||
         cell.type === CELL_TYPES.SHOP ||
         cell.type === CELL_TYPES.ABILITY)
         ? "pk-map-cell--completed"
         : "";
 
     let content = "";
-    if (cell.state === CELL_STATES.USED) {
-      content = this.#renderCellContent(cell);
-    } else if (cell.state === CELL_STATES.HIDDEN) {
-      /* Reveal flags promote a HIDDEN cell to a full preview. */
+    if (cell.state === CELL_STATES.HIDDEN) {
+      /* Hidden cells only show their icon when the matching reveal bonus
+         is active. Levels and empty tiles stay blank until discovered. */
       const reveal =
         (cell.type === CELL_TYPES.SHOP &&
           bonusManager.resolve(PARAM_KEYS.REVEAL_SHOPS, false)) ||
         (cell.type === CELL_TYPES.ABILITY &&
           bonusManager.resolve(PARAM_KEYS.REVEAL_ABILITIES, false)) ||
         (cell.type === CELL_TYPES.MYSTERY &&
-          bonusManager.resolve(PARAM_KEYS.REVEAL_MYSTERY, false));
-      if (
-        reveal ||
-        cell.type === CELL_TYPES.SHOP ||
-        cell.type === CELL_TYPES.ABILITY ||
-        cell.type === CELL_TYPES.MYSTERY
-      ) {
+          bonusManager.resolve(PARAM_KEYS.REVEAL_MYSTERY, false)) ||
+        (cell.type === CELL_TYPES.BOSS &&
+          bonusManager.resolve(PARAM_KEYS.REVEAL_BOSS, false));
+      if (reveal) {
         content = this.#renderCellContent(cell);
       }
     } else {
@@ -350,6 +348,8 @@ export class LevelSelectorScene {
         return '<span class="pk-map-cell-icon">⚡</span>';
       case CELL_TYPES.MYSTERY:
         return '<span class="pk-map-cell-icon">❓</span>';
+      case CELL_TYPES.BOSS:
+        return '<span class="pk-map-cell-icon">💀</span>';
       case CELL_TYPES.EMPTY:
         return '<span class="pk-map-cell-icon">·</span>';
       case CELL_TYPES.START:
@@ -375,6 +375,7 @@ export class LevelSelectorScene {
     const cellB = this.#grid.getCell(r2, c2);
     const aVis = cellA.state !== CELL_STATES.HIDDEN;
     const bVis = cellB.state !== CELL_STATES.HIDDEN;
+    const revealPaths = bonusManager.resolve(PARAM_KEYS.REVEAL_PATHS, false);
 
     let vis = "";
     if (aVis && bVis) {
@@ -388,7 +389,7 @@ export class LevelSelectorScene {
         aActive && bActive
           ? "pk-map-connector--active"
           : "pk-map-connector--visible";
-    } else if (aVis || bVis) {
+    } else if (aVis || bVis || revealPaths) {
       vis = "pk-map-connector--visible";
     }
 

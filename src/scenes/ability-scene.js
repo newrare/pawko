@@ -4,7 +4,6 @@ import { abilityManager } from "../managers/ability-manager.js";
 import { ListenerBag } from "../utils/listener-bag.js";
 import { BackgroundAnimator } from "../utils/background-animator.js";
 import { ABILITY_CATEGORIES } from "../configs/ability-defs.js";
-import { LevelSelectorScene } from "./level-selector-scene.js";
 
 /* Visual mapping per category — display order, chip color, and icon. */
 const CATEGORY_VIEW = [
@@ -49,7 +48,7 @@ export class AbilityScene {
     this.#bag.add(() => this.#bg?.destroy());
 
     this.#el = document.createElement("div");
-    this.#el.className = "gt-scene-center pk-ability";
+    this.#el.className = "pk-ability";
     this.#el.innerHTML = this.#renderShell();
     root.appendChild(this.#el);
 
@@ -66,10 +65,6 @@ export class AbilityScene {
     const action = target.closest("[data-action]");
     if (!action) return;
     const name = /** @type {HTMLElement} */ (action).dataset.action;
-    if (name === "back") {
-      this.#router.start(LevelSelectorScene);
-      return;
-    }
     if (name?.startsWith("select:")) {
       this.#selectedId = name.slice(7);
       this.#refresh();
@@ -124,37 +119,17 @@ export class AbilityScene {
 
   #renderShell() {
     return `
-      <h1 class="pk-ability-title">${i18n.t("ability.title")}</h1>
-
       <div class="pk-ability-wallet">
         <span class="pk-ability-wallet-label">${i18n.t("ability.wallet")}</span>
-        <span class="pk-ability-wallet-value" data-role="wallet">
-          💎 ${diamondManager.get()}
-        </span>
+        <div class="pk-ability-wallet-values">
+          <span class="pk-ability-wallet-value" data-role="wallet">💎 ${diamondManager.get()}</span>
+          <span class="pk-ability-wallet-delta" data-role="delta" hidden></span>
+        </div>
       </div>
 
       <div class="pk-ability-stacks" data-role="stacks"></div>
 
-      <div class="pk-ability-legend">
-        <span class="pk-ability-legend-item">
-          <span class="pk-ability-legend-dot pk-ability-legend-dot--owned"></span>
-          ${i18n.t("ability.legend.owned")}
-        </span>
-        <span class="pk-ability-legend-item">
-          <span class="pk-ability-legend-dot pk-ability-legend-dot--available"></span>
-          ${i18n.t("ability.legend.available")}
-        </span>
-        <span class="pk-ability-legend-item">
-          <span class="pk-ability-legend-dot pk-ability-legend-dot--locked"></span>
-          ${i18n.t("ability.legend.locked")}
-        </span>
-      </div>
-
       <aside class="pk-ability-detail" data-role="detail"></aside>
-
-      <button class="gt-btn gt-btn--ghost pk-ability-back" data-action="back">
-        <span class="gt-btn-label">${i18n.t("menu.back")}</span>
-      </button>
     `;
   }
 
@@ -162,6 +137,20 @@ export class AbilityScene {
     if (!this.#el) return;
     const wallet = this.#el.querySelector('[data-role="wallet"]');
     if (wallet) wallet.textContent = `💎 ${diamondManager.get()}`;
+
+    const delta = /** @type {HTMLElement | null} */ (
+      this.#el.querySelector('[data-role="delta"]')
+    );
+    if (delta) {
+      const def = this.#selectedId ? this.#findDef(this.#selectedId) : null;
+      if (def && this.#stateFor(def) === "available") {
+        delta.textContent = `-${def.cost}`;
+        delta.hidden = false;
+      } else {
+        delta.textContent = "";
+        delta.hidden = true;
+      }
+    }
 
     const stacks = this.#el.querySelector('[data-role="stacks"]');
     if (stacks) stacks.innerHTML = this.#renderStacks();
@@ -226,30 +215,11 @@ export class AbilityScene {
     const state = this.#stateFor(def);
     const have = diamondManager.get();
 
-    const stateLabel = i18n.t(`ability.legend.${state}`);
     const desc = i18n.t(`ability.${def.id}.desc`);
     const name = i18n.t(`ability.${def.id}`);
     const pathLabel = i18n.t("ability.detail.path", {
       name: i18n.t(`ability.category.${def.category}`),
     });
-
-    /* Prerequisite = the next-lower level chip in the same category, if
-       any. We only show it when the chip is locked, to keep the panel
-       quiet for available/owned chips. */
-    let prereqHTML = "";
-    if (state === "locked") {
-      const chips = this.#chipsFor(def.category);
-      const idx = chips.findIndex((c) => c.id === def.id);
-      const prereq = idx > 0 ? chips[idx - 1] : null;
-      if (prereq) {
-        prereqHTML = `
-          <div class="pk-ability-detail-prereq">
-            <div class="pk-ability-detail-prereq-label">${i18n.t("ability.detail.requires")}</div>
-            <div class="pk-ability-detail-prereq-value">${i18n.t(`ability.${prereq.id}`)}</div>
-          </div>
-        `;
-      }
-    }
 
     const costHTML =
       state === "owned"
@@ -262,12 +232,20 @@ export class AbilityScene {
         <span class="gt-btn-label">${i18n.t("ability.detail.owned_btn")}</span>
       </button>`;
     } else if (state === "locked") {
+      const chips = this.#chipsFor(def.category);
+      const idx = chips.findIndex((c) => c.id === def.id);
+      const prereq = idx > 0 ? chips[idx - 1] : null;
+      const label = prereq
+        ? i18n.t("ability.detail.locked_btn", {
+            prereq: i18n.t(`ability.${prereq.id}`),
+          })
+        : i18n.t("ability.detail.locked_btn_generic");
       btnHTML = `<button class="gt-btn gt-btn--ghost pk-ability-detail-btn pk-ability-detail-btn--locked" disabled>
-        <span class="gt-btn-label">${i18n.t("ability.detail.locked_btn")}</span>
+        <span class="gt-btn-label">${label}</span>
       </button>`;
     } else if (have >= def.cost) {
       btnHTML = `<button class="gt-btn gt-btn--primary pk-ability-detail-btn" data-action="unlock:${def.id}">
-        <span class="gt-btn-label">${i18n.t("ability.detail.buy_btn", { cost: def.cost })}</span>
+        <span class="gt-btn-label">${i18n.t("ability.detail.buy_btn")}</span>
       </button>`;
     } else {
       btnHTML = `<button class="gt-btn gt-btn--ghost pk-ability-detail-btn pk-ability-detail-btn--broke" disabled>
@@ -290,11 +268,9 @@ export class AbilityScene {
           <div class="pk-ability-detail-meta">
             <div class="pk-ability-detail-name">${name}</div>
             <div class="pk-ability-detail-category">${pathLabel}</div>
-            <span class="pk-ability-detail-badge pk-ability-detail-badge--${state}">${stateLabel}</span>
           </div>
         </div>
         <div class="pk-ability-detail-desc">${desc}</div>
-        ${prereqHTML}
         <div class="pk-ability-detail-cost">
           <span class="pk-ability-detail-cost-label">${i18n.t("ability.detail.cost")}</span>
           ${costHTML}

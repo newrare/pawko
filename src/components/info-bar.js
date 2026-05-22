@@ -164,7 +164,7 @@ export class InfoBar {
           for (const c of cells) {
             if (c.type === "mystery") mysteriesTotal++;
             if (c.state !== "used") continue;
-            if (c.type === "level") levelsDone++;
+            if (c.type === "level" || c.type === "boss") levelsDone++;
             else if (c.type === "shop") shopsDone++;
             else if (c.type === "ability") abilitiesDone++;
             else if (c.type === "mystery") mysteriesDone++;
@@ -185,7 +185,8 @@ export class InfoBar {
       {
         id: "resources",
         icon: "💰",
-        getCount: () => `${currencyManager.get()} | ${diamondManager.get()}`,
+        getCount: () =>
+          `${currencyManager.get()} | <span class="pk-info-pill-count--diamond">${diamondManager.get()}</span>`,
         renderDrawer: () => this.#renderResourcesDrawer(),
       },
       {
@@ -211,7 +212,7 @@ export class InfoBar {
             if (e.def.category === BONUS_CATEGORIES.MALUS) maluses++;
             else bonuses++;
           }
-          return `${bonuses} | ${maluses}`;
+          return `${bonuses} | <span class="pk-info-pill-count--malus">${maluses}</span>`;
         },
         renderDrawer: () => this.#renderSessionDrawer(),
       },
@@ -305,7 +306,7 @@ export class InfoBar {
     const mysteries = { done: 0, total: 0 };
 
     for (const c of cells) {
-      if (c.type === "level") {
+      if (c.type === "level" || c.type === "boss") {
         levels.total++;
         if (c.state === "used") levels.done++;
       } else if (c.type === "shop") {
@@ -606,7 +607,7 @@ export class InfoBar {
     const count = this.#getPillCount(config);
     const countEl = pillEl.querySelector(".pk-info-pill-count");
     if (countEl) {
-      countEl.textContent = String(count);
+      countEl.innerHTML = String(count);
       countEl.classList.toggle("pk-info-pill-count--zero", count === 0 || count === "0");
     }
   }

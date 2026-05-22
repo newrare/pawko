@@ -1,39 +1,36 @@
 /* --- Ability scene (chip-stack tree, paid in diamonds) --- */
 
+/* Full safe-zone container — wallet pinned top, detail pinned bottom,
+   stacks fill the middle. Top-right and bottom corners are reserved
+   for the persistent HudBar (40px buttons + gt-space-2 inset). */
 .pk-ability {
+  position: absolute;
+  top: var(--gt-safe-top, 0);
+  left: var(--gt-safe-left, 0);
+  width: var(--gt-safe-width, 100%);
+  height: var(--gt-safe-height, 100%);
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: var(--gt-space-3);
-  gap: var(--gt-space-3);
-  overflow-y: auto;
-  max-height: 100%;
-  width: 100%;
+  padding: var(--gt-space-2);
+  gap: var(--gt-space-2);
+  overflow: hidden;
   z-index: 1;
 }
 
-.pk-ability-title {
-  font-family: var(--gt-font-display);
-  font-size: 1.3rem;
-  color: var(--pk-gold);
-  text-align: center;
-  margin: 0;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-}
-
-/* --- Wallet bar --- */
+/* --- Wallet bar — pinned top, aligned with HUD top-right (40px) button --- */
 
 .pk-ability-wallet {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
-  max-width: 420px;
-  padding: 0.5rem 0.9rem;
+  /* leave room on the right for the HUD level-home button (40px + gt-space-2 gap) */
+  margin-right: calc(40px + var(--gt-space-2));
+  min-height: 40px;
+  padding: 0.4rem 0.9rem;
   background: rgba(14, 4, 10, 0.95);
   border: 1px solid var(--pk-crimson-deep);
-  border-radius: var(--gt-radius-sm);
+  border-radius: var(--gt-radius-md);
 }
 .pk-ability-wallet-label {
   font-size: 0.55rem;
@@ -41,45 +38,62 @@
   text-transform: uppercase;
   color: var(--pk-rose-muted);
 }
+.pk-ability-wallet-values {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1;
+}
 .pk-ability-wallet-value {
   font-size: 1rem;
   color: var(--pk-gold-light);
   font-weight: 700;
   letter-spacing: 0.1em;
 }
+.pk-ability-wallet-delta {
+  margin-top: 2px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #ef4444;
+  letter-spacing: 0.1em;
+}
+.pk-ability-wallet-delta[hidden] { display: none; }
 
-/* --- Stacks grid --- */
+/* --- Stacks (6 horizontal rows, one per category) --- */
 
 .pk-ability-stacks {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--gt-space-3) var(--gt-space-2);
-  width: 100%;
-  max-width: 420px;
-  justify-items: center;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--gt-space-2);
+  overflow-y: auto;
 }
 
 .pk-chip-stack-wrap {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
   gap: 0.6rem;
 }
+/* Chips packed to the left, category label pushed to the right. */
 .pk-chip-stack {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  padding-bottom: 8px;
+  flex: 1;
+  justify-content: flex-start;
 }
 .pk-chip-stack-label {
-  font-size: 0.5rem;
-  letter-spacing: 0.25em;
+  font-size: 0.55rem;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--pk-rose-dim);
-  text-align: center;
+  min-width: 70px;
+  text-align: right;
 }
 
-/* --- Chip wrappers / stacking --- */
+/* --- Chip wrappers — slight horizontal overlap inside a stack --- */
 
 .pk-chip-wrap {
   position: relative;
@@ -87,9 +101,9 @@
   cursor: pointer;
   transition: transform 0.15s;
 }
-.pk-chip-wrap:not(:first-child) { margin-top: -34px; }
-.pk-chip-wrap:hover { transform: translateY(-4px); z-index: 20 !important; }
-.pk-chip-wrap.is-active { z-index: 21 !important; transform: translateY(-4px); }
+.pk-chip-wrap:not(:first-child) { margin-left: -14px; }
+.pk-chip-wrap:hover { transform: translateY(-3px); z-index: 20 !important; }
+.pk-chip-wrap.is-active { z-index: 21 !important; transform: translateY(-3px); }
 .pk-chip-wrap.is-active .pk-chip {
   outline: 2px solid var(--pk-gold);
   outline-offset: 3px;
@@ -175,110 +189,29 @@
   --pk-chip-glow: rgba(43, 191, 91, 0.7);
 }
 
-/* --- Chip states --- */
-
-.pk-chip-wrap--owned .pk-chip {
-  box-shadow:
-    0 5px 0 rgba(0, 0, 0, 0.55),
-    0 8px 16px rgba(0, 0, 0, 0.6),
-    0 0 0 2px rgba(212, 175, 55, 0.45);
-}
-.pk-chip-wrap--owned .pk-chip-inner::after {
-  content: "✓";
-  position: absolute;
-  bottom: -3px; right: -3px;
-  width: 16px; height: 16px;
-  background: #16a34a;
-  border-radius: 50%;
-  border: 2px solid var(--pk-bg);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 0.55rem; font-weight: 900; color: #fff;
-  line-height: 1;
-}
+/* --- Chip states: owned = color, available = gray body + colored icon,
+       locked = dark (filter desaturates the whole chip including icon). --- */
 
 .pk-chip-wrap--available .pk-chip {
-  animation: pk-chip-pulse 2.2s ease-in-out infinite;
+  --pk-chip-main: #3a3a3a;
+  --pk-chip-alt: #6a6a6a;
+  --pk-chip-face: #1a1a1a;
+  --pk-chip-face-hi: #2a2a2a;
 }
-.pk-chip-wrap--available .pk-chip-inner::after {
-  content: "!";
-  position: absolute;
-  bottom: -3px; right: -3px;
-  width: 16px; height: 16px;
-  background: var(--pk-gold);
-  border-radius: 50%;
-  border: 2px solid var(--pk-bg);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 0.65rem; font-weight: 900; color: #000;
-  line-height: 1;
-}
-
 .pk-chip-wrap--locked .pk-chip { filter: grayscale(75%) brightness(0.35); }
-.pk-chip-wrap--locked {
-  cursor: default;
-}
-.pk-chip-wrap--locked .pk-chip-inner::after {
-  content: "🔒";
-  position: absolute;
-  bottom: -4px; right: -5px;
-  font-size: 0.6rem;
-  filter: grayscale(1) brightness(0.6);
-}
+.pk-chip-wrap--locked { cursor: default; }
 
-@keyframes pk-chip-pulse {
-  0%, 100% {
-    box-shadow:
-      0 5px 0 rgba(0, 0, 0, 0.55),
-      0 8px 16px rgba(0, 0, 0, 0.6),
-      0 0 6px var(--pk-chip-glow);
-  }
-  50% {
-    box-shadow:
-      0 5px 0 rgba(0, 0, 0, 0.55),
-      0 8px 16px rgba(0, 0, 0, 0.6),
-      0 0 18px var(--pk-chip-glow),
-      0 0 32px var(--pk-chip-glow);
-  }
-}
-
-/* --- Legend --- */
-
-.pk-ability-legend {
-  display: flex;
-  gap: 1.25rem;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-.pk-ability-legend-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.55rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--pk-rose-dim);
-}
-.pk-ability-legend-dot {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-}
-.pk-ability-legend-dot--owned { background: #16a34a; }
-.pk-ability-legend-dot--available {
-  background: var(--pk-gold);
-  box-shadow: 0 0 6px var(--pk-gold);
-}
-.pk-ability-legend-dot--locked { background: var(--pk-rose-muted); }
-
-/* --- Detail panel --- */
+/* --- Detail panel — pinned bottom, leaves room for HUD bottom buttons --- */
 
 .pk-ability-detail {
-  width: 100%;
-  max-width: 420px;
+  flex-shrink: 0;
+  /* clear bottom-left and bottom-right HUD buttons (40px + gt-space-2 inset) */
+  margin: 0 calc(40px + var(--gt-space-2));
   background: var(--pk-bg-card);
   border: 1px solid var(--pk-crimson-deep);
-  border-radius: var(--gt-radius-sm);
+  border-radius: var(--gt-radius-md);
   overflow: hidden;
-  min-height: 120px;
+  min-height: 110px;
 }
 .pk-ability-detail-empty {
   display: flex;
@@ -334,55 +267,10 @@
   color: var(--pk-rose-dim);
   margin-bottom: 0.5rem;
 }
-.pk-ability-detail-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: 2px;
-  font-size: 0.5rem;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  font-weight: 700;
-}
-.pk-ability-detail-badge--owned {
-  background: rgba(22, 163, 74, 0.15);
-  color: #86efac;
-  border: 1px solid rgba(22, 163, 74, 0.3);
-}
-.pk-ability-detail-badge--available {
-  background: rgba(212, 175, 55, 0.12);
-  color: var(--pk-gold);
-  border: 1px solid rgba(212, 175, 55, 0.3);
-}
-.pk-ability-detail-badge--locked {
-  background: rgba(106, 24, 40, 0.3);
-  color: var(--pk-rose-muted);
-  border: 1px solid var(--pk-crimson-muted);
-}
-
 .pk-ability-detail-desc {
   font-size: 0.78rem;
   color: var(--pk-rose);
   line-height: 1.55;
-}
-
-.pk-ability-detail-prereq {
-  padding: 0.5rem 0.75rem;
-  background: rgba(106, 24, 40, 0.15);
-  border: 1px solid var(--pk-crimson-muted);
-  border-left: 3px solid var(--pk-crimson-deep);
-  border-radius: 2px;
-}
-.pk-ability-detail-prereq-label {
-  font-size: 0.48rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--pk-rose-dim);
-  margin-bottom: 0.2rem;
-}
-.pk-ability-detail-prereq-value {
-  font-size: 0.72rem;
-  color: var(--pk-rose);
 }
 
 .pk-ability-detail-cost {
@@ -417,10 +305,4 @@
 .pk-ability-detail-btn--broke {
   cursor: default;
   pointer-events: none;
-}
-
-/* --- Back button --- */
-
-.pk-ability-back {
-  margin-top: var(--gt-space-2);
 }
