@@ -3,6 +3,7 @@ import { saveManager } from "../managers/save-manager.js";
 import { currencyManager } from "../managers/currency-manager.js";
 import { ListenerBag } from "../utils/listener-bag.js";
 import { BackgroundAnimator } from "../utils/background-animator.js";
+import { InfoBar, INFO_BAR_MODES } from "../components/info-bar.js";
 import {
   LevelGrid,
   GRID_ROWS,
@@ -38,6 +39,9 @@ export class LevelSelectorScene {
   /** @type {Set<string>} Keys "row,col" of cells just revealed (for animation) */
   #newlyRevealed = new Set();
 
+  /** @type {InfoBar | null} */
+  #infoBar = null;
+
   /** @param {import('./scene-router.js').SceneRouter} router */
   constructor(router) {
     this.#router = router;
@@ -67,6 +71,9 @@ export class LevelSelectorScene {
 
     this.#el.innerHTML = this.#render();
     root.appendChild(this.#el);
+
+    this.#infoBar = new InfoBar({ mode: INFO_BAR_MODES.EXPLORATION });
+    this.#infoBar.mount(this.#el);
 
     this.#bag.on(this.#el, "click", (e) => {
       const target = /** @type {HTMLElement} */ (e.target);
@@ -138,7 +145,6 @@ export class LevelSelectorScene {
 
   #render() {
     const hasMovesLeft = this.#grid.hasAvailableMoves();
-    const stats = this.#grid.getStats();
 
     let gridHtml = "";
     for (let r = 0; r < GRID_ROWS; r++) {
@@ -167,31 +173,7 @@ export class LevelSelectorScene {
          </div>`
       : "";
 
-    const shopStat = `<span class="pk-map-stat">
-            <span class="pk-map-stat-icon">🏪</span>
-            <b>${stats.shopsAvail}<span class="pk-map-stat-total">/${stats.shopsTotal}</span></b>
-          </span>`;
-    const abilityStat = `<span class="pk-map-stat">
-            <span class="pk-map-stat-icon">⚡</span>
-            <b>${stats.abilitiesAvail}<span class="pk-map-stat-total">/${stats.abilitiesTotal}</span></b>
-          </span>`;
-
     return `
-      <div class="pk-map-header">
-        <h1 class="pk-map-header-title">${i18n.t("level_selector.title")}</h1>
-        <div class="pk-map-header-stats">
-          <span class="pk-map-stat">
-            <span class="pk-map-stat-icon">🎯</span>
-            <b>${stats.levelsAvail}</b>
-          </span>
-          <span class="pk-map-stat">
-            <span class="pk-map-stat-icon">✓</span>
-            <b>${stats.levelsCompleted}<span class="pk-map-stat-total">/${stats.levelsTotal}</span></b>
-          </span>
-          ${shopStat}
-          ${abilityStat}
-        </div>
-      </div>
       <div class="pk-map-scroll">
         <div class="pk-map-grid">${gridHtml}</div>
         ${noMoves}
@@ -324,6 +306,8 @@ export class LevelSelectorScene {
   }
 
   destroy() {
+    this.#infoBar?.destroy();
+    this.#infoBar = null;
     this.#bag.dispose();
     this.#el?.remove();
     this.#el = null;

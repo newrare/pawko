@@ -1,6 +1,6 @@
 import { Capacitor } from "@capacitor/core";
 import { App } from "@capacitor/app";
-import { APP_NAME } from "./configs/constants.js";
+import { APP_NAME, DEV_FLAGS } from "./configs/constants.js";
 import { layout } from "./managers/layout-manager.js";
 import { audioManager } from "./managers/audio-manager.js";
 import { SceneRouter } from "./scenes/scene-router.js";
@@ -33,7 +33,7 @@ if (import.meta.env.DEV) {
     import("./utils/dev-admin-panel.js"),
   ]).then(([{ StyleguideScene }, { ShopScene }, { AbilityScene }, { installDevOverlay }, { installDevAdminPanel }]) => {
     const install = () => {
-      installDevOverlay();
+      if (DEV_FLAGS.SHOW_SAFE_ZONE) installDevOverlay();
       installDevAdminPanel({
         onTitle: () => router.start(TitleScene),
         onStyleguide: () => router.start(StyleguideScene),

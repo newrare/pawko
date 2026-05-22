@@ -1,6 +1,9 @@
-/* --- Pawko gameplay scene. The scene is split vertically into:
-       launch (12%) · pinboard (flex 1) · collection (10%) · status (10%).
-       Velvet Rouge × Classic Gold theme. --- */
+/* --- Pawko gameplay scene. Launchers, pinboard and collection gates
+       are wrapped in a single bordered card (.pk-board-card). The
+       pinboard top area is the "information zone" where the objective
+       and score markers live. Velvet Rouge × Classic Gold theme. ---
+       Target dashed-line offset is also exposed via --pk-target-y so
+       the gauge max-fill (CSS pixel value set from JS) stays in sync. */
 
 .gt-game {
   position: absolute;
@@ -22,6 +25,20 @@
   display: flex;
   flex-direction: column;
   z-index: 1;
+  --pk-target-y: 20px;
+}
+
+/* --- Board card: groups launchers + pinboard + gates with one border --- */
+
+.pk-board-card {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  border: 1.5px solid var(--pk-gold-dim);
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(20, 4, 10, 0.4);
+  min-height: 0;
 }
 
 /* --- Launch zone --- */
@@ -76,10 +93,8 @@
 .pk-pinboard {
   flex: 1 1 auto;
   position: relative;
-  background: var(--pk-arena-bg);
-  border-top: var(--pk-arena-border);
-  border-bottom: var(--pk-arena-border);
   overflow: hidden;
+  min-height: 0;
 }
 
 .pk-stack {
@@ -121,39 +136,94 @@
   font-weight: 700;
 }
 
-/* --- Score gauge (fills bottom to top based on score/target) --- */
+/* --- Score gauge (fills bottom to top based on score/target).
+       Height is set in CSS pixels by JS so the top edge — the "score line" —
+       lines up with the target dashed line exactly at 100% target. --- */
 
 .pk-score-gauge {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  height: 0%;
+  height: 0;
   background: linear-gradient(
     180deg,
     rgba(212, 175, 55, 0.04) 0%,
-    rgba(212, 175, 55, 0.15) 100%
+    rgba(212, 175, 55, 0.18) 100%
   );
-  border-top: 1px solid rgba(212, 175, 55, 0.2);
+  border-top: 1.5px dashed var(--pk-gold);
   transition: height 0.8s ease-out;
   pointer-events: none;
   z-index: 0;
 }
 
-.pk-score-label {
+/* --- Information zone markers: target line + objective label,
+       score line (= gauge top) + score label. --- */
+
+.pk-target-line {
   position: absolute;
-  top: 6px;
-  right: 10px;
-  background: rgba(212, 175, 55, 0.1);
-  color: var(--pk-gold);
-  border: 1px solid rgba(212, 175, 55, 0.2);
-  padding: 3px 8px;
-  border-radius: 2px;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 1px;
+  left: 0;
+  right: 0;
+  top: var(--pk-target-y);
+  height: 0;
+  border-top: 1.5px dashed var(--pk-gold);
+  opacity: 0.75;
   pointer-events: none;
   z-index: 2;
+}
+
+.pk-target-label {
+  position: absolute;
+  top: var(--pk-target-y);
+  right: 8px;
+  transform: translateY(-50%);
+  padding: 2px 8px;
+  background: rgba(20, 4, 10, 0.92);
+  color: var(--pk-gold-light);
+  border: 1px solid var(--pk-gold-dim);
+  border-radius: 3px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.pk-score-marker {
+  position: absolute;
+  left: 8px;
+  bottom: 0;
+  transform: translateY(50%);
+  padding: 2px 8px;
+  background: rgba(20, 4, 10, 0.92);
+  color: var(--pk-gold-light);
+  border: 1px solid var(--pk-gold-dim);
+  border-radius: 3px;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 0;
+  transition: bottom 0.8s ease-out, opacity var(--anim-fast) ease, color var(--anim-fast) ease, border-color var(--anim-fast) ease;
+}
+
+.pk-score-marker[data-visible="false"] {
+  opacity: 0;
+}
+
+/* --- Target reached: turn the two lines and the two labels green. --- */
+
+.pk-pinboard[data-score-reached="true"] .pk-target-line,
+.pk-pinboard[data-score-reached="true"] .pk-score-gauge {
+  border-top-color: var(--gt-color-success);
+}
+
+.pk-pinboard[data-score-reached="true"] .pk-target-label,
+.pk-pinboard[data-score-reached="true"] .pk-score-marker {
+  color: var(--gt-color-success);
+  border-color: var(--gt-color-success);
 }
 
 .pk-layer {
@@ -360,9 +430,9 @@
 /* --- Collection gates --- */
 
 .pk-collection {
-  flex: 0 0 10%;
+  flex: 0 0 12%;
   display: flex;
-  border-top: var(--pk-arena-border);
+  border-top: 1px solid rgba(212, 175, 55, 0.18);
 }
 
 .pk-gate {
@@ -483,29 +553,6 @@
 .pk-ball.pk-recycle-materialize {
   animation: pk-recycle-materialize 0.35s ease-out forwards;
 }
-
-/* --- Status bar --- */
-
-.pk-status {
-  flex: 0 0 10%;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 8px 12px;
-  background: var(--pk-status-bg);
-  border: 1px solid var(--pk-crimson-deep);
-  border-radius: 4px;
-  color: var(--pk-status-fg);
-  font-weight: 700;
-}
-
-.pk-status-score {
-  font-size: 0.82rem;
-}
-
-.pk-status-actions { display: flex; gap: 6px; }
-.pk-status-actions .gt-btn { min-height: 34px; padding: 4px 10px; font-size: 0.8rem; }
 
 /* --- Level end modal --- */
 

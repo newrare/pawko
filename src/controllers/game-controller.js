@@ -22,10 +22,10 @@ import {
   PEG_SAVE,
 } from "../configs/constants.js";
 import { PARAM_KEYS } from "../configs/bonus-defs.js";
-import { buttonHtml } from "../components/ui/button.js";
 import { LevelSelectorScene } from "../scenes/level-selector-scene.js";
 import { PegSaveSystem } from "../utils/peg-save-system.js";
 import { createPeg, PEG_TYPES } from "../entities/peg-factory.js";
+import { InfoBar, INFO_BAR_MODES } from "../components/info-bar.js";
 
 /**
  * GameController — wires a single Plinko level.
@@ -43,7 +43,8 @@ export class GameController {
   /** @type {HTMLElement | null} */ #pinboardEl = null;
   /** @type {HTMLElement | null} */ #stackEl = null;
   /** @type {HTMLElement | null} */ #scoreGaugeEl = null;
-  /** @type {HTMLElement | null} */ #scoreLabelEl = null;
+  /** @type {HTMLElement | null} */ #scoreMarkerEl = null;
+  /** @type {HTMLElement | null} */ #targetLabelEl = null;
   /** @type {HTMLElement[]} */ #sublaunchEls = [];
   /** @type {HTMLElement | null} */ #ballLayerEl = null;
 
@@ -84,6 +85,9 @@ export class GameController {
   /** @type {PegSaveSystem} */
   #pegSave = new PegSaveSystem();
   /** @type {HTMLElement | null} */ #saveComboHudEl = null;
+
+  /* --- InfoBar --- */
+  /** @type {InfoBar | null} */ #infoBar = null;
 
   /**
    * @param {{ root: HTMLElement,
@@ -128,6 +132,10 @@ export class GameController {
 
     this.#buildDom();
     this.#measure();
+
+    this.#infoBar = new InfoBar({ mode: INFO_BAR_MODES.PINBOARD });
+    this.#infoBar.mount(this.#safeEl);
+
     this.#bag.add(layout.onChange(() => this.#onResize()));
     this.#bag.add(i18n.onChange(() => this.#refreshLabels()));
 
@@ -140,6 +148,7 @@ export class GameController {
     this.#refreshSublaunches();
     this.#updateScoreGauge();
     this.#renderHudBonuses();
+    this.#updateInfoBar();
 
     /* Dev-admin spawn (kind passed as event arg). */
     this.#bag.add(
@@ -153,6 +162,8 @@ export class GameController {
     this.#stopLoop();
     this.#overModal?.destroy();
     this.#overModal = null;
+    this.#infoBar?.destroy();
+    this.#infoBar = null;
     for (const { unmount } of this.#arcs.values()) unmount();
     this.#arcs.clear();
     this.#comboHudEl?.remove();
@@ -189,25 +200,24 @@ export class GameController {
     };
 
     const sublaunchCount = this.#sublaunchBalls.length;
+    const targetLabelText = i18n.t("game.target", { target: this.#targetScore });
     safe.innerHTML = `
-      <div class="pk-launch" data-role="launch" style="grid-template-columns: repeat(${sublaunchCount}, 1fr)">
-        ${Array.from({ length: sublaunchCount }, (_, i) => `<div class="pk-sublaunch" data-sublaunch="${i}"></div>`).join("")}
-      </div>
-      <div class="pk-pinboard" data-role="pinboard">
-        <div class="pk-score-gauge" data-role="score-gauge"></div>
-        <div class="pk-score-label" data-role="score-label">0 / ${this.#targetScore}</div>
-        <div class="pk-hud-bonuses" data-role="hud-bonuses"></div>
-        <div class="pk-stack" data-role="stack"></div>
-      </div>
-      <div class="pk-collection">
-        ${PLINKO.GATE_ORDER.map((g) => `<div class="pk-gate pk-gate--${g}" data-gate="${g}"><span class="pk-gate-label">${gateLabels[g]}</span></div>`).join("")}
-      </div>
-      <div class="pk-status">
-        <div class="pk-status-score">
-          <span data-role="score-text">${i18n.t("game.score")}: <b data-role="r-score">0</b> / ${this.#targetScore}</span>
+      <div class="pk-board-card">
+        <div class="pk-launch" data-role="launch" style="grid-template-columns: repeat(${sublaunchCount}, 1fr)">
+          ${Array.from({ length: sublaunchCount }, (_, i) => `<div class="pk-sublaunch" data-sublaunch="${i}"></div>`).join("")}
         </div>
-        <div class="pk-status-actions">
-          ${buttonHtml({ action: "back", label: i18n.t("game.back"), variant: "ghost" })}
+        <div class="pk-pinboard" data-role="pinboard">
+          <div class="pk-score-gauge" data-role="score-gauge"></div>
+          <div class="pk-target-line" data-role="target-line"></div>
+          <div class="pk-target-label" data-role="target-label">${targetLabelText}</div>
+          <div class="pk-score-marker" data-role="score-marker" data-visible="false">
+            ${i18n.t("game.score")}: <b data-role="score-value">0</b>
+          </div>
+          <div class="pk-hud-bonuses" data-role="hud-bonuses"></div>
+          <div class="pk-stack" data-role="stack"></div>
+        </div>
+        <div class="pk-collection">
+          ${PLINKO.GATE_ORDER.map((g) => `<div class="pk-gate pk-gate--${g}" data-gate="${g}"><span class="pk-gate-label">${gateLabels[g]}</span></div>`).join("")}
         </div>
       </div>
     `;
@@ -222,7 +232,8 @@ export class GameController {
     this.#pinboardEl = safe.querySelector('[data-role="pinboard"]');
     this.#stackEl = safe.querySelector('[data-role="stack"]');
     this.#scoreGaugeEl = safe.querySelector('[data-role="score-gauge"]');
-    this.#scoreLabelEl = safe.querySelector('[data-role="score-label"]');
+    this.#scoreMarkerEl = safe.querySelector('[data-role="score-marker"]');
+    this.#targetLabelEl = safe.querySelector('[data-role="target-label"]');
     this.#sublaunchEls = Array.from(safe.querySelectorAll(".pk-sublaunch"));
 
     this.#bag.on(safe, "pointerdown", this.#onPointer);
@@ -259,12 +270,7 @@ export class GameController {
     if (sub) {
       const i = Number(/** @type {HTMLElement} */ (sub).dataset.sublaunch);
       this.#fireSublaunch(i);
-      return;
     }
-    const action = target.closest("[data-action]");
-    if (!action) return;
-    const name = /** @type {HTMLElement} */ (action).dataset.action;
-    if (name === "back") this.#endRound({ victory: false });
   };
 
   /* ──────────────────────────────────────────────────────────────────────
@@ -416,6 +422,7 @@ export class GameController {
     }
     this.#sublaunchBalls[index] = 0;
     this.#refreshSublaunches();
+    this.#updateInfoBar();
     this.#startLoop();
   }
 
@@ -547,7 +554,10 @@ export class GameController {
     const r = PLINKO.BALL_RADIUS;
     const gravity = PLINKO.GRAVITY;
     const bottomY = this.#pinboardHeight;
-    const gateFloor = bottomY + this.#gateZoneHeight - r;
+    /* gateFloor is the y-coordinate of the gate-zone floor surface.
+       Captured balls rest with ball.y = gateFloor - r so ball.bottom = gateFloor,
+       i.e. visually touching the actual bottom of the gate row. */
+    const gateFloor = bottomY + this.#gateZoneHeight;
 
     const activeBalls = [];
 
@@ -878,13 +888,57 @@ export class GameController {
     for (const { ball } of this.#balls.values()) {
       if (ball.alive && ball.state === "active") preview += ball.score;
     }
-    const pct = Math.min(1, Math.max(0, preview / this.#targetScore)) * 100;
-    if (this.#scoreGaugeEl) this.#scoreGaugeEl.style.height = `${pct}%`;
-    if (this.#scoreLabelEl)
-      this.#scoreLabelEl.textContent = `${this.#levelScore} / ${this.#targetScore}`;
+    const ratio = Math.min(1, Math.max(0, preview / this.#targetScore));
+    /* The target dashed line sits PLINKO.TARGET_LINE_OFFSET px from the
+       pinboard top; the gauge fills the remaining height so its top edge
+       (= the score line) meets the target line at 100%. */
+    const maxFill = Math.max(0, this.#pinboardHeight - PLINKO.TARGET_LINE_OFFSET);
+    const fillPx = ratio * maxFill;
+    if (this.#scoreGaugeEl) this.#scoreGaugeEl.style.height = `${fillPx}px`;
 
-    const scoreEl = this.#safeEl?.querySelector('[data-role="r-score"]');
-    if (scoreEl) scoreEl.textContent = String(this.#levelScore);
+    /* Score label is hidden below SCORE_LABEL_REVEAL_RATIO so it doesn't
+       appear half-clipped behind the gates at the start of the round. */
+    if (this.#scoreMarkerEl) {
+      this.#scoreMarkerEl.style.bottom = `${fillPx}px`;
+      this.#scoreMarkerEl.dataset.visible =
+        ratio >= PLINKO.SCORE_LABEL_REVEAL_RATIO ? "true" : "false";
+    }
+
+    /* Target reached → flip the target line + both labels to green. */
+    const reached = ratio >= 1;
+    if (this.#pinboardEl) {
+      this.#pinboardEl.dataset.scoreReached = reached ? "true" : "false";
+    }
+
+    const scoreValueEl = this.#safeEl?.querySelector('[data-role="score-value"]');
+    if (scoreValueEl) scoreValueEl.textContent = String(this.#levelScore);
+  }
+
+  #updateInfoBar() {
+    if (!this.#infoBar) return;
+
+    const ballsByKind = {};
+    for (const kind of Object.values(BALL_KINDS)) {
+      ballsByKind[kind] = 0;
+    }
+    for (const { ball } of this.#balls.values()) {
+      if (ball.alive) {
+        const kind = ball.kind ?? BALL_KINDS.CLASSIC;
+        ballsByKind[kind] = (ballsByKind[kind] ?? 0) + 1;
+      }
+    }
+    let heldBalls = 0;
+    for (const count of this.#sublaunchBalls) {
+      heldBalls += count;
+    }
+    ballsByKind[BALL_KINDS.CLASSIC] = (ballsByKind[BALL_KINDS.CLASSIC] ?? 0) + heldBalls;
+
+    this.#infoBar.setData("balls", ballsByKind);
+    this.#infoBar.setData("launchers", {
+      total: this.#sublaunchBalls.length,
+      fired: this.#sublaunchFired.filter(Boolean).length,
+    });
+    this.#infoBar.setData("score", this.#levelScore);
   }
 
   /* ──────────────────────────────────────────────────────────────────────
@@ -1266,6 +1320,9 @@ export class GameController {
       );
       if (el) el.textContent = i18n.t(`game.gate.${gate}`);
     }
+    if (this.#targetLabelEl) {
+      this.#targetLabelEl.textContent = i18n.t("game.target", { target: this.#targetScore });
+    }
   }
 
   #renderHudBonuses() {
@@ -1486,6 +1543,7 @@ export class GameController {
     entry.el.remove();
     this.#balls.delete(ball.id);
     this.#ballIdleTracker.delete(ball.id);
+    this.#updateInfoBar();
   }
 
   /**

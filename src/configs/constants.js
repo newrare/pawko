@@ -87,6 +87,17 @@ export const ANIM = {
  */
 export const SWIPE_THRESHOLD = 30;
 
+// ─── Dev-only flags ────────────────────────────────────────────────────────
+
+/**
+ * Toggles for dev-only overlays. Only consulted in DEV builds (the imports
+ * in `main.js` are already tree-shaken from production).
+ */
+export const DEV_FLAGS = {
+  /** Render the green dashed safe-zone outline + size readout. */
+  SHOW_SAFE_ZONE: true,
+};
+
 // ─── Persistence ───────────────────────────────────────────────────────────
 
 const NS = APP_ID;
@@ -182,6 +193,15 @@ export const PLINKO = {
   LAYER_HEIGHT: 56,
   /** Top padding inside the pinboard before the first layer. */
   LAYER_TOP_PADDING: 30,
+  /** Distance (px) from the pinboard top to the target dashed line.
+     Defines the empty zone reserved for the objective label and caps the
+     gauge fill so its top edge meets the target line at 100%. */
+  TARGET_LINE_OFFSET: 20,
+  /** Score / target ratio below which the floating "Score" label stays
+     hidden. Keeps it from appearing half-clipped behind the gates at the
+     start of the round; once the gauge crosses this ratio the label
+     reveals fully visible above the gate row. */
+  SCORE_LABEL_REVEAL_RATIO: 0.1,
 
   /* Physics */
   GRAVITY: 1400,

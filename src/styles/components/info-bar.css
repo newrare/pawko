@@ -1,0 +1,202 @@
+/* --- InfoBar — expandable pills showing game stats.
+       Positioned at the top of the safe zone over scene content. --- */
+
+.pk-info-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 45;
+  pointer-events: none;
+}
+
+/* --- Pills row --- */
+
+.pk-info-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 6px 8px;
+  pointer-events: auto;
+}
+
+.pk-info-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 8px;
+  background: rgba(14, 4, 10, 0.88);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 12px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--pk-gold-light);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+
+.pk-info-pill:active {
+  transform: scale(0.95);
+}
+
+.pk-info-pill--active {
+  background: rgba(212, 175, 55, 0.15);
+  border-color: var(--pk-gold);
+}
+
+.pk-info-pill-icon {
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.pk-info-pill-count {
+  font-variant-numeric: tabular-nums;
+  min-width: 1.2em;
+  text-align: center;
+}
+
+.pk-info-pill-count--zero {
+  opacity: 0.4;
+}
+
+/* --- Drawer --- */
+
+.pk-info-drawer {
+  display: none;
+  margin: 0 8px 6px;
+  padding: 8px 10px;
+  background: rgba(14, 4, 10, 0.94);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 8px;
+  pointer-events: auto;
+  animation: pk-info-drawer-in 0.18s ease-out;
+}
+
+.pk-info-drawer--open {
+  display: block;
+}
+
+@keyframes pk-info-drawer-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.pk-info-drawer-title {
+  font-size: 0.6rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gt-color-text-sec);
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--pk-crimson-muted);
+}
+
+.pk-info-drawer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px 12px;
+}
+
+.pk-info-drawer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 0;
+}
+
+.pk-info-drawer-label {
+  font-size: 0.7rem;
+  color: var(--gt-color-text-dim);
+}
+
+.pk-info-drawer-value {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--gt-color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Rarity colors for keys --- */
+
+.pk-info-drawer-label--legendary {
+  color: #f59e0b;
+}
+
+.pk-info-drawer-label--epic {
+  color: #a855f7;
+}
+
+.pk-info-drawer-label--rare {
+  color: #3b82f6;
+}
+
+.pk-info-drawer-label--common {
+  color: #9ca3af;
+}
+
+/* --- Ball kind colors --- */
+
+.pk-info-drawer-label--classic {
+  color: var(--pk-rose);
+}
+
+.pk-info-drawer-label--ice {
+  color: #22d3ee;
+}
+
+.pk-info-drawer-label--fire {
+  color: #f97316;
+}
+
+.pk-info-drawer-label--glass {
+  color: #e2e8f0;
+}
+
+.pk-info-drawer-label--black {
+  color: #6b7280;
+}
+
+.pk-info-drawer-label--electrical {
+  color: #facc15;
+}
+
+/* --- Empty state --- */
+
+.pk-info-drawer-empty {
+  font-size: 0.7rem;
+  color: var(--gt-color-text-dim);
+  font-style: italic;
+  text-align: center;
+  padding: 4px 0;
+}
+
+/* --- Progress drawer specific --- */
+
+.pk-info-drawer-progress {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.pk-info-drawer-progress-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+}
+
+.pk-info-drawer-progress-item span:first-child {
+  color: var(--gt-color-text-dim);
+}
+
+.pk-info-drawer-progress-item span:last-child {
+  font-weight: 700;
+  color: var(--gt-color-text);
+}

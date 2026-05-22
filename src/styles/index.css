@@ -18,6 +18,7 @@
 @import "./components/ability.css";
 @import "./components/vfx.css";
 @import "./components/hud.css";
+@import "./components/info-bar.css";
 @import "./components/ball-effects.css";
 @import "./components/spark-web.css";
 @import "./components/peg-save.css";
