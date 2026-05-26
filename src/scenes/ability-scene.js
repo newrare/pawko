@@ -8,7 +8,6 @@ import { ABILITY_CATEGORIES } from "../configs/ability-defs.js";
 /* Visual mapping per category — display order, chip color, and icon. */
 const CATEGORY_VIEW = [
   { id: ABILITY_CATEGORIES.BALL, color: "crimson", icon: "🎱" },
-  { id: ABILITY_CATEGORIES.LUKY, color: "gold", icon: "🍀" },
   { id: ABILITY_CATEGORIES.GATE, color: "blue", icon: "🚪" },
   { id: ABILITY_CATEGORIES.LAUNCHER, color: "epic", icon: "🚀" },
   { id: ABILITY_CATEGORIES.PINBOARD, color: "ice", icon: "🎯" },
@@ -26,8 +25,6 @@ const CATEGORY_VIEW = [
  * Reachable from the Ability button on the Level Selector scene.
  */
 export class AbilityScene {
-  /** @type {import('./scene-router.js').SceneRouter} */
-  #router;
   /** @type {HTMLElement | null} */
   #el = null;
   /** @type {ListenerBag} */
@@ -37,10 +34,7 @@ export class AbilityScene {
   /** @type {string | null} */
   #selectedId = null;
 
-  /** @param {import('./scene-router.js').SceneRouter} router */
-  constructor(router) {
-    this.#router = router;
-  }
+  constructor() {}
 
   /** @param {HTMLElement} root */
   mount(root) {

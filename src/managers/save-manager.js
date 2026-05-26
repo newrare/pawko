@@ -119,6 +119,7 @@ class SaveManager {
     localStorage.removeItem(STORAGE_KEYS.BONUSES);
     localStorage.removeItem(STORAGE_KEYS.ABILITIES);
     localStorage.removeItem(STORAGE_KEYS.GRID_STATE);
+    localStorage.removeItem(STORAGE_KEYS.PINBOARD_STATE);
   }
 
   // ─── Level progress ───────────────────────────────
@@ -151,6 +152,22 @@ class SaveManager {
 
   clearGridState() {
     localStorage.removeItem(STORAGE_KEYS.GRID_STATE);
+  }
+
+  // ─── Pinboard state (player-customized peg layout) ──
+
+  /** @param {object} data */
+  savePinboardState(data) {
+    this.#write(STORAGE_KEYS.PINBOARD_STATE, data);
+  }
+
+  /** @returns {object | null} */
+  loadPinboardState() {
+    return this.#read(STORAGE_KEYS.PINBOARD_STATE);
+  }
+
+  clearPinboardState() {
+    localStorage.removeItem(STORAGE_KEYS.PINBOARD_STATE);
   }
 
   // ─── Internals ────────────────────────────────────

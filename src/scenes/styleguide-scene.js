@@ -3,7 +3,7 @@ import { i18n } from "../managers/i18n-manager.js";
 import { layout } from "../managers/layout-manager.js";
 import { buttonHtml } from "../components/ui/button.js";
 import { toggleRowHtml } from "../components/ui/toggle-row.js";
-import { mountSparkWeb, mountSparkArc } from "../utils/spark-web.js";
+import { mountSparkWeb } from "../utils/spark-web.js";
 
 import { TitleScene } from "./title-scene.js";
 import { vfx } from "../utils/vfx.js";
@@ -47,29 +47,17 @@ export class StyleguideScene {
   }
 
   /**
-   * Mount spark-web overlays on every electrified peg / electrical ball in
-   * the rendered guide, plus an arc between the paired-pegs cell.
-   * Must be re-run after every `#refresh()` (which rewrites innerHTML and
-   * wipes the previously-mounted SVGs).
+   * Mount spark-web overlays on every electrified peg in the rendered
+   * guide. Must be re-run after every `#refresh()` (which rewrites
+   * innerHTML and wipes the previously-mounted SVGs).
    */
   #mountSparks() {
     if (!this.#el) return;
-    /** @param {NodeListOf<HTMLElement>} els @param {Parameters<typeof mountSparkWeb>[1]} opts */
-    const each = (els, opts) => {
-      els.forEach((host) => this.#sparkUnmounts.push(mountSparkWeb(host, opts)));
-    };
-    each(this.#el.querySelectorAll('[data-sg-spark="peg"]'), { radius: 11, padding: 14 });
-    each(this.#el.querySelectorAll('[data-sg-spark="ball"]'), { radius: 9, padding: 14 });
-
-    const arcStage = this.#el.querySelector("[data-sg-arc]");
-    if (arcStage instanceof HTMLElement) {
-      /* Hard-coded peg centres from the inline styles above: left=11, right=stage-11. */
-      const w = arcStage.clientWidth || 140;
-      const h = arcStage.clientHeight || 40;
-      this.#sparkUnmounts.push(
-        mountSparkArc(arcStage, 11, h / 2, w - 11, h / 2, { padding: 8 }),
+    this.#el
+      .querySelectorAll('[data-sg-spark="peg"]')
+      .forEach((host) =>
+        this.#sparkUnmounts.push(mountSparkWeb(host, { radius: 11, padding: 14 })),
       );
-    }
   }
 
   #unmountSparks() {
@@ -228,9 +216,9 @@ export class StyleguideScene {
   }
 
   #renderPegs() {
-    const cell = (inner, label) =>
+    const cell = (inner, label, stageExtra = '') =>
       `<div class="gt-sg-plinko-cell">
-        <div class="gt-sg-plinko-stage">${inner}</div>
+        <div class="gt-sg-plinko-stage gt-sg-plinko-stage--overflow${stageExtra}">${inner}</div>
         <span>${label}</span>
       </div>`;
 
@@ -241,42 +229,45 @@ export class StyleguideScene {
           <div class="gt-sg-plinko-row gt-sg-plinko-row--4" style="grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));">
             ${cell('<div class="pk-peg"></div>', "Classic<br>+2 pts")}
             ${cell('<div class="pk-peg pk-peg--bumper"></div>', "Bumper<br>×10 pts")}
-            ${cell('<div class="pk-peg pk-peg--coin">¢</div>', "Coin<br>+1 coin")}
-            ${cell('<div class="pk-peg pk-peg--diamond">💎</div>', "Diamond<br>5 HP")}
+            ${cell('<div class="pk-peg pk-peg--coin"></div>', "Coin<br>+1 coin")}
+            ${cell('<div class="pk-peg pk-peg--diamond"></div>', "Diamond<br>5 HP")}
             ${cell('<div class="pk-peg pk-peg--glue"></div>', "Glue<br>5 HP")}
-            ${cell('<div class="pk-peg pk-peg--cat">🐱</div>', "Cat<br>20 HP")}
-            ${cell('<div class="pk-peg pk-peg--boss">👹</div>', "Boss<br>50 HP")}
             ${cell('<div class="pk-peg pk-peg--teleport"></div>', "Teleport<br>2 HP")}
-            ${cell('<div class="pk-peg pk-peg--chest">📦</div>', "Chest<br>2 HP")}
-            ${cell('<div class="pk-peg pk-peg--key">🔑</div>', "Key<br>1 HP")}
-            ${cell('<div class="pk-peg pk-peg--chester" data-rarity="common">🗝</div>', "Chester<br>Common")}
-            ${cell('<div class="pk-peg pk-peg--chester" data-rarity="rare">🗝</div>', "Chester<br>Rare")}
-            ${cell('<div class="pk-peg pk-peg--chester" data-rarity="epic">🗝</div>', "Chester<br>Epic")}
-            ${cell('<div class="pk-peg pk-peg--chester" data-rarity="legendary">🗝</div>', "Chester<br>Legendary")}
+            ${cell('<div class="pk-peg pk-peg--chest"></div>', "Chest<br>2 HP")}
             ${cell('<div class="pk-peg pk-peg--shield pk-peg--shield-active"></div>', "Shield<br>Active")}
             ${cell('<div class="pk-peg pk-peg--shield pk-peg--shield-down"></div>', "Shield<br>Down")}
-            ${cell('<div class="pk-peg pk-peg--mystery">?</div>', "Mystery<br>2 HP")}
+            ${cell('<div class="pk-peg pk-peg--mystery"></div>', "Mystery<br>2 HP")}
           </div>
         </div>
 
-        <h2 class="gt-sg-h2" style="margin-top:1rem;">Pegs — ball-effect states</h2>
+        <h2 class="gt-sg-h2" style="margin-top:1rem;">Pegs — elemental (tower-defense)</h2>
+        <div class="gt-sg-plinko">
+          <div class="gt-sg-plinko-row gt-sg-plinko-row--4" style="grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));">
+            ${cell('<div class="pk-peg pk-peg--ice"></div>', "Ice<br>freezes ball")}
+            ${cell('<div class="pk-peg pk-peg--fire"></div>', "Fire<br>burns ball")}
+            ${cell('<div class="pk-peg pk-peg--electrical" data-sg-spark="peg"></div>', "Electrical<br>shocks ball")}
+            ${cell('<div class="pk-peg pk-peg--bomb"></div>', "Bomb<br>tap to detonate")}
+          </div>
+        </div>
+
+        <h2 class="gt-sg-h2" style="margin-top:1rem;">Pegs — HP remaining label (peg-color tinted, horizontal)</h2>
+        <div class="gt-sg-plinko">
+          <div class="gt-sg-plinko-row gt-sg-plinko-row--4" style="grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));">
+            ${cell('<div class="pk-peg"><span class="pk-peg-hp-label pk-peg-hp-label--persistent">7</span></div>', "Classic<br>7 HP")}
+            ${cell('<div class="pk-peg pk-peg--bumper"><span class="pk-peg-hp-label pk-peg-hp-label--persistent">4</span></div>', "Bumper<br>4 HP")}
+            ${cell('<div class="pk-peg pk-peg--coin"><span class="pk-peg-hp-label pk-peg-hp-label--persistent">5</span></div>', "Coin<br>5 HP")}
+            ${cell('<div class="pk-peg pk-peg--diamond"><span class="pk-peg-hp-label pk-peg-hp-label--persistent">3</span></div>', "Diamond<br>3 HP")}
+            ${cell('<div class="pk-peg pk-peg--glue"><span class="pk-peg-hp-label pk-peg-hp-label--persistent">4</span></div>', "Glue<br>4 HP")}
+            ${cell('<div class="pk-peg pk-peg--teleport"><span class="pk-peg-hp-label pk-peg-hp-label--persistent">2</span></div>', "Teleport<br>2 HP")}
+            ${cell('<div class="pk-peg pk-peg--chest"><span class="pk-peg-hp-label pk-peg-hp-label--persistent">2</span></div>', "Chest<br>2 HP")}
+            ${cell('<div class="pk-peg pk-peg--mystery"><span class="pk-peg-hp-label pk-peg-hp-label--persistent">2</span></div>', "Mystery<br>2 HP")}
+          </div>
+        </div>
+
+        <h2 class="gt-sg-h2" style="margin-top:1rem;">Pegs — tremble</h2>
         <div class="gt-sg-plinko">
           <div class="gt-sg-plinko-row gt-sg-plinko-row--4" style="grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));">
-            ${cell('<div class="pk-peg pk-peg--frozen-3"></div>', "Frozen ③<br>3 hits left")}
-            ${cell('<div class="pk-peg pk-peg--frozen-2"></div>', "Frozen ②<br>2 hits left")}
-            ${cell('<div class="pk-peg pk-peg--frozen-1"></div>', "Frozen ①<br>1 hit left")}
-            ${cell('<div class="pk-peg pk-peg--burned"></div>', "Burned<br>÷2 score")}
-            ${cell('<div class="pk-peg pk-peg--electrified" data-sg-spark="peg"></div>', "Electrified")}
             ${cell('<div class="pk-peg pk-tremble"></div>', "Tremble<br>1 HP left")}
-            <div class="gt-sg-plinko-cell" style="grid-column: span 2;">
-              <div class="gt-sg-plinko-stage gt-sg-plinko-stage--overflow gt-sg-arc-host" style="width: 140px;">
-                <div class="gt-sg-arc-stage" data-sg-arc>
-                  <div class="pk-peg pk-peg--electrified gt-sg-arc-peg gt-sg-arc-peg--left" data-sg-spark="peg"></div>
-                  <div class="pk-peg pk-peg--electrified gt-sg-arc-peg gt-sg-arc-peg--right" data-sg-spark="peg"></div>
-                </div>
-              </div>
-              <span>Arc<br>between pegs</span>
-            </div>
           </div>
         </div>
       </section>
@@ -296,22 +287,15 @@ export class StyleguideScene {
         <div class="gt-sg-plinko">
           <div class="gt-sg-plinko-row" style="grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));">
             ${cell('<div class="pk-ball"></div>', "Classic")}
-            ${cell('<div class="pk-ball pk-ball--ice"></div>', "Ice<br>freezes pegs")}
-            ${cell('<div class="pk-ball pk-ball--fire"></div>', "Fire<br>burns pegs")}
-            ${cell('<div class="pk-ball pk-ball--glass"></div>', "Glass<br>20-hit life")}
-            ${cell('<div class="pk-ball pk-ball--black"></div>', "Black<br>no score")}
-            ${cell('<div class="pk-ball pk-ball--electrical" data-sg-spark="ball"></div>', "Electrical<br>combo arcs")}
           </div>
         </div>
 
-        <h2 class="gt-sg-h2" style="margin-top:1rem;">Glass ball cracking stages</h2>
+        <h2 class="gt-sg-h2" style="margin-top:1rem;">Ball — peg-driven effect overlays</h2>
         <div class="gt-sg-plinko">
           <div class="gt-sg-plinko-row" style="grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));">
-            ${cell('<div class="pk-ball pk-ball--glass"></div>', "Intact<br>>4 hits")}
-            ${cell('<div class="pk-ball pk-ball--glass pk-ball--glass-crack-1"></div>', "Crack 1<br>4 hits left")}
-            ${cell('<div class="pk-ball pk-ball--glass pk-ball--glass-crack-2"></div>', "Crack 2<br>3 hits left")}
-            ${cell('<div class="pk-ball pk-ball--glass pk-ball--glass-crack-3"></div>', "Crack 3<br>2 hits left")}
-            ${cell('<div class="pk-ball pk-ball--glass pk-ball--glass-crack-4"></div>', "Crack 4<br>1 hit left")}
+            ${cell('<div class="pk-ball pk-ball--on-fire"></div>', "On fire<br>(burning)")}
+            ${cell('<div class="pk-ball pk-ball--frozen"></div>', "Frozen<br>(0.5× speed)")}
+            ${cell('<div class="pk-ball pk-ball--electrified"></div>', "Electrified<br>(DoT)")}
           </div>
         </div>
       </section>

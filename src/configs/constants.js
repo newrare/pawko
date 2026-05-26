@@ -10,7 +10,6 @@
 
 export const APP_ID = "com.pawko.game";
 export const APP_NAME = "Pawko";
-export const APP_VERSION = "0.1.0";
 
 // ─── Orientation ───────────────────────────────────────────────────────────
 
@@ -28,17 +27,6 @@ export const ORIENTATIONS = /** @type {const} */ ({
 
 /** Active orientation for the current game. Change this single line to switch. */
 export const ORIENTATION = ORIENTATIONS.PORTRAIT;
-
-// ─── Scenes ────────────────────────────────────────────────────────────────
-
-export const SCENE_KEYS = /** @type {const} */ ({
-  BOOT: "BootScene",
-  PRELOAD: "PreloadScene",
-  TITLE: "TitleScene",
-  GAME: "GameScene",
-  /** Dev-only: registered conditionally by game-config.js. */
-  STYLEGUIDE: "StyleguideScene",
-});
 
 // ─── Layout ────────────────────────────────────────────────────────────────
 
@@ -95,7 +83,7 @@ export const SWIPE_THRESHOLD = 30;
  */
 export const DEV_FLAGS = {
   /** Render the green dashed safe-zone outline + size readout. */
-  SHOW_SAFE_ZONE: true,
+  SHOW_SAFE_ZONE: false,
 };
 
 // ─── Persistence ───────────────────────────────────────────────────────────
@@ -114,6 +102,7 @@ export const STORAGE_KEYS = {
   BONUSES: `${NS}.bonuses`,
   ABILITIES: `${NS}.abilities`,
   GRID_STATE: `${NS}.grid_state`,
+  PINBOARD_STATE: `${NS}.pinboard_state`,
 };
 
 export const MAX_SAVE_SLOTS = 8;
@@ -153,7 +142,6 @@ export const AUDIO = {
 // ─── Locales ───────────────────────────────────────────────────────────────
 
 export const DEFAULT_LOCALE = "en";
-export const AVAILABLE_LOCALES = ["en", "fr"];
 
 // ─── Plinko gameplay ───────────────────────────────────────────────────────
 
@@ -177,13 +165,21 @@ export const PLINKO = {
   INITIAL_LAYERS: 9,
 
   /* Launch zone */
-  SUBLAUNCH_COUNT: 3,
-  /** Base ball count per sublaunch at round start. */
+  SUBLAUNCH_COUNT: 1,
+  /** Base ball count per sublaunch at round start (fallback / dev). */
   STARTING_BALLS_PER_SUBLAUNCH: 2,
+  /** Tower-defense ball-count scaling per level: base + step * levelId.
+     Level 1 → 20, level 2 → 30, level 3 → 40, etc. */
+  BALLS_LEVEL_BASE: 10,
+  BALLS_LEVEL_STEP: 10,
   /** Delay between consecutive ball drops from the same sublaunch. */
   LAUNCH_DELAY_MS: 80,
   /** Anti-loop cap on how many times a ball may go through the recycle gate. */
   MAX_RECYCLES: 8,
+
+  /* Player HP — tower-defense mode. Player loses 1 HP per ball reaching
+     the central gate; round ends when HP reaches 0. */
+  PLAYER_MAX_HP: 20,
 
   /* Pinboard sizing (CSS px). Pegs/bumpers/balls share the pinboard
      coordinate space (origin = pinboard top-left). */
@@ -227,12 +223,24 @@ export const PLINKO = {
   /** How long (ms) a ball must be stationary before its blocker is removed. */
   STUCK_TIMEOUT_MS: 3000,
 
-  /** Points deducted when a ball lands in the malus gate. */
+  /** Points deducted when a ball lands in the malus gate (legacy — kept for tests). */
   MALUS_POINTS: 10,
 
-  /* Collection gates — 5 equal-width zones (sum = 1). */
-  GATE_WIDTHS: { recycle: 0.20, x2: 0.20, x10: 0.20, x5: 0.20, malus: 0.20 },
-  GATE_ORDER: ["recycle", "x2", "x10", "x5", "malus"],
+  /* Collection gates — 5 equal-width zones (sum = 1). Tower-defense mode:
+     teleport_left | destroy_left | hp | destroy_right | teleport_right */
+  GATE_WIDTHS: {
+    teleport_left: 0.20,
+    destroy_left: 0.20,
+    hp: 0.20,
+    destroy_right: 0.20,
+    teleport_right: 0.20,
+  },
+  GATE_ORDER: ["teleport_left", "destroy_left", "hp", "destroy_right", "teleport_right"],
+
+  /** Coins gained per HP point of a ball that lands in a destroy gate. */
+  DESTROY_COIN_PER_HP: 1,
+  /** Damage dealt to the player when a ball reaches the central HP gate. */
+  HP_GATE_DAMAGE: 1,
 
   /* Shield peg */
   SHIELD_MAX_HITS: 5,
@@ -262,85 +270,70 @@ export const PEG_SAVE = {
 
 /**
  * Configuration for each peg type.
- * Each peg type has a base HP (hits before destruction), a frequency tag
- * controlling spawn rate in layers, and a base score or behaviour description.
- * Frequency: 'high' → ~60%, 'medium' → ~25%, 'low' → ~10%
- * @type {Record<string, { hp: number, frequency: 'high'|'medium'|'low' }>}
+ * Each peg type has a base HP (hits before destruction).
+ * Layers spawn classic pegs only; the player replaces them via the radial peg menu.
+ * @type {Record<string, { hp: number }>}
  */
 export const PEG_DEFS = {
-  peg: { hp: 1000, frequency: "high" },
-  bumper: { hp: 1000, frequency: "low" },
-  coin: { hp: 1000, frequency: "medium" },
-  diamond: { hp: 5, frequency: "medium" },
-  glue: { hp: 5, frequency: "low" },
-  cat: { hp: 20, frequency: "low" },
-  boss: { hp: 50, frequency: "low" },
-  teleport: { hp: 2, frequency: "medium" },
-  chest: { hp: 2, frequency: "medium" },
-  key: { hp: 1, frequency: "medium" },
-  chester: { hp: 20, frequency: "low" },
-  shield: { hp: 1, frequency: "low" },
-  mystery: { hp: 2, frequency: "medium" },
+  peg: { hp: 10 },
+  bumper: { hp: 10 },
+  coin: { hp: 10 },
+  diamond: { hp: 5 },
+  glue: { hp: 5 },
+  teleport: { hp: 2 },
+  chest: { hp: 2 },
+  shield: { hp: 1 },
+  mystery: { hp: 2 },
+  fire: { hp: 8 },
+  ice: { hp: 8 },
+  electrical: { hp: 6 },
+  black: { hp: 15 },
+  bomb: { hp: 1 },
 };
 
-/** Spawn weight lookup based on frequency tag. */
-export const PEG_FREQUENCY_WEIGHTS = {
-  high: 0.60,
-  medium: 0.25,
-  low: 0.10,
-};
-
-/** Key rarity tiers (ordered most → least rare). */
-export const KEY_RARITIES = /** @type {const} */ ([
-  "legendary",
-  "epic",
-  "rare",
-  "common",
-]);
-
-// ─── Ball effects ─────────────────────────────────────────────────────────
+// ─── Ball kinds & peg-to-ball effects ─────────────────────────────────────
 /* Ball kinds (the string ids) live next to the factory in
    `src/entities/ball-factory.js` — see `BALL_KINDS` there. */
 
-export const BALL_EFFECTS = {
-  /** Number of subsequent hits a peg remains frozen after an ice-ball touch. */
-  ICE_FREEZE_HITS: 3,
-  /** Base-score divisor applied while a peg is burned. */
-  FIRE_SCORE_DIVISOR: 2,
-  /** Hits a glass ball can sustain before it shatters. */
-  GLASS_MAX_HITS: 20,
-  /** Glass crack stages (1..N) shown as the ball nears destruction. */
-  GLASS_CRACK_STAGES: 4,
-  /** Max gap (px) under which two same-layer electrified pegs form an arc. */
-  ELECTRIC_ARC_MAX_DIST: 80,
-  /** Pixel half-thickness of the live arc segment used for combo detection. */
-  ELECTRIC_ARC_THICKNESS: 14,
-  /** ms a "Combo ×N" banner stays on-screen after triggering. */
-  COMBO_BANNER_DURATION_MS: 1200,
+/**
+ * Configuration for each ball kind. Mirrors `PEG_DEFS`: each entry
+ * carries the base HP (hits a ball can absorb before being destroyed).
+ * Ball variants will be added here as they come.
+ * @type {Record<string, { hp: number }>}
+ */
+export const BALL_DEFS = {
+  classic: { hp: 20 },
 };
 
-// ─── Level definitions ────────────────────────────────────────────────────
+/**
+ * Elemental peg → ball effect configuration.
+ * Used by ball.applyEffect() and tickEffects().
+ */
+export const EFFECT_DEFS = {
+  /** Fire peg: -1 HP every tickMs for durationMs. */
+  burning: { durationMs: 3000, tickMs: 1000 },
+  /** Ice peg: speed × 0.5 for durationMs. */
+  frozen: { durationMs: 2000, tickMs: 0 },
+  /** Electrical peg: -1 HP every tickMs for durationMs. */
+  electrified: { durationMs: 3000, tickMs: 500 },
+};
 
-/** @type {Array<{ id: number, target: number }>} */
-export const LEVELS = [
-  { id: 1, target: 100 },
-  { id: 2, target: 300 },
-  { id: 3, target: 600 },
-  { id: 4, target: 1000 },
-  { id: 5, target: 1500 },
-  { id: 6, target: 2200 },
-  { id: 7, target: 3000 },
-  { id: 8, target: 4000 },
-  { id: 9, target: 5200 },
-  { id: 10, target: 6500 },
-  { id: 11, target: 8000 },
-  { id: 12, target: 10000 },
-  { id: 13, target: 12500 },
-  { id: 14, target: 15500 },
-  { id: 15, target: 19000 },
-  { id: 16, target: 23000 },
-  { id: 17, target: 28000 },
-  { id: 18, target: 34000 },
-  { id: 19, target: 41000 },
-  { id: 20, target: 50000 },
-];
+/** Radius (px) of the bomb peg explosion area. */
+export const BOMB_RADIUS = 80;
+
+/**
+ * Cost (in coins) to replace a classic peg with a special peg type via
+ * the radial peg menu. Pegs not listed here are not replaceable.
+ * @type {Record<string, number>}
+ */
+export const PEG_REPLACE_COSTS = {
+  fire: 50,
+  ice: 50,
+  electrical: 75,
+  black: 100,
+  bomb: 80,
+  glue: 30,
+  teleport: 60,
+  shield: 40,
+};
+

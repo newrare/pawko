@@ -10,7 +10,6 @@
 
 export const ABILITY_CATEGORIES = /** @type {const} */ ({
   BALL: "ball",
-  LUKY: "luky",
   GATE: "gate",
   LAUNCHER: "launcher",
   PINBOARD: "pinboard",
@@ -50,21 +49,6 @@ export const ABILITY_DEFS = [
     level: 3,
     cost: diamondCost(3),
     unlocks: ["perm_extra_ball_3"],
-  },
-
-  {
-    id: "luky_1",
-    category: ABILITY_CATEGORIES.LUKY,
-    level: 1,
-    cost: diamondCost(1),
-    unlocks: ["session_remove_ice_ball"],
-  },
-  {
-    id: "luky_2",
-    category: ABILITY_CATEGORIES.LUKY,
-    level: 2,
-    cost: diamondCost(2),
-    unlocks: ["session_remove_fire_ball"],
   },
 
   {

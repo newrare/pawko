@@ -1,5 +1,5 @@
 import { Entity } from "./entity.js";
-import { PLINKO, BALL_EFFECTS, PEG_DEFS } from "../configs/constants.js";
+import { PLINKO, PEG_DEFS } from "../configs/constants.js";
 
 /**
  * Peg — basic metallic clou. Score +2 per ball contact.
@@ -20,12 +20,6 @@ export class Peg extends Entity {
   maxHp;
   /** @type {number} Current hit points remaining. */
   hp;
-  /** @type {number} Remaining hits before the ice melts (0 = not frozen). */
-  iceHits = 0;
-  /** @type {boolean} Burning pegs score half their base value. */
-  burned = false;
-  /** @type {boolean} Electrified pegs participate in arcs with same-layer neighbours. */
-  electrified = false;
 
   /**
    * @param {{ x?: number, y?: number, slot?: number }} [opts]
@@ -72,15 +66,8 @@ export class Peg extends Entity {
     return true;
   }
 
-  /**
-   * Score awarded for a single ball contact, accounting for ice and burn
-   * rules. The controller multiplies this by the PEG_SCORE_MULTIPLIER
-   * bonus when `appliesPegMultiplier` is true.
-   * @returns {number}
-   */
+  /** Score awarded for a single ball contact. */
   scoreForContact() {
-    if (this.iceHits > 0) return 0;
-    if (this.burned) return Math.floor(this.score / BALL_EFFECTS.FIRE_SCORE_DIVISOR);
     return this.score;
   }
 
@@ -110,23 +97,23 @@ export class Peg extends Entity {
     return this.hp <= 0;
   }
 
+  /**
+   * CSS modifier appended to `pk-peg--`. Empty for the classic peg.
+   * Convention: the modifier is the peg type. Subclasses can override
+   * if they need a different mapping.
+   */
+  get cssModifier() {
+    return this.type === "peg" ? "" : this.type;
+  }
+
+  /** Extra CSS classes added to the peg element (e.g. interactivity). */
+  get extraCssClasses() {
+    return [];
+  }
+
   /** Whether the next hit will destroy this peg (triggers tremble visual). */
   get isLastHit() {
     return this.hp === 1;
-  }
-
-  /**
-   * Peg-side bookkeeping after a scored contact: decay ice by one charge
-   * so the next hit moves the peg one step closer to thawing.
-   * Returns true if the peg's visual state changed.
-   * @returns {boolean}
-   */
-  onAfterScored() {
-    if (this.iceHits > 0) {
-      this.iceHits -= 1;
-      return true;
-    }
-    return false;
   }
 
   /**

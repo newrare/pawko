@@ -6,6 +6,9 @@ import { audioManager } from "./managers/audio-manager.js";
 import { SceneRouter } from "./scenes/scene-router.js";
 import { TitleScene } from "./scenes/title-scene.js";
 import { GameScene } from "./scenes/game-scene.js";
+import { LevelSelectorScene } from "./scenes/level-selector-scene.js";
+import { saveManager } from "./managers/save-manager.js";
+import { bonusManager } from "./managers/bonus-manager.js";
 
 document.title = APP_NAME;
 
@@ -40,6 +43,12 @@ if (import.meta.env.DEV) {
         onShop: () => router.start(ShopScene),
         onAbility: () => router.start(AbilityScene),
         onTestPegs: (type) => router.start(GameScene, { testPegs: type ?? "all" }),
+        onResetRun: () => {
+          saveManager.clearGridState();
+          saveManager.clearPinboardState();
+          bonusManager.clearSession();
+          router.start(LevelSelectorScene);
+        },
       });
     };
     if (document.body) install();

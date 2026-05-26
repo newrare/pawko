@@ -25,7 +25,7 @@ by design. To enumerate every entry use `ALL_BONUSES` directly.
   type: BONUS_TYPES.SESSION,
   category: BONUS_CATEGORIES.BONUS,
   cost: 30,                     // coins for shop entries, 0 for mystery-only
-  abilityRequired: "luky_2",    // null = no gate
+  abilityRequired: "pinboard_2", // null = no gate
   rarity: "rare",               // visual tier in shop card
   icon: "✖️",
   durationLevels: 3,            // null = run-scoped (Infinity)
@@ -72,14 +72,13 @@ resolve a parameter.
 
 ## Directives
 
-Some bonuses can't be expressed as a number — for example "spawn a fire
-ball" or "replace one classic ball with a glass ball". These use the
-**directive queue**:
+Some bonuses can't be expressed as a number — for example "spawn an
+extra classic ball into one launcher". These use the **directive queue**:
 
 ```js
-{ action: DIRECTIVE_ACTIONS.ADD_BALL, payload: { kind: "fire", count: 1, target: "all" } }
-{ action: DIRECTIVE_ACTIONS.REMOVE_BALL, payload: { kind: "ice", count: 1 } }
-{ action: DIRECTIVE_ACTIONS.TRANSFORM_BALL, payload: { from: "classic", to: "glass", count: 1, target: "all" } }
+{ action: DIRECTIVE_ACTIONS.ADD_BALL, payload: { kind: "classic", count: 1, target: "one" } }
+{ action: DIRECTIVE_ACTIONS.REMOVE_BALL, payload: { kind: "classic", count: 1 } }
+{ action: DIRECTIVE_ACTIONS.TRANSFORM_BALL, payload: { from: "classic", to: "classic", count: 1, target: "all" } }
 ```
 
 Activation enqueues every directive. The `GameController` calls
@@ -88,17 +87,17 @@ the queue, and applies each action. Directives are therefore **single-use**
 even when the bonus is multi-level.
 
 `target: "all"` repeats the action per sublauncher; `target: "one"`
-picks a random sublauncher.
+picks a random sublauncher. `REMOVE_BALL` / `TRANSFORM_BALL` actions are
+kept as plumbing for future ball variants; today only `kind: "classic"`
+exists.
 
 ## Malus catalogue
 
-| id                                | Effect                                                |
-| --------------------------------- | ----------------------------------------------------- |
-| `malus_score_reduce_next` 📉      | × 0.8 score on the next pinboard                      |
-| `malus_add_ice_ball` 🧊           | +1 ice ball per sublauncher next round                |
-| `malus_add_fire_ball` 🔥          | +1 fire ball per sublauncher next round               |
-| `malus_transform_glass` 🪟        | converts 1 classic held ball per sublauncher to glass |
-| `malus_obfuscate_level_number` ❓ | hides level numbers on the map for one selection      |
+| id                                | Effect                                           |
+| --------------------------------- | ------------------------------------------------ |
+| `malus_score_reduce_next`         | × 0.8 score on the next pinboard                 |
+| `malus_obfuscate_level_number`    | hides level numbers on the map for one selection |
+| `malus_player_hp_drain`           | -3 max HP for the run                            |
 
 Maluses are only obtainable via the **mystery peg** (30% chance) or the
 **mystery cell** on the level map (30% chance). They never appear in the

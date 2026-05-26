@@ -2,8 +2,9 @@
 
 A **ball** is the physical bead the player drops from the launch zone.
 Base class: [`src/entities/ball-classic.js`](../src/entities/ball-classic.js).
-The variant zoo (ice / fire / glass / black / electrical) lives in
-sibling files; spawn the right one through
+
+Only the classic ball exists today. Future variants will live in sibling
+`ball-*.js` files; spawn the right one through
 [`createBall(kind, opts)`](../src/entities/ball-factory.js).
 
 ## Pure data
@@ -14,8 +15,11 @@ Like every other entity, `Ball` carries zero DOM dependency. It owns:
 | ------------- | ------------------------------------------------------------------------ |
 | `x`, `y`      | Position in pinboard-local CSS pixels.                                   |
 | `vx`, `vy`    | Velocity in CSS px/sec.                                                  |
+| `hp` / `maxHp`| Hit points. Each peg contact subtracts 1; effects can tick further.      |
 | `recycles`    | How many times this ball has gone through the recycle gate.              |
-| `alive`       | Becomes `false` once the ball reaches a save / drain gate.               |
+| `alive`       | Becomes `false` once the ball is destroyed or captured.                  |
+| `state`       | One of `"held" \| "active" \| "captured" \| "glued"`.                    |
+| `effects`     | Map of active peg-driven effects (`burning`, `frozen`, `electrified`).   |
 | `recentPegs`  | Set of peg ids touched in the current contact frame (anti-double-count). |
 | `radius`      | `PLINKO.BALL_RADIUS`.                                                    |
 
@@ -24,22 +28,35 @@ Convenience: `ball.canRecycle()` returns `true` while
 
 ## Variants
 
-Each variant overrides a small contract instead of being branched on with
+A variant overrides a small contract instead of being branched on with
 a `switch (ball.kind)` from the controller:
 
-| Hook                  | Default              | Overridden by                                                           |
-| --------------------- | -------------------- | ----------------------------------------------------------------------- |
-| `kind`                | `"classic"`          | every subclass                                                          |
-| `cssModifier`         | `""`                 | every subclass — appended to `pk-ball--<modifier>`                      |
-| `onBeforeContact(p)`  | `"alive"`            | `GlassBall` — increments `glassHits`, returns `"shatter"` at the cap    |
-| `consumesPeg(p)`      | `false`              | `BlackBall` — destroys the peg, no score                                |
-| `applyEffectTo(p)`    | no-op, returns false | `IceBall` (freeze), `FireBall` (burn + melt ice), `ElectricalBall`      |
-| `triggersArcRefresh`  | `false`              | `ElectricalBall`                                                        |
+| Hook          | Default     | Notes                                                         |
+| ------------- | ----------- | ------------------------------------------------------------- |
+| `kind`        | `"classic"` | Every subclass returns its own literal string                 |
+| `cssModifier` | `""`        | Subclass returns e.g. `"sniper"` → `.pk-ball pk-ball--sniper` |
+| `maxHp`       | `5`         | Subclass sets its own default                                 |
 
 Adding a new ball type = one new file in `src/entities/`, plus the entry
 in [ball-factory.js](../src/entities/ball-factory.js) and the
-`BALL_KINDS` constant. No controller changes needed unless the new
-variant introduces a brand-new hook.
+`BALL_KINDS` constant. The controller never branches on a ball-specific
+field — keep the variant logic in the entity.
+
+## Peg-driven effects
+
+Elemental pegs (fire / ice / electrical) apply a timed effect to the
+ball they hit:
+
+| Effect        | Source          | Behaviour                                       |
+| ------------- | --------------- | ----------------------------------------------- |
+| `burning`     | `FirePeg`       | DoT: -1 HP every 1 s for 3 s                    |
+| `frozen`      | `IcePeg`        | Speed × 0.5 for 2 s                             |
+| `electrified` | `ElectricalPeg` | DoT: -1 HP every 0.5 s for 3 s                  |
+
+Durations live in `EFFECT_DEFS` ([src/configs/constants.js](../src/configs/constants.js)).
+The controller calls `ball.tickEffects(now)` once per physics frame and
+swaps the matching `.pk-ball--on-fire | --frozen | --electrified` class
+on the DOM element via `#syncBallEffectClasses`.
 
 ## Physics
 
@@ -51,8 +68,8 @@ For each substep (`PLINKO.SUBSTEPS = 3` per frame for stability):
 
 1. `vy += GRAVITY * dt`
 2. Velocity is clamped to `MAX_VELOCITY` to avoid tunneling.
-3. Position is integrated and clamped to the pinboard left/right walls
-   (`WALL_RESTITUTION` damping).
+3. Position integrated using `ball.getSpeedMultiplier()` (frozen halves
+   speed). Clamped to pinboard walls with `WALL_RESTITUTION` damping.
 4. **Collisions** with every peg whose layer y is within one
    `LAYER_HEIGHT` of the ball — circle vs circle, resolved with
    [`collideCircles`](../src/utils/physics.js) and
@@ -65,24 +82,26 @@ For each substep (`PLINKO.SUBSTEPS = 3` per frame for stability):
 ## Lifecycle (one round)
 
 ```
-launch zone → spawn (y < 0)
-            → falls through pegs/bumpers
+launch zone → spawn (state="held")
+            → fire → state="active", falls through pegs/bumpers
             → reaches bottom band:
-                ┌─ SAVE    → saved += 1, ball removed
-                ├─ RECYCLE → if recycles < MAX, sent back to a launch
+                ┌─ TELEPORT → if recycles < MAX, sent back to a launch
                 │            cell with reset velocity; else drained
-                └─ DRAIN   → drained += 1, ball removed
+                ├─ DESTROY  → coins awarded, state="captured"
+                └─ HP       → player loses HP, state="captured"
 ```
 
 ## Rendering
 
-The controller pairs each `Ball` with a `.pk-ball` DOM node (a `radial-gradient`
-mouse-grey orb), positioned by `transform: translate(x, y)` every frame.
-There is no canvas; the browser compositor takes care of GPU acceleration.
+The controller pairs each `Ball` with a `.pk-ball` DOM node, positioned by
+`transform: translate(x, y)` every frame. There is no canvas; the browser
+compositor takes care of GPU acceleration.
 
 ## Tests
 
 [`tests/entities/ball.test.js`](../tests/entities/ball.test.js) covers
-the base class. Each variant has its own sibling test file
-(`ball-ice.test.js`, `ball-fire.test.js`, …) and the factory is covered
-by [`ball-factory.test.js`](../tests/entities/ball-factory.test.js).
+the base class. The factory is covered by
+[`ball-factory.test.js`](../tests/entities/ball-factory.test.js). The
+peg-driven effect system (`burning` / `frozen` / `electrified`) is
+exercised by
+[`tests/entities/peg-elemental.test.js`](../tests/entities/peg-elemental.test.js).

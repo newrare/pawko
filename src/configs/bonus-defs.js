@@ -40,17 +40,12 @@ export const PARAM_KEYS = /** @type {const} */ ({
   /* Launcher / ball composition */
   STARTING_BALLS_PER_SUBLAUNCH: "startingBallsPerSublaunch",
   SUBLAUNCH_COUNT: "sublaunchCount",
-  EXTRA_BLACK_BALLS_PER_SUBLAUNCH: "extraBlackBallsPerSublaunch",
-  EXTRA_ICE_BALLS_PER_SUBLAUNCH: "extraIceBallsPerSublaunch",
-  EXTRA_FIRE_BALLS_PER_SUBLAUNCH: "extraFireBallsPerSublaunch",
-  TRANSFORM_CLASSIC_TO_GLASS_PER_SUBLAUNCH:
-    "transformClassicToGlassPerSublaunch",
 
-  /* Scoring */
+  /* Scoring (legacy — kept for backward compat) */
   PEG_SCORE_MULTIPLIER: "pegScoreMultiplier",
   NEXT_PINBOARD_SCORE_MULT: "nextPinboardScoreMult",
 
-  /* Gates */
+  /* Gates (legacy) */
   GATE_MALUS_REDUCTION: "gateMalusReduction",
   GATE_X_MULTIPLIER: "gateXMultiplier",
   GATE_X_DOUBLE: "gateXDouble",
@@ -59,7 +54,6 @@ export const PARAM_KEYS = /** @type {const} */ ({
   SHOP_DISCOUNT: "shopDiscount",
 
   /* Gameplay flags */
-  BUMPER_RELEASES_GLASS: "bumperReleasesGlass",
   SHOP_MAGNET_ENABLED: "shopMagnetEnabled",
 
   /* Grid visibility */
@@ -69,6 +63,13 @@ export const PARAM_KEYS = /** @type {const} */ ({
   REVEAL_PATHS: "revealPaths",
   REVEAL_BOSS: "revealBoss",
   REVEAL_LEVEL_NUMBER: "revealLevelNumber",
+
+  /* Tower-defense specific */
+  PLAYER_MAX_HP_BONUS: "playerMaxHpBonus",
+  DESTROY_COIN_MULTIPLIER: "destroyCoinMultiplier",
+  PEG_REPLACE_DISCOUNT: "pegReplaceDiscount",
+  BOMB_RADIUS_BONUS: "bombRadiusBonus",
+  TELEPORT_RECYCLE_MAX_BONUS: "teleportRecycleMaxBonus",
 });
 
 /**
@@ -227,6 +228,79 @@ export const PERMANENT_BONUSES = [
       { paramKey: PARAM_KEYS.REVEAL_BOSS, op: "set", value: true },
     ],
   },
+  /* Tower-defense permanent bonuses */
+  {
+    id: "perm_extra_hp_1",
+    type: BONUS_TYPES.PERMANENT,
+    category: BONUS_CATEGORIES.BONUS,
+    cost: 2000,
+    abilityRequired: null,
+    rarity: "permanent",
+    icon: "❤️",
+    modifiers: [
+      { paramKey: PARAM_KEYS.PLAYER_MAX_HP_BONUS, op: "add", value: 5 },
+    ],
+  },
+  {
+    id: "perm_extra_hp_2",
+    type: BONUS_TYPES.PERMANENT,
+    category: BONUS_CATEGORIES.BONUS,
+    cost: 5000,
+    abilityRequired: null,
+    rarity: "permanent",
+    icon: "❤️",
+    modifiers: [
+      { paramKey: PARAM_KEYS.PLAYER_MAX_HP_BONUS, op: "add", value: 10 },
+    ],
+  },
+  {
+    id: "perm_extra_hp_3",
+    type: BONUS_TYPES.PERMANENT,
+    category: BONUS_CATEGORIES.BONUS,
+    cost: 12000,
+    abilityRequired: null,
+    rarity: "permanent",
+    icon: "❤️",
+    modifiers: [
+      { paramKey: PARAM_KEYS.PLAYER_MAX_HP_BONUS, op: "add", value: 15 },
+    ],
+  },
+  {
+    id: "perm_destroy_coins_x2",
+    type: BONUS_TYPES.PERMANENT,
+    category: BONUS_CATEGORIES.BONUS,
+    cost: 8000,
+    abilityRequired: null,
+    rarity: "permanent",
+    icon: "🪙",
+    modifiers: [
+      { paramKey: PARAM_KEYS.DESTROY_COIN_MULTIPLIER, op: "multiply", value: 2 },
+    ],
+  },
+  {
+    id: "perm_bomb_radius_xl",
+    type: BONUS_TYPES.PERMANENT,
+    category: BONUS_CATEGORIES.BONUS,
+    cost: 6000,
+    abilityRequired: null,
+    rarity: "permanent",
+    icon: "💣",
+    modifiers: [
+      { paramKey: PARAM_KEYS.BOMB_RADIUS_BONUS, op: "add", value: 25 },
+    ],
+  },
+  {
+    id: "perm_peg_discount_10",
+    type: BONUS_TYPES.PERMANENT,
+    category: BONUS_CATEGORIES.BONUS,
+    cost: 4000,
+    abilityRequired: null,
+    rarity: "permanent",
+    icon: "💸",
+    modifiers: [
+      { paramKey: PARAM_KEYS.PEG_REPLACE_DISCOUNT, op: "multiply", value: 0.9 },
+    ],
+  },
 ];
 
 // ────────────────────────────────────────────────────────────────────
@@ -248,70 +322,6 @@ export const SESSION_BONUSES = [
       {
         action: DIRECTIVE_ACTIONS.ADD_BALL,
         payload: { kind: "classic", count: 1, target: "one" },
-      },
-    ],
-  },
-  {
-    id: "session_extra_black_ball_one",
-    type: BONUS_TYPES.SESSION,
-    category: BONUS_CATEGORIES.BONUS,
-    cost: 500,
-    abilityRequired: null,
-    rarity: "rare",
-    icon: "⚫",
-    durationLevels: 1,
-    directives: [
-      {
-        action: DIRECTIVE_ACTIONS.ADD_BALL,
-        payload: { kind: "black", count: 1, target: "one" },
-      },
-    ],
-  },
-  {
-    id: "session_remove_ice_ball",
-    type: BONUS_TYPES.SESSION,
-    category: BONUS_CATEGORIES.BONUS,
-    cost: 500,
-    abilityRequired: "luky_1",
-    rarity: "rare",
-    icon: "🧊",
-    durationLevels: 1,
-    directives: [
-      {
-        action: DIRECTIVE_ACTIONS.REMOVE_BALL,
-        payload: { kind: "ice", count: 1 },
-      },
-    ],
-  },
-  {
-    id: "session_remove_fire_ball",
-    type: BONUS_TYPES.SESSION,
-    category: BONUS_CATEGORIES.BONUS,
-    cost: 600,
-    abilityRequired: "luky_2",
-    rarity: "rare",
-    icon: "🔥",
-    durationLevels: 1,
-    directives: [
-      {
-        action: DIRECTIVE_ACTIONS.REMOVE_BALL,
-        payload: { kind: "fire", count: 1 },
-      },
-    ],
-  },
-  {
-    id: "session_extra_black_ball_all",
-    type: BONUS_TYPES.SESSION,
-    category: BONUS_CATEGORIES.BONUS,
-    cost: 1000,
-    abilityRequired: null,
-    rarity: "epic",
-    icon: "⚫",
-    durationLevels: 1,
-    directives: [
-      {
-        action: DIRECTIVE_ACTIONS.ADD_BALL,
-        payload: { kind: "black", count: 1, target: "all" },
       },
     ],
   },
@@ -368,17 +378,44 @@ export const SESSION_BONUSES = [
       { paramKey: PARAM_KEYS.PEG_SCORE_MULTIPLIER, op: "multiply", value: 3 },
     ],
   },
+  /* Tower-defense session bonuses */
   {
-    id: "session_bumper_releases_glass",
+    id: "session_extra_recycles",
     type: BONUS_TYPES.SESSION,
     category: BONUS_CATEGORIES.BONUS,
-    cost: 2000,
+    cost: 800,
+    abilityRequired: null,
+    rarity: "rare",
+    icon: "🌀",
+    durationLevels: null,
+    modifiers: [
+      { paramKey: PARAM_KEYS.TELEPORT_RECYCLE_MAX_BONUS, op: "add", value: 2 },
+    ],
+  },
+  {
+    id: "session_destroy_coins_x3",
+    type: BONUS_TYPES.SESSION,
+    category: BONUS_CATEGORIES.BONUS,
+    cost: 3000,
     abilityRequired: null,
     rarity: "epic",
-    icon: "💥",
-    durationLevels: 1,
+    icon: "🪙",
+    durationLevels: null,
     modifiers: [
-      { paramKey: PARAM_KEYS.BUMPER_RELEASES_GLASS, op: "set", value: true },
+      { paramKey: PARAM_KEYS.DESTROY_COIN_MULTIPLIER, op: "multiply", value: 3 },
+    ],
+  },
+  {
+    id: "session_peg_discount_20",
+    type: BONUS_TYPES.SESSION,
+    category: BONUS_CATEGORIES.BONUS,
+    cost: 1500,
+    abilityRequired: null,
+    rarity: "rare",
+    icon: "💸",
+    durationLevels: null,
+    modifiers: [
+      { paramKey: PARAM_KEYS.PEG_REPLACE_DISCOUNT, op: "multiply", value: 0.8 },
     ],
   },
 ];
@@ -431,54 +468,6 @@ export const SESSION_MALUSES = [
     ],
   },
   {
-    id: "malus_add_ice_ball",
-    type: BONUS_TYPES.SESSION,
-    category: BONUS_CATEGORIES.MALUS,
-    cost: 0,
-    abilityRequired: null,
-    rarity: "malus",
-    icon: "🧊",
-    durationLevels: 1,
-    directives: [
-      {
-        action: DIRECTIVE_ACTIONS.ADD_BALL,
-        payload: { kind: "ice", count: 1, target: "all" },
-      },
-    ],
-  },
-  {
-    id: "malus_add_fire_ball",
-    type: BONUS_TYPES.SESSION,
-    category: BONUS_CATEGORIES.MALUS,
-    cost: 0,
-    abilityRequired: null,
-    rarity: "malus",
-    icon: "🔥",
-    durationLevels: 1,
-    directives: [
-      {
-        action: DIRECTIVE_ACTIONS.ADD_BALL,
-        payload: { kind: "fire", count: 1, target: "all" },
-      },
-    ],
-  },
-  {
-    id: "malus_transform_glass",
-    type: BONUS_TYPES.SESSION,
-    category: BONUS_CATEGORIES.MALUS,
-    cost: 0,
-    abilityRequired: null,
-    rarity: "malus",
-    icon: "🪟",
-    durationLevels: 1,
-    directives: [
-      {
-        action: DIRECTIVE_ACTIONS.TRANSFORM_BALL,
-        payload: { from: "classic", to: "glass", count: 1, target: "all" },
-      },
-    ],
-  },
-  {
     id: "malus_obfuscate_level_number",
     type: BONUS_TYPES.SESSION,
     category: BONUS_CATEGORIES.MALUS,
@@ -489,6 +478,20 @@ export const SESSION_MALUSES = [
     durationLevels: 1,
     modifiers: [
       { paramKey: PARAM_KEYS.REVEAL_LEVEL_NUMBER, op: "set", value: false },
+    ],
+  },
+  /* Tower-defense maluses */
+  {
+    id: "malus_player_hp_drain",
+    type: BONUS_TYPES.SESSION,
+    category: BONUS_CATEGORIES.MALUS,
+    cost: 0,
+    abilityRequired: null,
+    rarity: "malus",
+    icon: "💔",
+    durationLevels: 1,
+    modifiers: [
+      { paramKey: PARAM_KEYS.PLAYER_MAX_HP_BONUS, op: "add", value: -3 },
     ],
   },
 ];

@@ -4,14 +4,11 @@ import { buttonHtml } from "./ui/button.js";
 
 /**
  * LevelEndModal — shown at the end of a level (victory or defeat).
- * Displays an animated score counter and navigation buttons.
  */
 export class LevelEndModal extends BaseModal {
   /**
    * @param {{
    *   victory: boolean,
-   *   score: number,
-   *   target: number,
    *   levelId: number,
    *   onContinue?: () => void,
    *   onRetry?: () => void,
@@ -34,11 +31,11 @@ export class LevelEndModal extends BaseModal {
   }
 
   renderBody() {
-    const { victory, score, target, levelId } = this.options;
+    const { victory, levelId } = this.options;
 
     const body = victory
-      ? i18n.t("game.victory.body", { level: levelId, score, target })
-      : i18n.t("game.defeat.body", { score, target });
+      ? i18n.t("game.victory.body", { level: levelId })
+      : i18n.t("game.defeat.body");
 
     const buttons = victory
       ? buttonHtml({
@@ -50,10 +47,6 @@ export class LevelEndModal extends BaseModal {
          ${buttonHtml({ action: "back", label: i18n.t("game.defeat.back"), variant: "ghost" })}`;
 
     return `
-      <div class="pk-level-end-score" data-role="animated-score">
-        <span class="pk-level-end-score-value">${score}</span>
-        <span class="pk-level-end-score-target">/ ${target}</span>
-      </div>
       <p class="pk-level-end-body">${body.replace(/\n/g, "<br>")}</p>
       <div class="pk-level-end-actions">${buttons}</div>
     `;

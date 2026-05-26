@@ -5,7 +5,6 @@ import { diamondManager } from "../managers/diamond-manager.js";
 import { saveManager } from "../managers/save-manager.js";
 import { bonusManager } from "../managers/bonus-manager.js";
 import { abilityManager } from "../managers/ability-manager.js";
-import { KEY_RARITIES } from "../configs/constants.js";
 import { BALL_KINDS } from "../entities/ball-factory.js";
 import { BONUS_CATEGORIES, findBonus } from "../configs/bonus-defs.js";
 import { findAbility } from "../configs/ability-defs.js";
@@ -153,16 +152,14 @@ export class InfoBar {
     return [
       {
         id: "progress",
-        icon: "🗺️",
+        icon: '<img src="/images/icon-flag.svg" class="pk-svg-icon" alt="">',
         getCount: () => {
           const cells = this.#flattenGridCells();
           let levelsDone = 0;
           let shopsDone = 0;
           let abilitiesDone = 0;
           let mysteriesDone = 0;
-          let mysteriesTotal = 0;
           for (const c of cells) {
-            if (c.type === "mystery") mysteriesTotal++;
             if (c.state !== "used") continue;
             if (c.type === "level" || c.type === "boss") levelsDone++;
             else if (c.type === "shop") shopsDone++;
@@ -174,24 +171,15 @@ export class InfoBar {
         renderDrawer: () => this.#renderProgressDrawer(),
       },
       {
-        id: "keys",
-        icon: "🔑",
-        getCount: () => {
-          const keys = this.#data.keys?.keys ?? { legendary: 0, epic: 0, rare: 0, common: 0 };
-          return Object.values(keys).reduce((a, b) => a + b, 0);
-        },
-        renderDrawer: () => this.#renderKeysDrawer(),
-      },
-      {
         id: "resources",
-        icon: "💰",
+        icon: '<img src="/images/icon-bag.svg" class="pk-svg-icon" alt="">',
         getCount: () =>
           `${currencyManager.get()} | <span class="pk-info-pill-count--diamond">${diamondManager.get()}</span>`,
         renderDrawer: () => this.#renderResourcesDrawer(),
       },
       {
         id: "arsenal",
-        icon: "🎱",
+        icon: '<img src="/images/icon-ball.svg" class="pk-svg-icon" alt="">',
         getCount: () => {
           const arsenal = this.#data.arsenal ?? {};
           const launchers = arsenal.launchers ?? 0;
@@ -203,7 +191,7 @@ export class InfoBar {
       },
       {
         id: "session",
-        icon: "⏳",
+        icon: '<img src="/images/icon-fire.svg" class="pk-svg-icon" alt="">',
         getCount: () => {
           const active = bonusManager.getActiveSession();
           let bonuses = 0;
@@ -218,7 +206,7 @@ export class InfoBar {
       },
       {
         id: "permanent",
-        icon: "🏆",
+        icon: '<img src="/images/icon-lightning.svg" class="pk-svg-icon" alt="">',
         getCount: () => {
           const abilities = abilityManager.getUnlocked().length;
           const bonuses = bonusManager.getUnlockedPermanent().length;
@@ -233,8 +221,19 @@ export class InfoBar {
   #getPinboardPills() {
     return [
       {
+        id: "hp",
+        icon: "❤️",
+        getCount: () => {
+          const hp = this.#data.hp ?? {};
+          const cur = hp.current ?? 0;
+          const max = hp.max ?? 0;
+          return `${cur}/${max}`;
+        },
+        renderDrawer: () => this.#renderHpDrawer(),
+      },
+      {
         id: "balls",
-        icon: "🎱",
+        icon: '<img src="/images/icon-ball.svg" class="pk-svg-icon" alt="">',
         getCount: () => {
           const balls = this.#data.balls ?? {};
           if (typeof balls === "number") return balls;
@@ -249,32 +248,10 @@ export class InfoBar {
         renderDrawer: () => this.#renderLaunchersDrawer(),
       },
       {
-        id: "keys",
-        icon: "🔑",
-        getCount: () => {
-          const keys = this.#data.keys?.keys ?? {};
-          return Object.values(keys).reduce((a, b) => a + b, 0);
-        },
-        renderDrawer: () => this.#renderKeysDrawer(),
-      },
-      {
-        id: "loot",
-        icon: "📦",
-        getCount: () => {
-          const loot = this.#data.loot ?? {};
-          return (loot.coins ?? 0) + (loot.diamonds ?? 0);
-        },
-        renderDrawer: () => this.#renderLootDrawer(),
-      },
-      {
-        id: "score",
-        icon: "⭐",
-        getCount: () => {
-          const score = this.#data.score ?? 0;
-          if (score >= 10000) return `${(score / 1000).toFixed(1)}k`;
-          return score;
-        },
-        renderDrawer: () => this.#renderScoreDrawer(),
+        id: "coins",
+        icon: '<img src="/images/icon-coin.svg" class="pk-svg-icon" alt="">',
+        getCount: () => currencyManager.get(),
+        renderDrawer: () => this.#renderCoinsDrawer(),
       },
     ];
   }
@@ -339,30 +316,6 @@ export class InfoBar {
           <span>${i18n.t("info_bar.mysteries")}</span>
           <span>${mysteries.done}/${mysteries.total}</span>
         </div>
-      </div>
-    `;
-  }
-
-  #renderKeysDrawer() {
-    const keys = this.#data.keys?.keys ?? { legendary: 0, epic: 0, rare: 0, common: 0 };
-    const total = Object.values(keys).reduce((a, b) => a + b, 0);
-
-    if (total === 0) {
-      return `<div class="pk-info-drawer-empty">${i18n.t("info_bar.no_keys")}</div>`;
-    }
-
-    return `
-      <div class="pk-info-drawer-grid">
-        ${KEY_RARITIES.map(
-          (rarity) => `
-          <div class="pk-info-drawer-row">
-            <span class="pk-info-drawer-label pk-info-drawer-label--${rarity}">
-              ${i18n.t(`info_bar.key.${rarity}`)}
-            </span>
-            <span class="pk-info-drawer-value">${keys[rarity] ?? 0}</span>
-          </div>
-        `,
-        ).join("")}
       </div>
     `;
   }
@@ -462,7 +415,7 @@ export class InfoBar {
         if (!def) return "";
         return `
           <div class="pk-info-entry">
-            <span class="pk-info-entry-icon">⚡</span>
+            <span class="pk-info-entry-icon"><img src="/images/icon-lightning.svg" class="pk-svg-icon" alt=""></span>
             <span class="pk-info-entry-name">${i18n.t(`ability.${id}`)}</span>
             <span class="pk-info-entry-meta">${i18n.t(`ability.category.${def.category}`)}</span>
           </div>
@@ -494,6 +447,23 @@ export class InfoBar {
       <div class="pk-info-drawer-list">
         ${abilitiesSection}
         ${bonusesSection}
+      </div>
+    `;
+  }
+
+  #renderHpDrawer() {
+    const hp = this.#data.hp ?? {};
+    const cur = hp.current ?? 0;
+    const max = hp.max ?? 0;
+    const pct = max > 0 ? Math.round((cur / max) * 100) : 0;
+    return `
+      <div class="pk-info-drawer-row">
+        <span class="pk-info-drawer-label">${i18n.t("info_bar.hp_current")}</span>
+        <span class="pk-info-drawer-value">${cur} / ${max}</span>
+      </div>
+      <div class="pk-info-drawer-row">
+        <span class="pk-info-drawer-label">${i18n.t("info_bar.hp_percent")}</span>
+        <span class="pk-info-drawer-value">${pct}%</span>
       </div>
     `;
   }
@@ -553,38 +523,12 @@ export class InfoBar {
     `;
   }
 
-  #renderLootDrawer() {
-    const loot = this.#data.loot ?? {};
-    const coins = loot.coins ?? 0;
-    const diamonds = loot.diamonds ?? diamondManager.get();
-
+  #renderCoinsDrawer() {
     return `
       <div class="pk-info-drawer-grid">
         <div class="pk-info-drawer-row">
           <span class="pk-info-drawer-label">${i18n.t("info_bar.coins")}</span>
-          <span class="pk-info-drawer-value">${coins}</span>
-        </div>
-        <div class="pk-info-drawer-row">
-          <span class="pk-info-drawer-label">${i18n.t("info_bar.diamonds")}</span>
-          <span class="pk-info-drawer-value">${diamonds}</span>
-        </div>
-      </div>
-    `;
-  }
-
-  #renderScoreDrawer() {
-    const score = this.#data.score ?? 0;
-    const levelMax = this.#data.levelMax ?? saveManager.loadLevelProgress()?.maxLevel ?? 1;
-
-    return `
-      <div class="pk-info-drawer-grid">
-        <div class="pk-info-drawer-row">
-          <span class="pk-info-drawer-label">${i18n.t("info_bar.current_score")}</span>
-          <span class="pk-info-drawer-value">${score}</span>
-        </div>
-        <div class="pk-info-drawer-row">
-          <span class="pk-info-drawer-label">${i18n.t("info_bar.level_max")}</span>
-          <span class="pk-info-drawer-value">${levelMax}</span>
+          <span class="pk-info-drawer-value">${currencyManager.get()}</span>
         </div>
       </div>
     `;

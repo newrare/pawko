@@ -13,14 +13,15 @@
 @import "./components/toggle.css";
 @import "./components/title.css";
 @import "./components/game.css";
+@import "./components/peg.css";
 @import "./components/level-selector.css";
 @import "./components/shop.css";
 @import "./components/ability.css";
 @import "./components/vfx.css";
 @import "./components/hud.css";
 @import "./components/info-bar.css";
-@import "./components/ball-effects.css";
+@import "./components/ball.css";
+@import "./components/radial-menu.css";
 @import "./components/spark-web.css";
-@import "./components/peg-save.css";
 @import "./components/notification.css";
 @import "./components/styleguide.css";

@@ -10,13 +10,12 @@ and are accessed through `abilityManager`.
 
 ## Categories
 
-Abilities are grouped into six categories. Each category is a vertical
+Abilities are grouped into five categories. Each category is a vertical
 progression: `level 2` requires `level 1`, etc.
 
 | Category   | Theme                                          |
 | ---------- | ---------------------------------------------- |
 | `BALL`     | Extra starting balls per sublauncher           |
-| `LUKY`     | Score multipliers on pegs                      |
 | `GATE`     | Gate reveal & gate-multiplier upgrades         |
 | `LAUNCHER` | Extra sublaunchers (run-scoped, fed by shop)   |
 | `PINBOARD` | One-shot pinboard score bonuses                |
@@ -43,11 +42,9 @@ Use the helper `diamondCost(level)` rather than hard-coding.
 
 | id              | Cat      | Lvl | Unlocks (bonus id)                                     |
 | --------------- | -------- | --- | ------------------------------------------------------ |
-| `ball_1`        | BALL     | 1   | `perm_extra_ball_1`                                    |
-| `ball_2`        | BALL     | 2   | `perm_extra_ball_2`, `session_extra_black_ball_one`    |
-| `ball_3`        | BALL     | 3   | `perm_extra_ball_3`, `session_extra_black_ball_all`    |
-| `luky_1`        | LUKY     | 1   | `session_peg_score_x` (×3 / 3 lvls)                    |
-| `luky_2`        | LUKY     | 2   | stronger peg score modifiers                           |
+| `ball_1`        | BALL     | 1   | `perm_extra_ball_1`, `session_extra_classic_ball_one`  |
+| `ball_2`        | BALL     | 2   | `perm_extra_ball_2`                                    |
+| `ball_3`        | BALL     | 3   | `perm_extra_ball_3`                                    |
 | `gate_1`        | GATE     | 1   | `session_gate_malus_reduce`                            |
 | `gate_2`        | GATE     | 2   | `session_gate_x_boost` (×1.5 on every gate multiplier) |
 | `gate_3`        | GATE     | 3   | `session_gate_x_double`                                |

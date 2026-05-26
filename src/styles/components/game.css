@@ -1,9 +1,8 @@
-/* --- Pawko gameplay scene. Launchers, pinboard and collection gates
-       are wrapped in a single bordered card (.pk-board-card). The
-       pinboard top area is the "information zone" where the objective
-       and score markers live. Velvet Rouge × Classic Gold theme. ---
-       Target dashed-line offset is also exposed via --pk-target-y so
-       the gauge max-fill (CSS pixel value set from JS) stays in sync. */
+/* --- Pawko gameplay scene — launchers, pinboard frame and collection
+       gates wrapped in a single bordered card (.pk-board-card).
+       Per-peg styles live in peg.css; radial-menu / info-bar / hud /
+       ball / vfx have their own files. Velvet Rouge × Classic Gold
+       theme. --- */
 
 .gt-game {
   position: absolute;
@@ -25,7 +24,6 @@
   display: flex;
   flex-direction: column;
   z-index: 1;
-  --pk-target-y: 20px;
 }
 
 /* --- Board card: groups launchers + pinboard + gates with one border --- */
@@ -136,268 +134,11 @@
   font-weight: 700;
 }
 
-/* --- Score gauge (fills bottom to top based on score/target).
-       Height is set in CSS pixels by JS so the top edge — the "score line" —
-       lines up with the target dashed line exactly at 100% target. --- */
-
-.pk-score-gauge {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 0;
-  background: linear-gradient(
-    180deg,
-    rgba(212, 175, 55, 0.04) 0%,
-    rgba(212, 175, 55, 0.18) 100%
-  );
-  border-top: 1.5px dashed var(--pk-gold);
-  transition: height 0.8s ease-out;
-  pointer-events: none;
-  z-index: 0;
-}
-
-/* --- Information zone markers: target line + objective label,
-       score line (= gauge top) + score label. --- */
-
-.pk-target-line {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: var(--pk-target-y);
-  height: 0;
-  border-top: 1.5px dashed var(--pk-gold);
-  opacity: 0.75;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.pk-target-label {
-  position: absolute;
-  top: var(--pk-target-y);
-  right: 8px;
-  transform: translateY(-50%);
-  padding: 2px 8px;
-  background: rgba(20, 4, 10, 0.92);
-  color: var(--pk-gold-light);
-  border: 1px solid var(--pk-gold-dim);
-  border-radius: 3px;
-  font-size: 0.66rem;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-  pointer-events: none;
-  z-index: 3;
-}
-
-.pk-score-marker {
-  position: absolute;
-  left: 8px;
-  bottom: 0;
-  transform: translateY(50%);
-  padding: 2px 8px;
-  background: rgba(20, 4, 10, 0.92);
-  color: var(--pk-gold-light);
-  border: 1px solid var(--pk-gold-dim);
-  border-radius: 3px;
-  font-size: 0.66rem;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-  pointer-events: none;
-  z-index: 0;
-  transition: bottom 0.8s ease-out, opacity var(--anim-fast) ease, color var(--anim-fast) ease, border-color var(--anim-fast) ease;
-}
-
-.pk-score-marker[data-visible="false"] {
-  opacity: 0;
-}
-
-/* --- Target reached: turn the two lines and the two labels green. --- */
-
-.pk-pinboard[data-score-reached="true"] .pk-target-line,
-.pk-pinboard[data-score-reached="true"] .pk-score-gauge {
-  border-top-color: var(--gt-color-success);
-}
-
-.pk-pinboard[data-score-reached="true"] .pk-target-label,
-.pk-pinboard[data-score-reached="true"] .pk-score-marker {
-  color: var(--gt-color-success);
-  border-color: var(--gt-color-success);
-}
-
 .pk-layer {
   position: absolute;
   left: 0;
   right: 0;
   height: 0;
-}
-
-.pk-peg {
-  position: absolute;
-  width: 22px;
-  height: 22px;
-  margin: -11px 0 0 -11px;
-  border-radius: 50%;
-  background: transparent;
-  border: var(--pk-peg-ring-width) solid var(--pk-peg-ring);
-  box-sizing: border-box;
-  box-shadow: var(--pk-peg-shadow);
-}
-
-.pk-peg.pk-peg--bumper {
-  width: 22px;
-  height: 22px;
-  margin: -11px 0 0 -11px;
-  background: transparent;
-  border: var(--pk-bumper-ring-width) solid var(--pk-bumper-ring);
-  box-shadow: var(--pk-bumper-shadow);
-  animation: pk-bumper-idle 2.4s ease-in-out infinite;
-}
-
-.pk-peg.pk-flash { animation: pk-peg-flash 0.18s ease-out; }
-.pk-peg--bumper.pk-flash { animation: pk-bumper-flash 0.22s ease-out; }
-
-.pk-peg--coin {
-  width: 22px;
-  height: 22px;
-  margin: -11px 0 0 -11px;
-  background: transparent;
-  border: 2.5px solid #facc15;
-  color: #facc15;
-  font-weight: 900;
-  font-size: 0.6rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 8px rgba(250, 204, 21, 0.55);
-}
-
-/* --- New peg types --- */
-.pk-peg--diamond {
-  border: 2.5px solid #a78bfa;
-  box-shadow: 0 0 8px rgba(167, 139, 250, 0.6), inset 0 0 4px rgba(167, 139, 250, 0.3);
-  color: #a78bfa;
-  font-size: 0.55rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.pk-peg--glue {
-  border: 2.5px solid #22d3ee;
-  background: rgba(34, 211, 238, 0.1);
-  box-shadow: 0 0 6px rgba(34, 211, 238, 0.4);
-}
-
-.pk-peg--cat {
-  border: 2.5px solid #fb923c;
-  box-shadow: 0 0 6px rgba(251, 146, 60, 0.5);
-  color: #fb923c;
-  font-size: 0.6rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.pk-peg--boss {
-  border: 3px solid #ef4444;
-  box-shadow: 0 0 10px rgba(239, 68, 68, 0.6), 0 0 20px rgba(239, 68, 68, 0.2);
-  color: #ef4444;
-  font-size: 0.6rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.pk-peg--teleport {
-  border: 2.5px dashed #818cf8;
-  box-shadow: 0 0 8px rgba(129, 140, 248, 0.5);
-  animation: pk-teleport-pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes pk-teleport-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.pk-peg--chest {
-  border: 2.5px solid #d97706;
-  background: rgba(217, 119, 6, 0.12);
-  box-shadow: 0 0 8px rgba(217, 119, 6, 0.5);
-  color: #d97706;
-  font-size: 0.55rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.pk-peg--key {
-  border: 2px solid #fbbf24;
-  box-shadow: 0 0 6px rgba(251, 191, 36, 0.5);
-  color: #fbbf24;
-  font-size: 0.55rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.pk-peg--chester {
-  border: 3px solid;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.55rem;
-}
-.pk-peg--chester[data-rarity="common"] { border-color: #9ca3af; color: #9ca3af; box-shadow: 0 0 6px rgba(156,163,175,0.4); }
-.pk-peg--chester[data-rarity="rare"] { border-color: #3b82f6; color: #3b82f6; box-shadow: 0 0 8px rgba(59,130,246,0.5); }
-.pk-peg--chester[data-rarity="epic"] { border-color: #a855f7; color: #a855f7; box-shadow: 0 0 10px rgba(168,85,247,0.5); }
-.pk-peg--chester[data-rarity="legendary"] { border-color: #f59e0b; color: #f59e0b; box-shadow: 0 0 12px rgba(245,158,11,0.6); }
-
-.pk-peg--shield {
-  border: 2.5px solid #34d399;
-  box-shadow: 0 0 6px rgba(52, 211, 153, 0.4);
-}
-.pk-peg--shield-active::after {
-  content: '';
-  position: absolute;
-  inset: -8px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(52, 211, 153, 0.5);
-  box-shadow: 0 0 8px rgba(52, 211, 153, 0.3);
-}
-.pk-peg--shield-down::after {
-  content: '';
-  position: absolute;
-  inset: -8px;
-  border-radius: 50%;
-  border: 1.5px dashed rgba(239, 68, 68, 0.4);
-}
-
-.pk-peg--mystery {
-  border: 2.5px solid #e879f9;
-  box-shadow: 0 0 8px rgba(232, 121, 249, 0.5);
-  color: #e879f9;
-  font-size: 0.6rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: pk-mystery-shimmer 2s ease-in-out infinite;
-}
-@keyframes pk-mystery-shimmer {
-  0%, 100% { box-shadow: 0 0 8px rgba(232, 121, 249, 0.5); }
-  50% { box-shadow: 0 0 14px rgba(232, 121, 249, 0.8), 0 0 4px rgba(250,204,21,0.3); }
-}
-
-/* Tremble animation for last-hit pegs */
-.pk-tremble {
-  animation: pk-tremble 0.15s ease-in-out infinite;
-}
-@keyframes pk-tremble {
-  0%, 100% { transform: translate(0, 0); }
-  25% { transform: translate(-1px, 0.5px); }
-  50% { transform: translate(1px, -0.5px); }
-  75% { transform: translate(-0.5px, -1px); }
 }
 
 .pk-ball {
@@ -459,11 +200,20 @@
 .pk-gate--x10::before     { background: var(--pk-gate-x10-bg); }
 .pk-gate--x5::before      { background: var(--pk-gate-x5-bg); }
 .pk-gate--malus::before   { background: var(--pk-gate-malus-bg); }
+.pk-gate--teleport_left::before,
+.pk-gate--teleport_right::before { background: var(--pk-gate-recycle-bg); }
+.pk-gate--destroy_left::before,
+.pk-gate--destroy_right::before  { background: var(--pk-gate-x5-bg); }
+.pk-gate--hp::before { background: var(--pk-gate-malus-bg); }
 
 .pk-gate--recycle { border-right: 1px solid rgba(59, 130, 246, 0.18); }
 .pk-gate--x2      { border-right: 1px solid rgba(34, 197, 94, 0.18); }
 .pk-gate--x10     { border-right: 1px solid rgba(234, 179, 8, 0.18); }
 .pk-gate--x5      { border-right: 1px solid rgba(168, 85, 247, 0.18); }
+.pk-gate--teleport_left,
+.pk-gate--destroy_left,
+.pk-gate--hp,
+.pk-gate--destroy_right { border-right: 1px solid rgba(255, 255, 255, 0.08); }
 
 .pk-gate-label {
   position: relative;
@@ -479,6 +229,11 @@
 .pk-gate--x10     .pk-gate-label { color: var(--pk-gate-x10-fg); }
 .pk-gate--x5      .pk-gate-label { color: var(--pk-gate-x5-fg); }
 .pk-gate--malus   .pk-gate-label { color: var(--pk-gate-malus-fg); }
+.pk-gate--teleport_left  .pk-gate-label,
+.pk-gate--teleport_right .pk-gate-label { color: var(--pk-gate-recycle-fg); }
+.pk-gate--destroy_left   .pk-gate-label,
+.pk-gate--destroy_right  .pk-gate-label { color: var(--pk-gate-x5-fg); }
+.pk-gate--hp             .pk-gate-label { color: var(--pk-gate-malus-fg); }
 
 .pk-gate.pk-flash { animation: pk-gate-flash 0.35s ease-out; }
 
@@ -601,23 +356,6 @@
   0%   { background: rgba(212, 175, 55, 0.06); }
   50%  { background: rgba(212, 175, 55, 0.2); }
   100% { background: rgba(212, 175, 55, 0.06); }
-}
-
-@keyframes pk-peg-flash {
-  0%   { transform: scale(1); filter: brightness(1); }
-  50%  { transform: scale(1.4); filter: brightness(1.4); }
-  100% { transform: scale(1); filter: brightness(1); }
-}
-
-@keyframes pk-bumper-flash {
-  0%   { transform: scale(1); }
-  50%  { transform: scale(1.6); filter: brightness(1.4); }
-  100% { transform: scale(1); }
-}
-
-@keyframes pk-bumper-idle {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.06); }
 }
 
 @keyframes pk-popup-rise {

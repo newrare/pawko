@@ -71,6 +71,22 @@
   --pk-bumper-ring: #ffd66b;
   --pk-bumper-ring-width: 3px;
   --pk-bumper-shadow: 0 0 6px rgba(255, 214, 107, 0.5);
+  --pk-teleport-ring: #818cf8;
+
+  /* --- Per-type peg accent colors. Used both for the peg's own visual
+         identity (--pk-peg-color on .pk-peg--<type>) and for downstream
+         tinted UI (HP label, rescue banner, radial-menu accent). --- */
+  --pk-peg-coin: #facc15;
+  --pk-peg-diamond: #a78bfa;
+  --pk-peg-glue: #4ade80;
+  --pk-peg-chest: #d97706;
+  --pk-peg-shield: #34d399;
+  --pk-peg-mystery: #e879f9;
+  --pk-peg-fire: #ef4444;
+  --pk-peg-ice: #38bdf8;
+  --pk-peg-electrical: #a78bfa;
+  --pk-peg-black: #6b7280;
+  --pk-peg-bomb: #1f2937;
   --pk-ball-bg: radial-gradient(circle at 30% 30%, #c4a0b0, #9a7080);
   --pk-ball-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 

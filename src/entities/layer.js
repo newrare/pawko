@@ -1,6 +1,6 @@
 import { Entity } from "./entity.js";
 import { Slot } from "./slot.js";
-import { PLINKO, PEG_DEFS, PEG_FREQUENCY_WEIGHTS } from "../configs/constants.js";
+import { PLINKO } from "../configs/constants.js";
 import { createPeg, PEG_TYPES } from "./peg-factory.js";
 
 /**
@@ -10,8 +10,7 @@ import { createPeg, PEG_TYPES } from "./peg-factory.js";
  *   - one slot out of two is filled (alternating pattern);
  *   - the first filled slot (`startSlot`) is randomly picked from
  *     `START_SLOT_CHOICES` so consecutive layers shift the staggered grid;
- *   - each filled slot is rolled against a weighted probability table
- *     built from `PEG_DEFS` frequency tags.
+ *   - all pegs spawn as classic; the player replaces them via the radial peg menu.
  */
 export class Layer extends Entity {
   /** @type {number} */
@@ -45,69 +44,11 @@ export class Layer extends Entity {
         Math.floor(rng() * PLINKO.START_SLOT_CHOICES.length)
       ];
 
-    const table = buildSpawnTable(level);
-
     for (let i = this.startSlot; i < Slot.count; i += 2) {
       const x = Slot.xFor(i, width);
-      const type = rollPegType(table, rng);
-      this.pegs.push(createPeg(type, { x, y, slot: i }));
-    }
-
-    /* Guarantee at least one coin peg per layer (random position). */
-    const hasCoin = this.pegs.some((p) => p.type === "coin");
-    if (!hasCoin && this.pegs.length > 0) {
-      const idx = Math.floor(rng() * this.pegs.length);
-      const old = this.pegs[idx];
-      this.pegs[idx] = createPeg(PEG_TYPES.COIN, { x: old.x, y: old.y, slot: old.slot });
+      this.pegs.push(createPeg(PEG_TYPES.CLASSIC, { x, y, slot: i }));
     }
   }
-}
-
-/**
- * Build a cumulative probability table from PEG_DEFS frequencies.
- * Classic pegs fill whatever probability remains unassigned.
- * @param {number} _level - reserved for future level-scaling
- * @returns {Array<{ type: string, cumulative: number }>}
- */
-function buildSpawnTable(_level) {
-  const entries = [];
-  let totalWeight = 0;
-
-  for (const [type, def] of Object.entries(PEG_DEFS)) {
-    if (type === PEG_TYPES.CLASSIC) continue; // classic is the fallback
-    const w = PEG_FREQUENCY_WEIGHTS[def.frequency] || 0;
-    entries.push({ type, weight: w });
-    totalWeight += w;
-  }
-
-  // Normalize: non-classic types share a portion of the probability space;
-  // classic takes whatever is left. Non-classic total is capped at 40%.
-  const nonClassicCap = 0.40;
-  const scale = totalWeight > 0 ? nonClassicCap / totalWeight : 0;
-
-  const table = [];
-  let cumulative = 0;
-  for (const entry of entries) {
-    cumulative += entry.weight * scale;
-    table.push({ type: entry.type, cumulative });
-  }
-  // Classic fills the rest (cumulative to 1.0)
-  table.push({ type: PEG_TYPES.CLASSIC, cumulative: 1.0 });
-  return table;
-}
-
-/**
- * Roll a peg type from the spawn table.
- * @param {Array<{ type: string, cumulative: number }>} table
- * @param {() => number} rng
- * @returns {string}
- */
-function rollPegType(table, rng) {
-  const r = rng();
-  for (const entry of table) {
-    if (r < entry.cumulative) return entry.type;
-  }
-  return PEG_TYPES.CLASSIC;
 }
 
 /**

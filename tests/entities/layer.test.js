@@ -10,9 +10,6 @@ function seedRng(seq) {
   return () => seq[i++ % seq.length];
 }
 
-/** All valid peg type values. */
-const ALL_PEG_TYPES = Object.values(PEG_TYPES);
-
 describe("Layer", () => {
   it("fills slots in alternating pattern from startSlot", () => {
     /* rng[0] picks startSlot index inside START_SLOT_CHOICES (0 → first). */
@@ -30,34 +27,12 @@ describe("Layer", () => {
     expect(indices).toEqual(expected);
   });
 
-  it("guarantees at least one coin peg per layer", () => {
-    const layer = new Layer({
-      level: 0,
-      width: 200,
-      y: 0,
-    });
-    const types = layer.pegs.map((p) => p.type);
-    expect(types).toContain("coin");
-  });
-
-  it("produces a variety of peg types from the spawn table", () => {
-    /* With enough pegs generated over many layers, we expect variety. */
-    const allTypes = new Set();
-    for (let i = 0; i < 20; i++) {
-      const layer = new Layer({ level: i, width: 300, y: i * 56 });
-      layer.pegs.forEach((p) => allTypes.add(p.type));
-    }
-    /* At minimum classic and coin should appear. */
-    expect(allTypes.has("peg")).toBe(true);
-    expect(allTypes.has("coin")).toBe(true);
-    /* Some non-classic types should also appear. */
-    expect(allTypes.size).toBeGreaterThan(2);
-  });
-
-  it("all peg types produced are valid", () => {
-    const layer = new Layer({ level: 5, width: 300, y: 80 });
-    for (const peg of layer.pegs) {
-      expect(ALL_PEG_TYPES).toContain(peg.type);
+  it("all pegs are classic (player defines special types via radial menu)", () => {
+    for (let level = 0; level < 5; level++) {
+      const layer = new Layer({ level, width: 300, y: level * 56 });
+      for (const peg of layer.pegs) {
+        expect(peg.type).toBe(PEG_TYPES.CLASSIC);
+      }
     }
   });
 

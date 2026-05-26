@@ -19,7 +19,7 @@ import { PEG_TYPES } from "../entities/peg-factory.js";
  * fast-forwarding the rogue-lite progression while testing.
  *
  * Communicates with GameController via gameEvents — no direct coupling.
- * @param {{ onTitle?: () => void, onStyleguide?: () => void, onShop?: () => void, onAbility?: () => void, onTestPegs?: (type: string) => void }} [hooks]
+ * @param {{ onTitle?: () => void, onStyleguide?: () => void, onShop?: () => void, onAbility?: () => void, onTestPegs?: (type: string) => void, onResetRun?: () => void }} [hooks]
  */
 export function installDevAdminPanel({
   onTitle,
@@ -27,6 +27,7 @@ export function installDevAdminPanel({
   onShop,
   onAbility,
   onTestPegs,
+  onResetRun,
 } = {}) {
   if (document.getElementById("pk-dev-admin")) return;
 
@@ -43,6 +44,7 @@ export function installDevAdminPanel({
       <button class="pk-dev-admin-btn" data-dev="nav-styleguide" data-no-sfx>Style guide</button>
       <button class="pk-dev-admin-btn" data-dev="nav-shop" data-no-sfx>Shop</button>
       <button class="pk-dev-admin-btn" data-dev="nav-ability" data-no-sfx>Ability</button>
+      <button class="pk-dev-admin-btn pk-dev-admin-btn--malus" data-dev="reset-run" data-no-sfx>Reset run</button>
     </div>
     <div class="pk-dev-admin-section pk-dev-admin-section--game-only" data-section="spawn-ball">
       <h4>Spawn ball</h4>
@@ -73,11 +75,14 @@ export function installDevAdminPanel({
     </div>
     <div class="pk-dev-admin-section">
       <h4>Test Level</h4>
-      <select class="pk-dev-admin-select" id="pk-dev-test-peg-select" data-no-sfx>
-        <option value="all">All pegs pinboard</option>
-        ${Object.values(PEG_TYPES).map((t) => `<option value="${t}">Only ${t}</option>`).join("")}
-      </select>
-      <button class="pk-dev-admin-btn pk-dev-admin-btn--test" data-dev="test-pegs" data-no-sfx>Run test level</button>
+      <div class="pk-dev-admin-row">
+        <select class="pk-dev-admin-select" id="pk-dev-test-peg-select" data-no-sfx>
+          <option value="">— choose —</option>
+          <option value="all">All pegs</option>
+          ${Object.values(PEG_TYPES).map((t) => `<option value="${t}">Only ${t}</option>`).join("")}
+        </select>
+        <button class="pk-dev-admin-btn pk-dev-admin-btn--test" data-dev="test-pegs" data-no-sfx disabled>Run</button>
+      </div>
     </div>
   `;
 
@@ -93,6 +98,7 @@ export function installDevAdminPanel({
       else if (action === "nav-styleguide") onStyleguide?.();
       else if (action === "nav-shop") onShop?.();
       else if (action === "nav-ability") onAbility?.();
+      else if (action === "reset-run") onResetRun?.();
       else if (action === "spawn-ball") {
         const kind = /** @type {HTMLElement} */ (btn).dataset.kind || "classic";
         gameEvents.emit("dev:spawnBall", kind);
@@ -167,6 +173,12 @@ export function installDevAdminPanel({
   );
 
   document.body.appendChild(panel);
+
+  const testSelect = /** @type {HTMLSelectElement} */ (panel.querySelector("#pk-dev-test-peg-select"));
+  const testBtn = /** @type {HTMLButtonElement} */ (panel.querySelector("[data-dev='test-pegs']"));
+  testSelect.addEventListener("change", () => {
+    testBtn.disabled = !testSelect.value;
+  });
 
   // Track the active scene so we can show/hide scene-specific sections
   // (currently only "Spawn ball", which is meaningful inside GameScene).

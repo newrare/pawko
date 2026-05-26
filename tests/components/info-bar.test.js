@@ -89,15 +89,14 @@ describe("InfoBar", () => {
   });
 
   describe("exploration mode", () => {
-    it("renders 6 pills: progress, keys, resources, arsenal, session, permanent", () => {
+    it("renders 5 pills: progress, resources, arsenal, session, permanent", () => {
       infoBar = new InfoBar({ mode: INFO_BAR_MODES.EXPLORATION });
       infoBar.mount(root);
       const pills = root.querySelectorAll(".pk-info-pill");
-      expect(pills.length).toBe(6);
+      expect(pills.length).toBe(5);
       const ids = [...pills].map((p) => p.dataset.pill);
       expect(ids).toEqual([
         "progress",
-        "keys",
         "resources",
         "arsenal",
         "session",
@@ -117,13 +116,20 @@ describe("InfoBar", () => {
   });
 
   describe("pinboard mode", () => {
-    it("renders 5 pills: balls, launchers, keys, loot, score", () => {
+    it("renders 4 pills: hp, balls, launchers, coins", () => {
       infoBar = new InfoBar({ mode: INFO_BAR_MODES.PINBOARD });
       infoBar.mount(root);
       const pills = root.querySelectorAll(".pk-info-pill");
-      expect(pills.length).toBe(5);
+      expect(pills.length).toBe(4);
       const ids = [...pills].map((p) => p.dataset.pill);
-      expect(ids).toEqual(["balls", "launchers", "keys", "loot", "score"]);
+      expect(ids).toEqual(["hp", "balls", "launchers", "coins"]);
+    });
+
+    it("coins pill shows currency from currencyManager", () => {
+      infoBar = new InfoBar({ mode: INFO_BAR_MODES.PINBOARD });
+      infoBar.mount(root);
+      const count = root.querySelector('[data-pill="coins"] .pk-info-pill-count');
+      expect(count.textContent).toBe("100");
     });
   });
 
@@ -131,21 +137,21 @@ describe("InfoBar", () => {
     it("clicking a pill opens its drawer", () => {
       infoBar = new InfoBar({ mode: INFO_BAR_MODES.EXPLORATION });
       infoBar.mount(root);
-      const pill = root.querySelector('[data-pill="keys"]');
+      const pill = root.querySelector('[data-pill="resources"]');
       pill.click();
-      const updatedPill = root.querySelector('[data-pill="keys"]');
-      expect(root.querySelector('.pk-info-drawer[data-drawer="keys"]')).not.toBeNull();
+      const updatedPill = root.querySelector('[data-pill="resources"]');
+      expect(root.querySelector('.pk-info-drawer[data-drawer="resources"]')).not.toBeNull();
       expect(updatedPill.classList.contains("pk-info-pill--active")).toBe(true);
     });
 
     it("clicking another pill closes current and opens new", () => {
       infoBar = new InfoBar({ mode: INFO_BAR_MODES.EXPLORATION });
       infoBar.mount(root);
-      root.querySelector('[data-pill="keys"]').click();
+      root.querySelector('[data-pill="resources"]').click();
       root.querySelector('[data-pill="progress"]').click();
 
       expect(
-        root.querySelector('[data-pill="keys"]').classList.contains("pk-info-pill--active"),
+        root.querySelector('[data-pill="resources"]').classList.contains("pk-info-pill--active"),
       ).toBe(false);
       expect(
         root.querySelector('[data-pill="progress"]').classList.contains("pk-info-pill--active"),
@@ -156,9 +162,9 @@ describe("InfoBar", () => {
     it("clicking active pill closes its drawer", () => {
       infoBar = new InfoBar({ mode: INFO_BAR_MODES.EXPLORATION });
       infoBar.mount(root);
-      root.querySelector('[data-pill="keys"]').click();
-      root.querySelector('[data-pill="keys"]').click();
-      const pill = root.querySelector('[data-pill="keys"]');
+      root.querySelector('[data-pill="resources"]').click();
+      root.querySelector('[data-pill="resources"]').click();
+      const pill = root.querySelector('[data-pill="resources"]');
       expect(pill.classList.contains("pk-info-pill--active")).toBe(false);
       expect(root.querySelector(".pk-info-drawer--open")).toBeNull();
     });
@@ -166,8 +172,8 @@ describe("InfoBar", () => {
     it("drawer has a title", () => {
       infoBar = new InfoBar({ mode: INFO_BAR_MODES.EXPLORATION });
       infoBar.mount(root);
-      root.querySelector('[data-pill="keys"]').click();
-      const drawer = root.querySelector('.pk-info-drawer[data-drawer="keys"]');
+      root.querySelector('[data-pill="resources"]').click();
+      const drawer = root.querySelector('.pk-info-drawer[data-drawer="resources"]');
       expect(drawer.querySelector(".pk-info-drawer-title")).not.toBeNull();
     });
   });
@@ -176,26 +182,18 @@ describe("InfoBar", () => {
     it("updates pill count", () => {
       infoBar = new InfoBar({ mode: INFO_BAR_MODES.PINBOARD });
       infoBar.mount(root);
-      infoBar.setData("score", 1500);
-      const count = root.querySelector('[data-pill="score"] .pk-info-pill-count');
-      expect(count.textContent).toBe("1500");
+      infoBar.setData("hp", { current: 15, max: 20 });
+      const count = root.querySelector('[data-pill="hp"] .pk-info-pill-count');
+      expect(count.textContent).toBe("15/20");
     });
 
     it("updates drawer content when open", () => {
       infoBar = new InfoBar({ mode: INFO_BAR_MODES.PINBOARD });
       infoBar.mount(root);
-      root.querySelector('[data-pill="score"]').click();
-      infoBar.setData("score", 2500);
-      const drawer = root.querySelector('.pk-info-drawer[data-drawer="score"]');
-      expect(drawer.textContent).toContain("2500");
-    });
-
-    it("formats large scores with k suffix", () => {
-      infoBar = new InfoBar({ mode: INFO_BAR_MODES.PINBOARD });
-      infoBar.mount(root);
-      infoBar.setData("score", 12345);
-      const count = root.querySelector('[data-pill="score"] .pk-info-pill-count');
-      expect(count.textContent).toBe("12.3k");
+      root.querySelector('[data-pill="hp"]').click();
+      infoBar.setData("hp", { current: 10, max: 20 });
+      const drawer = root.querySelector('.pk-info-drawer[data-drawer="hp"]');
+      expect(drawer.textContent).toContain("10");
     });
   });
 
@@ -255,7 +253,7 @@ describe("InfoBar", () => {
     });
 
     it("counts abilities and permanent bonuses separately", () => {
-      abilityManager.getUnlocked.mockReturnValue(["ball_1", "luky_1", "gate_1"]);
+      abilityManager.getUnlocked.mockReturnValue(["ball_1", "gate_1", "launcher_1"]);
       bonusManager.getUnlockedPermanent.mockReturnValue(["perm_extra_ball_1"]);
       infoBar = new InfoBar({ mode: INFO_BAR_MODES.EXPLORATION });
       infoBar.mount(root);

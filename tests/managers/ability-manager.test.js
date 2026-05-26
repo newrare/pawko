@@ -27,15 +27,15 @@ describe("abilityManager", () => {
   });
 
   it("canBuyBonus() returns true for ungated bonuses", () => {
-    expect(abilityManager.canBuyBonus("session_extra_black_ball_one")).toBe(true);
+    expect(abilityManager.canBuyBonus("session_extra_recycles")).toBe(true);
     expect(abilityManager.canBuyBonus("totally_unrelated")).toBe(true);
   });
 
   it("emits change on unlock", () => {
     const fn = vi.fn();
     abilityManager.on("change", fn);
-    abilityManager.unlock("luky_1");
-    expect(fn).toHaveBeenCalledWith("luky_1");
+    abilityManager.unlock("gate_1");
+    expect(fn).toHaveBeenCalledWith("gate_1");
   });
 
   it("getAll() exposes the static catalogue", () => {
@@ -44,7 +44,7 @@ describe("abilityManager", () => {
 
   it("reset() wipes every unlock", () => {
     abilityManager.unlock("ball_1");
-    abilityManager.unlock("luky_1");
+    abilityManager.unlock("gate_1");
     abilityManager.reset();
     expect(abilityManager.getUnlocked()).toEqual([]);
   });

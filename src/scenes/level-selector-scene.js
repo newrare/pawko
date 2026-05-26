@@ -198,6 +198,13 @@ export class LevelSelectorScene {
     const isMalus = def.category === BONUS_CATEGORIES.MALUS;
     const message = i18n.t(titleKey, { name: `${def.icon} ${i18n.t(nameKey)}` });
     notify.show(message, { type: isMalus ? "warning" : "success" });
+
+    /* Mystery is non-blocking: reveal adjacents so the player can keep
+       exploring paths leading away from this cell. */
+    const revealed = this.#grid.revealCurrentAdjacents();
+    this.#newlyRevealed = new Set(revealed.map((c) => `${c.row},${c.col}`));
+    saveManager.saveGridState(this.#grid.serialize());
+
     this.#refresh();
     this.#refreshArsenal();
   }
@@ -237,17 +244,6 @@ export class LevelSelectorScene {
     );
     const balls = { [BALL_KINDS.CLASSIC]: launchers * ballsPerLauncher };
     this.#infoBar.setData("arsenal", { balls, launchers });
-  }
-
-  #startNewRun() {
-    /* New run: clear session bonuses/maluses; permanent unlocks survive. */
-    bonusManager.clearSession();
-    this.#grid = new LevelGrid();
-    this.#grid.init();
-    this.#newlyRevealed = new Set();
-    saveManager.saveGridState(this.#grid.serialize());
-    this.#refresh();
-    this.#refreshArsenal();
   }
 
   // ─── Rendering ──────────────────────────────────────
@@ -343,13 +339,13 @@ export class LevelSelectorScene {
         return `<span class="pk-map-cell-icon">${label}</span>`;
       }
       case CELL_TYPES.SHOP:
-        return '<span class="pk-map-cell-icon">💰</span>';
+        return '<span class="pk-map-cell-icon"><img src="/images/icon-coin.svg" class="pk-svg-icon" alt=""></span>';
       case CELL_TYPES.ABILITY:
-        return '<span class="pk-map-cell-icon">⚡</span>';
+        return '<span class="pk-map-cell-icon"><img src="/images/icon-chip.svg" class="pk-svg-icon" alt=""></span>';
       case CELL_TYPES.MYSTERY:
-        return '<span class="pk-map-cell-icon">❓</span>';
+        return '<span class="pk-map-cell-icon">?</span>';
       case CELL_TYPES.BOSS:
-        return '<span class="pk-map-cell-icon">💀</span>';
+        return '<span class="pk-map-cell-icon"><img src="/images/icon-cat.svg" class="pk-svg-icon" alt=""></span>';
       case CELL_TYPES.EMPTY:
         return '<span class="pk-map-cell-icon">·</span>';
       case CELL_TYPES.START:

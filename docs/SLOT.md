@@ -72,9 +72,8 @@ mirroring the [Ball variants](BALL.md):
 | `score`                  | `PLINKO.SCORE_PEG`       | `Bumper` (SCORE_BUMPER), `CoinPeg` (0)       |
 | `restitution`            | `PLINKO.RESTITUTION_PEG` | `Bumper` (RESTITUTION_BUMPER)                |
 | `appliesPegMultiplier`   | `true`                   | `Bumper` (`false`)                           |
-| `scoreForContact()`      | base, ice=0, burn÷2      | `CoinPeg` (always 0)                         |
-| `consumeReward(ball)`    | `null`                   | `CoinPeg` (returns coin payout directive)    |
-| `onAfterScored()`        | decay one ice charge     | —                                            |
+| `scoreForContact()`      | base score               | elemental pegs (`FirePeg`, `IcePeg`…) → 0    |
+| `consumeReward(ball)`    | `null`                   | elemental pegs (apply effect), `CoinPeg`     |
 
 Adding a new family member is as simple as subclassing `Peg`, overriding
 the relevant hooks, and giving it a `type` tag. The `Layer` factory will

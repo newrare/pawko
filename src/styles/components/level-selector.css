@@ -225,6 +225,15 @@
 .pk-map-cell-icon {
   font-size: 0.95rem;
   line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pk-map-cell-icon .pk-svg-icon {
+  width: 1em;
+  height: 1em;
+  display: block;
 }
 
 /* Level */
@@ -274,8 +283,7 @@
 
 /* Used / completed icons — green.
    Level number and · dot are plain text → CSS color works.
-   Shop 💰, ability ⚡, mystery ❓ are emoji → CSS color has no effect on them;
-   filter converts them to a flat green silhouette that is still recognisable. */
+   Shop/ability/boss SVG imgs → filter converts them to a flat green silhouette. */
 
 .pk-map-cell--used.pk-map-cell--type-level .pk-map-cell-icon,
 .pk-map-cell--used.pk-map-cell--type-empty .pk-map-cell-icon,

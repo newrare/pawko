@@ -43,6 +43,7 @@ export default [
       globals: {
         Event: 'readonly',
         Touch: 'readonly',
+        MouseEvent: 'readonly',
       },
     },
   },
