@@ -6,6 +6,7 @@ import { saveManager } from "../managers/save-manager.js";
 import { bonusManager } from "../managers/bonus-manager.js";
 import { abilityManager } from "../managers/ability-manager.js";
 import { BALL_KINDS } from "../entities/ball-factory.js";
+import { PEG_TYPES } from "../entities/peg-factory.js";
 import { BONUS_CATEGORIES, findBonus } from "../configs/bonus-defs.js";
 import { findAbility } from "../configs/ability-defs.js";
 
@@ -183,9 +184,11 @@ export class InfoBar {
         getCount: () => {
           const arsenal = this.#data.arsenal ?? {};
           const launchers = arsenal.launchers ?? 0;
-          const balls = arsenal.balls ?? {};
-          const totalBalls = Object.values(balls).reduce((a, b) => a + b, 0);
-          return `${launchers} | ${totalBalls}`;
+          const pegs = arsenal.pegs ?? {};
+          const specialPegs = Object.entries(pegs)
+            .filter(([type]) => type !== PEG_TYPES.CLASSIC)
+            .reduce((a, [, n]) => a + n, 0);
+          return `${launchers} | ${specialPegs}`;
         },
         renderDrawer: () => this.#renderArsenalDrawer(),
       },
@@ -327,44 +330,76 @@ export class InfoBar {
     return `
       <div class="pk-info-drawer-grid">
         <div class="pk-info-drawer-row">
-          <span class="pk-info-drawer-label">${i18n.t("info_bar.coins")}</span>
+          <span class="pk-info-drawer-label">
+            <img src="/images/icon-coin.svg" class="pk-svg-icon pk-info-inline-icon" alt="">
+            ${i18n.t("info_bar.coins")}
+          </span>
           <span class="pk-info-drawer-value">${coins}</span>
         </div>
         <div class="pk-info-drawer-row">
-          <span class="pk-info-drawer-label">${i18n.t("info_bar.diamonds")}</span>
-          <span class="pk-info-drawer-value">${diamonds}</span>
+          <span class="pk-info-drawer-label">
+            <img src="/images/icon-card-diamond.svg" class="pk-svg-icon pk-info-inline-icon" alt="">
+            ${i18n.t("info_bar.diamonds")}
+          </span>
+          <span class="pk-info-drawer-value pk-info-drawer-value--diamond">${diamonds}</span>
         </div>
       </div>
     `;
   }
 
   #renderArsenalDrawer() {
-    const balls = this.#data.arsenal?.balls ?? {};
+    const pegs = this.#data.arsenal?.pegs ?? {};
     const launchers = this.#data.arsenal?.launchers ?? 0;
 
-    const kinds = Object.values(BALL_KINDS);
-    const ballRows = kinds
+    const types = Object.values(PEG_TYPES);
+    const pegRows = types
+      .filter((type) => (pegs[type] ?? 0) > 0)
       .map(
-        (kind) => `
+        (type) => `
         <div class="pk-info-drawer-row">
-          <span class="pk-info-drawer-label pk-info-drawer-label--${kind}">
-            ${i18n.t(`info_bar.ball.${kind}`)}
+          <span class="pk-info-drawer-label" style="color:${this.#pegTypeColor(type)}">
+            ${i18n.t(`peg.${type}`)}
           </span>
-          <span class="pk-info-drawer-value">${balls[kind] ?? 0}</span>
+          <span class="pk-info-drawer-value">${pegs[type]}</span>
         </div>
       `,
       )
       .join("");
 
+    const pegsContent = pegRows
+      || `<div class="pk-info-drawer-empty">${i18n.t("info_bar.no_pegs")}</div>`;
+
     return `
       <div class="pk-info-drawer-grid">
-        ${ballRows}
         <div class="pk-info-drawer-row">
           <span class="pk-info-drawer-label">${i18n.t("info_bar.launchers")}</span>
           <span class="pk-info-drawer-value">${launchers}</span>
         </div>
+        <div class="pk-info-drawer-subtitle">${i18n.t("info_bar.pegs")}</div>
+        ${pegsContent}
       </div>
     `;
+  }
+
+  /** @param {string} type — one of PEG_TYPES values */
+  #pegTypeColor(type) {
+    const map = {
+      [PEG_TYPES.CLASSIC]: "var(--pk-peg-ring)",
+      [PEG_TYPES.BUMPER]: "var(--pk-bumper-ring)",
+      [PEG_TYPES.COIN]: "var(--pk-peg-coin)",
+      [PEG_TYPES.DIAMOND]: "var(--pk-peg-diamond)",
+      [PEG_TYPES.GLUE]: "var(--pk-peg-glue)",
+      [PEG_TYPES.TELEPORT]: "var(--pk-teleport-ring)",
+      [PEG_TYPES.CHEST]: "var(--pk-peg-chest)",
+      [PEG_TYPES.SHIELD]: "var(--pk-peg-shield)",
+      [PEG_TYPES.MYSTERY]: "var(--pk-peg-mystery)",
+      [PEG_TYPES.FIRE]: "var(--pk-peg-fire)",
+      [PEG_TYPES.ICE]: "var(--pk-peg-ice)",
+      [PEG_TYPES.ELECTRICAL]: "var(--pk-peg-electrical)",
+      [PEG_TYPES.BLACK]: "var(--pk-peg-black)",
+      [PEG_TYPES.BOMB]: "var(--pk-peg-bomb)",
+    };
+    return map[type] ?? "var(--gt-color-text)";
   }
 
   #renderSessionDrawer() {

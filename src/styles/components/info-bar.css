@@ -15,34 +15,37 @@
 .pk-info-pills {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  padding: 6px 8px;
+  justify-content: center;
+  gap: var(--gt-space-2);
+  padding: var(--gt-space-2) var(--gt-space-3);
   pointer-events: auto;
 }
 
 .pk-info-pill {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  padding: 4px 8px;
-  background: rgba(14, 4, 10, 0.88);
-  border: 1px solid rgba(212, 175, 55, 0.2);
-  border-radius: 12px;
+  gap: var(--gt-space-1);
+  padding: 4px var(--gt-space-2);
+  background: var(--gt-color-surface);
+  border: 1px solid var(--pk-crimson-muted);
+  border-radius: var(--gt-radius-md);
   font-size: 0.68rem;
   font-weight: 700;
   color: var(--pk-gold-light);
   cursor: pointer;
   user-select: none;
+  box-shadow: var(--gt-shadow-sm);
   transition: background 0.15s, border-color 0.15s, transform 0.1s;
 }
 
 .pk-info-pill:active {
-  transform: scale(0.95);
+  transform: scale(0.92);
 }
 
 .pk-info-pill--active {
-  background: rgba(212, 175, 55, 0.15);
+  background: rgba(212, 175, 55, 0.12);
   border-color: var(--pk-gold);
+  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.2);
 }
 
 .pk-info-pill-icon {
@@ -137,6 +140,22 @@
   font-weight: 700;
   color: var(--gt-color-text);
   font-variant-numeric: tabular-nums;
+}
+
+/* --- Inline icon in drawer labels --- */
+
+.pk-info-inline-icon {
+  width: 12px;
+  height: 12px;
+  vertical-align: middle;
+  margin-right: 2px;
+  display: inline-block;
+}
+
+/* --- Colored drawer values --- */
+
+.pk-info-drawer-value--diamond {
+  color: #60a5fa;
 }
 
 /* --- Ball kind colors --- */

@@ -4,7 +4,6 @@ import { currencyManager } from "../managers/currency-manager.js";
 import { bonusManager } from "../managers/bonus-manager.js";
 import { layout } from "../managers/layout-manager.js";
 import { PLINKO } from "../configs/constants.js";
-import { BALL_KINDS } from "../entities/ball-factory.js";
 import {
   PARAM_KEYS,
   SESSION_BONUSES,
@@ -233,17 +232,18 @@ export class LevelSelectorScene {
         ),
       ),
     );
-    const ballsPerLauncher = Math.max(
-      1,
-      Math.floor(
-        bonusManager.resolve(
-          PARAM_KEYS.STARTING_BALLS_PER_SUBLAUNCH,
-          PLINKO.STARTING_BALLS_PER_SUBLAUNCH,
-        ),
-      ),
-    );
-    const balls = { [BALL_KINDS.CLASSIC]: launchers * ballsPerLauncher };
-    this.#infoBar.setData("arsenal", { balls, launchers });
+
+    const pegs = {};
+    const pinboard = saveManager.loadPinboardState();
+    if (pinboard?.layers) {
+      for (const layer of pinboard.layers) {
+        for (const p of layer.pegs ?? []) {
+          pegs[p.type] = (pegs[p.type] ?? 0) + 1;
+        }
+      }
+    }
+
+    this.#infoBar.setData("arsenal", { pegs, launchers });
   }
 
   // ─── Rendering ──────────────────────────────────────
