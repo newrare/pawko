@@ -14,8 +14,8 @@ export class DiamondPeg extends Peg {
   consumeReward(_ball) {
     return {
       diamonds: 1,
-      popText: "+1 💎",
-      popClass: "pk-popup pk-popup--diamond",
+      popHtml: `+1 <span class="pk-float-icon pk-float-icon--diamond"></span>`,
+      popColor: "var(--pk-peg-diamond)",
     };
   }
 }

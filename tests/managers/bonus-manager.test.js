@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { bonusManager } from "../../src/managers/bonus-manager.js";
 import { PARAM_KEYS, DIRECTIVE_ACTIONS } from "../../src/configs/bonus-defs.js";
-import { PLINKO } from "../../src/configs/constants.js";
 
 beforeEach(() => bonusManager._resetForTests());
 
@@ -39,7 +38,7 @@ describe("bonusManager — session", () => {
   });
 
   it("stores Infinity for run-scoped bonuses (durationLevels: null)", () => {
-    bonusManager.activateSession("session_launcher_4");
+    bonusManager.activateSession("session_gate_malus_reduce");
     expect(bonusManager.getActiveSession()[0].remaining).toBe(Infinity);
   });
 
@@ -50,7 +49,7 @@ describe("bonusManager — session", () => {
   });
 
   it("onLevelUp() does not decrement run-scoped bonuses", () => {
-    bonusManager.activateSession("session_launcher_4");
+    bonusManager.activateSession("session_gate_malus_reduce");
     bonusManager.onLevelUp();
     bonusManager.onLevelUp();
     expect(bonusManager.getActiveSession()[0].remaining).toBe(Infinity);
@@ -126,21 +125,13 @@ describe("bonusManager — directives", () => {
 
 describe("bonusManager — resolve()", () => {
   it("returns the base value when no bonus is active", () => {
-    const v = bonusManager.resolve(
-      PARAM_KEYS.STARTING_BALLS_PER_SUBLAUNCH,
-      PLINKO.STARTING_BALLS_PER_SUBLAUNCH,
-    );
-    expect(v).toBe(PLINKO.STARTING_BALLS_PER_SUBLAUNCH);
+    const v = bonusManager.resolve(PARAM_KEYS.STARTING_BALLS, 20);
+    expect(v).toBe(20);
   });
 
   it("applies an additive permanent bonus", () => {
     bonusManager.unlockPermanent("perm_extra_ball_1");
-    expect(
-      bonusManager.resolve(
-        PARAM_KEYS.STARTING_BALLS_PER_SUBLAUNCH,
-        PLINKO.STARTING_BALLS_PER_SUBLAUNCH,
-      ),
-    ).toBe(PLINKO.STARTING_BALLS_PER_SUBLAUNCH + 1);
+    expect(bonusManager.resolve(PARAM_KEYS.STARTING_BALLS, 20)).toBe(21);
   });
 
   it("applies a multiplicative session bonus", () => {
@@ -153,21 +144,11 @@ describe("bonusManager — resolve()", () => {
     expect(bonusManager.resolve(PARAM_KEYS.GATE_X_DOUBLE, false)).toBe(true);
   });
 
-  it("stacks add then multiply across permanent + session", () => {
+  it("stacks permanent and session modifiers independently", () => {
     bonusManager.unlockPermanent("perm_extra_ball_1");
-    bonusManager.activateSession("session_launcher_4");
-    expect(
-      bonusManager.resolve(
-        PARAM_KEYS.STARTING_BALLS_PER_SUBLAUNCH,
-        PLINKO.STARTING_BALLS_PER_SUBLAUNCH,
-      ),
-    ).toBe(PLINKO.STARTING_BALLS_PER_SUBLAUNCH + 1);
-    expect(
-      bonusManager.resolve(
-        PARAM_KEYS.SUBLAUNCH_COUNT,
-        PLINKO.SUBLAUNCH_COUNT,
-      ),
-    ).toBe(PLINKO.SUBLAUNCH_COUNT + 1);
+    bonusManager.activateSession("session_extra_recycles");
+    expect(bonusManager.resolve(PARAM_KEYS.STARTING_BALLS, 20)).toBe(21);
+    expect(bonusManager.resolve(PARAM_KEYS.TELEPORT_RECYCLE_MAX_BONUS, 0)).toBe(2);
   });
 });
 

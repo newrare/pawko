@@ -25,7 +25,9 @@ describe("CoinPeg", () => {
     const reward = c.consumeReward(null);
     expect(reward).not.toBeNull();
     expect(reward.coins).toBe(PLINKO.COIN_VALUE);
-    expect(reward.popText).toBe(`+${PLINKO.COIN_VALUE}`);
-    expect(reward.popClass).toBe("pk-popup pk-popup--coin");
+    /* Rich floating-text with SVG icon — controller reads popHtml + popColor. */
+    expect(reward.popHtml).toContain(`+${PLINKO.COIN_VALUE}`);
+    expect(reward.popHtml).toContain("pk-float-icon--coin");
+    expect(reward.popColor).toBe("#facc15");
   });
 });

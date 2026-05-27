@@ -153,20 +153,11 @@ export const PLINKO = {
   SLOTS_PER_LAYER: 20,
   /** Random start slot offset; staggers the pattern from layer to layer. */
   START_SLOT_CHOICES: [0, 1, 2],
-  /** Probability a filled slot becomes a bumper instead of a peg. */
-  BUMPER_CHANCE_BASE: 0.05,
-  BUMPER_CHANCE_PER_LEVEL: 0.005,
-  BUMPER_CHANCE_MAX: 0.35,
-  /** Probability a filled slot becomes a coin peg. */
-  COIN_CHANCE_BASE: 0.04,
 
   /** Number of layers loaded at once at the start of a level. */
   INITIAL_LAYERS: 9,
 
   /* Launch zone */
-  SUBLAUNCH_COUNT: 1,
-  /** Base ball count per sublaunch at round start (fallback / dev). */
-  STARTING_BALLS_PER_SUBLAUNCH: 2,
   /** Tower-defense ball-count scaling per level: base + step * levelId.
      Level 1 → 20, level 2 → 30, level 3 → 40, etc. */
   BALLS_LEVEL_BASE: 10,
@@ -194,12 +185,12 @@ export const PLINKO = {
      gauge fill so its top edge meets the target line at 100%. */
   TARGET_LINE_OFFSET: 20,
   /* Physics */
-  GRAVITY: 1400,
-  RESTITUTION_PEG: 0.55,
-  RESTITUTION_BUMPER: 1.05,
+  GRAVITY: 600,
+  RESTITUTION_PEG: 0.40,
+  RESTITUTION_BUMPER: 1.00,
   WALL_RESTITUTION: 0.7,
   /** Horizontal velocity multiplier when a ball contacts a floor surface. */
-  FLOOR_FRICTION: 0.4,
+  FLOOR_FRICTION: 0,
   MAX_VELOCITY: 1200,
   /** Max simulation step (s); avoids tunneling on tab refocus. */
   MAX_STEP: 1 / 60,
@@ -267,17 +258,17 @@ export const PEG_DEFS = {
   peg: { hp: 10 },
   bumper: { hp: 10 },
   coin: { hp: 10 },
-  diamond: { hp: 5 },
-  glue: { hp: 5 },
-  teleport: { hp: 2 },
-  chest: { hp: 2 },
-  shield: { hp: 1 },
-  mystery: { hp: 2 },
-  fire: { hp: 8 },
-  ice: { hp: 8 },
-  electrical: { hp: 6 },
-  black: { hp: 15 },
-  bomb: { hp: 1 },
+  diamond: { hp: 10 },
+  glue: { hp: 10 },
+  teleport: { hp: 10 },
+  chest: { hp: 10 },
+  shield: { hp: 10 },
+  mystery: { hp: 10 },
+  fire: { hp: 10 },
+  ice: { hp: 10 },
+  electrical: { hp: 10 },
+  black: { hp: 10 },
+  bomb: { hp: 10 },
 };
 
 // ─── Ball kinds & peg-to-ball effects ─────────────────────────────────────

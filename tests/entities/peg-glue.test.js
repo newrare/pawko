@@ -25,8 +25,8 @@ describe("GluePeg", () => {
     const reward = g.consumeReward(ball);
     expect(reward).not.toBeNull();
     expect(reward.trapped).toBe(true);
-    expect(reward.popText).toBe("GLUE!");
-    expect(reward.popClass).toBe("pk-popup pk-popup--glue");
+    expect(reward.popText).toBeUndefined();
+    expect(reward.popClass).toBeUndefined();
     expect(g.trappedBall).toBe(ball);
     expect(g.canTrap).toBe(false);
   });
@@ -57,14 +57,14 @@ describe("GluePeg", () => {
     expect(g.isLastHit).toBe(true);
   });
 
-  it("onDestroyed releases the trapped ball and pops a FREE label", () => {
+  it("onDestroyed releases the trapped ball without a popup label", () => {
     const g = new GluePeg();
     const ball = { id: 7 };
     g.consumeReward(ball);
     const death = g.onDestroyed(ball);
     expect(death).not.toBeNull();
     expect(death.releaseBall).toBe(ball);
-    expect(death.popText).toBe("FREE!");
+    expect(death.popText).toBeUndefined();
     expect(g.trappedBall).toBeNull();
   });
 

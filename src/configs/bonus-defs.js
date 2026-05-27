@@ -38,8 +38,7 @@ export const BONUS_CATEGORIES = /** @type {const} */ ({
  */
 export const PARAM_KEYS = /** @type {const} */ ({
   /* Launcher / ball composition */
-  STARTING_BALLS_PER_SUBLAUNCH: "startingBallsPerSublaunch",
-  SUBLAUNCH_COUNT: "sublaunchCount",
+  STARTING_BALLS: "startingBalls",
 
   /* Gates (legacy) */
   GATE_MALUS_REDUCTION: "gateMalusReduction",
@@ -125,7 +124,7 @@ export const PERMANENT_BONUSES = [
     rarity: "permanent",
     icon: "🟢",
     modifiers: [
-      { paramKey: PARAM_KEYS.STARTING_BALLS_PER_SUBLAUNCH, op: "add", value: 1 },
+      { paramKey: PARAM_KEYS.STARTING_BALLS, op: "add", value: 1 },
     ],
   },
   {
@@ -137,7 +136,7 @@ export const PERMANENT_BONUSES = [
     rarity: "permanent",
     icon: "🟢",
     modifiers: [
-      { paramKey: PARAM_KEYS.STARTING_BALLS_PER_SUBLAUNCH, op: "add", value: 1 },
+      { paramKey: PARAM_KEYS.STARTING_BALLS, op: "add", value: 1 },
     ],
   },
   {
@@ -149,7 +148,7 @@ export const PERMANENT_BONUSES = [
     rarity: "permanent",
     icon: "🟢",
     modifiers: [
-      { paramKey: PARAM_KEYS.STARTING_BALLS_PER_SUBLAUNCH, op: "add", value: 1 },
+      { paramKey: PARAM_KEYS.STARTING_BALLS, op: "add", value: 1 },
     ],
   },
   {
@@ -360,7 +359,6 @@ export const SESSION_BONUSES = [
       { paramKey: PARAM_KEYS.GATE_X_DOUBLE, op: "set", value: true },
     ],
   },
-  ...buildLauncherBonuses(),
   {
     id: "session_coin_drop_x2",
     type: BONUS_TYPES.SESSION,
@@ -415,34 +413,6 @@ export const SESSION_BONUSES = [
     ],
   },
 ];
-
-/**
- * Build the launcher-bonus rows (session_launcher_4 … session_launcher_9).
- * Each one bumps `SUBLAUNCH_COUNT` by 1 for the rest of the run.
- */
-function buildLauncherBonuses() {
-  const rows = [
-    { id: "session_launcher_4", cost: 2000, ability: "launcher_1" },
-    { id: "session_launcher_5", cost: 4000, ability: "launcher_2" },
-    { id: "session_launcher_6", cost: 8000, ability: "launcher_3" },
-    { id: "session_launcher_7", cost: 9000, ability: "launcher_4" },
-    { id: "session_launcher_8", cost: 10000, ability: "launcher_5" },
-    { id: "session_launcher_9", cost: 10000, ability: "launcher_6" },
-  ];
-  return rows.map((r) => ({
-    id: r.id,
-    type: BONUS_TYPES.SESSION,
-    category: BONUS_CATEGORIES.BONUS,
-    cost: r.cost,
-    abilityRequired: r.ability,
-    rarity: "epic",
-    icon: "🚀",
-    durationLevels: null,
-    modifiers: [
-      { paramKey: PARAM_KEYS.SUBLAUNCH_COUNT, op: "add", value: 1 },
-    ],
-  }));
-}
 
 // ────────────────────────────────────────────────────────────────────
 // Session maluses (never sold in shop; rolled by mystery cell / peg)

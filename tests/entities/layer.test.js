@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { Layer, bumperChanceForLevel } from "../../src/entities/layer.js";
+import { Layer } from "../../src/entities/layer.js";
 import { Slot } from "../../src/entities/slot.js";
 import { PLINKO } from "../../src/configs/constants.js";
 import { PEG_TYPES } from "../../src/entities/peg-factory.js";
@@ -51,23 +51,6 @@ describe("Layer", () => {
       expect(peg.x).toBeCloseTo(Slot.xFor(peg.slot, 200));
       expect(peg.y).toBe(100);
     }
-  });
-});
-
-describe("bumperChanceForLevel", () => {
-  it("starts at BUMPER_CHANCE_BASE", () => {
-    expect(bumperChanceForLevel(0)).toBeCloseTo(PLINKO.BUMPER_CHANCE_BASE);
-  });
-
-  it("grows linearly with level", () => {
-    const v = bumperChanceForLevel(10);
-    expect(v).toBeCloseTo(
-      PLINKO.BUMPER_CHANCE_BASE + 10 * PLINKO.BUMPER_CHANCE_PER_LEVEL,
-    );
-  });
-
-  it("caps at BUMPER_CHANCE_MAX", () => {
-    expect(bumperChanceForLevel(10000)).toBe(PLINKO.BUMPER_CHANCE_MAX);
   });
 });
 

@@ -303,6 +303,13 @@
 
 /* --- Peg keyframes --- */
 
+/* Implode on destruction: the ring contracts to its own centre and vanishes. */
+@keyframes pk-peg-implode {
+  0%   { transform: scale(1);    opacity: 1; }
+  55%  { transform: scale(0.35); opacity: 0.7; }
+  100% { transform: scale(0);    opacity: 0; }
+}
+
 @keyframes pk-peg-flash {
   0%   { transform: scale(1); filter: brightness(1); }
   50%  { transform: scale(1.4); filter: brightness(1.4); }

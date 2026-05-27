@@ -46,6 +46,27 @@ export class PinboardVfx {
   }
 
   /**
+   * Pop a rich floating label (HTML content — text + SVG icon) inside the
+   * pinboard at (x, y). Uses the bouncy vfx-float-up style animation.
+   * @param {string} html  — safe inner HTML (no user input)
+   * @param {number} x
+   * @param {number} y
+   * @param {string} [color]  — CSS color applied to both text and icon
+   */
+  popFloatingText(html, x, y, color) {
+    const { stackEl, bag } = this.deps;
+    if (!stackEl) return;
+    const pop = document.createElement("div");
+    pop.className = "pk-float-text";
+    pop.innerHTML = html;
+    if (color) pop.style.color = color;
+    pop.style.left = `${x}px`;
+    pop.style.top = `${y - 12}px`;
+    stackEl.appendChild(pop);
+    bag.timeout(() => pop.remove(), 1200);
+  }
+
+  /**
    * Pop a floating label at the pinboard bottom when a ball enters a gate
    * (coins gained or HP damage).
    * @param {number} value  positive = coins gained, negative = HP damage
@@ -62,6 +83,26 @@ export class PinboardVfx {
     pop.style.top = `${y - 8}px`;
     stackEl.appendChild(pop);
     bag.timeout(() => pop.remove(), 900);
+  }
+
+  /**
+   * Implode a peg element: the ring contracts toward its own centre and
+   * fades out, then the element is removed from the DOM.
+   * Call this instead of el.remove() so destruction always plays the animation.
+   * @param {HTMLElement | null | undefined} el
+   */
+  implodePeg(el) {
+    if (!el) return;
+    const { bag } = this.deps;
+    /* Stop pointer events so the dying peg can't be clicked. */
+    el.style.pointerEvents = "none";
+    /* Strip classes whose animations would fight the implode. */
+    el.classList.remove("pk-tremble", "pk-flash", "pk-peg--rescuable");
+    /* Reflow so the browser registers the above removals before we override. */
+    void el.offsetWidth;
+    /* Override every existing animation with the implode keyframe. */
+    el.style.animation = "pk-peg-implode 260ms ease-in forwards";
+    bag.timeout(() => el.remove(), 280);
   }
 
   /** Replay the .pk-flash animation on a peg element. */
@@ -163,6 +204,29 @@ export class PinboardVfx {
       ballEl.classList.add("pk-recycle-materialize");
       bag.timeout(() => ballEl.classList.remove("pk-recycle-materialize"), 400);
     }
+  }
+
+  /**
+   * Peg teleport effect: a short vertical beam in teleport-indigo colour.
+   * Subtle variant of emitRecycleTeleport — no particles, no materialize
+   * flash, half the beam length and thickness.
+   * @param {number} bx
+   * @param {number} by
+   * @param {HTMLElement | null} _ballEl  — unused, kept for API symmetry
+   */
+  emitPegTeleport(bx, by, _ballEl) {
+    const { ballLayerEl, bag, getPinboardOffsetTop } = this.deps;
+    if (!ballLayerEl) return;
+    const oy = getPinboardOffsetTop();
+    const sx = bx;
+    const sy = by + oy;
+    const halfSy = sy / 2;
+
+    const beam = document.createElement("div");
+    beam.className = "pk-teleport-beam";
+    beam.style.cssText = `left:${sx}px;top:${halfSy.toFixed(1)}px;height:${halfSy.toFixed(1)}px`;
+    ballLayerEl.appendChild(beam);
+    bag.timeout(() => beam.remove(), 550);
   }
 
   /**

@@ -51,14 +51,3 @@ export class Layer extends Entity {
   }
 }
 
-/**
- * Compute the bumper probability for a given level. Capped so high levels
- * stay playable. Pure helper, exported for tests.
- * @param {number} level
- * @returns {number}
- */
-export function bumperChanceForLevel(level) {
-  const v =
-    PLINKO.BUMPER_CHANCE_BASE + level * PLINKO.BUMPER_CHANCE_PER_LEVEL;
-  return Math.min(PLINKO.BUMPER_CHANCE_MAX, v);
-}

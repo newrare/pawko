@@ -18,6 +18,6 @@ export class TeleportPeg extends Peg {
    * @returns {{ teleport: true }}
    */
   consumeReward(_ball) {
-    return { teleport: true, popText: "⚡ ZAP!", popClass: "pk-popup pk-popup--teleport" };
+    return { teleport: true };
   }
 }

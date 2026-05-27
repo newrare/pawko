@@ -44,8 +44,7 @@
 .pk-launch {
   flex: 0 0 12%;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
+  grid-template-columns: 1fr;
   padding: 6px;
 }
 
@@ -153,6 +152,30 @@
   will-change: transform;
 }
 
+/* --- Ball destroy — explosion (effect 01) --- */
+
+@keyframes pk-ball-destroy {
+  0%   { transform: translate(var(--bx), var(--by)) scale(1);    opacity: 1; }
+  30%  { transform: translate(var(--bx), var(--by)) scale(1.35); opacity: 1; }
+  100% { transform: translate(var(--bx), var(--by)) scale(0);    opacity: 0; }
+}
+
+.pk-ball--destroying {
+  animation: pk-ball-destroy 0.4s ease-out forwards;
+}
+
+@keyframes pk-ball-explode-particle {
+  0%   { transform: translate(0, 0) scale(1);   opacity: 1; }
+  100% { transform: translate(var(--px), var(--py)) scale(0.3); opacity: 0; }
+}
+
+.pk-ball-explode-particle {
+  position: absolute;
+  border-radius: 50%;
+  animation: pk-ball-explode-particle 0.55s ease-out forwards;
+  pointer-events: none;
+}
+
 .pk-popup {
   position: absolute;
   font-weight: 800;
@@ -167,6 +190,52 @@
 .pk-popup--gate { font-size: 0.95rem; font-weight: 900; }
 .pk-popup--bonus { color: var(--gt-color-success); }
 .pk-popup--malus { color: var(--gt-color-danger); }
+
+/* --- Floating text with icon (coin / diamond peg hits) --- */
+
+.pk-float-text {
+  position: absolute;
+  font-weight: 900;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  pointer-events: none;
+  white-space: nowrap;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+  animation: pk-float-text-up 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes pk-float-text-up {
+  0%   { opacity: 1; transform: translate(-50%, 0) scale(0.5); }
+  20%  { transform: translate(-50%, -10px) scale(1.3); }
+  40%  { transform: translate(-50%, -25px) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -60px) scale(0.8); }
+}
+
+.pk-float-icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+  background-color: currentColor;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+
+.pk-float-icon--coin {
+  mask-image: url('/images/icon-coin.svg');
+  -webkit-mask-image: url('/images/icon-coin.svg');
+}
+
+.pk-float-icon--diamond {
+  mask-image: url('/images/icon-diamond.svg');
+  -webkit-mask-image: url('/images/icon-diamond.svg');
+}
 
 /* --- Collection gates --- */
 
@@ -294,6 +363,26 @@
   transform-origin: bottom center;
 }
 
+/* --- Peg teleport beam (subtle — half thickness/length, indigo tint) --- */
+
+.pk-teleport-beam {
+  position: absolute;
+  width: 1.5px;
+  margin-left: -0.75px;
+  border-radius: 1px;
+  background: linear-gradient(
+    to top,
+    rgba(129, 140, 248, 0.65) 0%,
+    rgba(165, 180, 252, 0.2) 70%,
+    transparent 100%
+  );
+  box-shadow: 0 0 4px rgba(129, 140, 248, 0.35);
+  animation: pk-recycle-beam 0.35s ease-out forwards;
+  pointer-events: none;
+  z-index: 11;
+  transform-origin: bottom center;
+}
+
 @keyframes pk-recycle-beam {
   0%   { transform: scaleY(0); opacity: 0; }
   20%  { transform: scaleY(1); opacity: 0.7; }
@@ -301,8 +390,8 @@
 }
 
 @keyframes pk-recycle-materialize {
-  0%   { filter: brightness(3) saturate(0.3); transform: scale(1.5); }
-  100% { filter: brightness(1) saturate(1); transform: scale(1); }
+  0%   { filter: brightness(3) saturate(0.3); scale: 1.5; }
+  100% { filter: brightness(1) saturate(1); scale: 1; }
 }
 
 .pk-ball.pk-recycle-materialize {

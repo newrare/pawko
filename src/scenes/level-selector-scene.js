@@ -3,7 +3,6 @@ import { saveManager } from "../managers/save-manager.js";
 import { currencyManager } from "../managers/currency-manager.js";
 import { bonusManager } from "../managers/bonus-manager.js";
 import { layout } from "../managers/layout-manager.js";
-import { PLINKO } from "../configs/constants.js";
 import {
   PARAM_KEYS,
   SESSION_BONUSES,
@@ -223,15 +222,6 @@ export class LevelSelectorScene {
    */
   #refreshArsenal() {
     if (!this.#infoBar) return;
-    const launchers = Math.max(
-      1,
-      Math.floor(
-        bonusManager.resolve(
-          PARAM_KEYS.SUBLAUNCH_COUNT,
-          PLINKO.SUBLAUNCH_COUNT,
-        ),
-      ),
-    );
 
     const pegs = {};
     const pinboard = saveManager.loadPinboardState();
@@ -243,7 +233,7 @@ export class LevelSelectorScene {
       }
     }
 
-    this.#infoBar.setData("arsenal", { pegs, launchers });
+    this.#infoBar.setData("arsenal", { pegs, launchers: 1 });
   }
 
   // ─── Rendering ──────────────────────────────────────

@@ -29,7 +29,7 @@ export class GluePeg extends Peg {
   consumeReward(ball) {
     if (!this.canTrap) return null;
     this.trappedBall = ball;
-    return { trapped: true, popText: "GLUE!", popClass: "pk-popup pk-popup--glue" };
+    return { trapped: true };
   }
 
   /**
@@ -40,7 +40,7 @@ export class GluePeg extends Peg {
     if (this.trappedBall) {
       const freed = this.trappedBall;
       this.trappedBall = null;
-      return { releaseBall: freed, popText: "FREE!", popClass: "pk-popup pk-popup--free" };
+      return { releaseBall: freed };
     }
     return null;
   }

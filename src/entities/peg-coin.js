@@ -23,8 +23,8 @@ export class CoinPeg extends Peg {
   consumeReward(_ball) {
     return {
       coins: this.coinValue,
-      popText: `+${this.coinValue}`,
-      popClass: "pk-popup pk-popup--coin",
+      popHtml: `+${this.coinValue} <span class="pk-float-icon pk-float-icon--coin"></span>`,
+      popColor: "var(--pk-gold)",
     };
   }
 }

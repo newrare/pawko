@@ -40,15 +40,15 @@ export class GameController {
   /** @type {HTMLElement | null} */ #safeEl = null;
   /** @type {HTMLElement | null} */ #pinboardEl = null;
   /** @type {HTMLElement | null} */ #stackEl = null;
-  /** @type {HTMLElement[]} */ #sublaunchEls = [];
+  /** @type {HTMLElement | null} */ #launcherEl = null;
   /** @type {HTMLElement | null} */ #ballLayerEl = null;
 
   /* --- Game state --- */
   /** @type {number} */ #levelId = 1;
   /** @type {number} */ #playerHp = 0;
   /** @type {number} */ #playerMaxHp = 0;
-  /** @type {number[]} */ #sublaunchBalls = [];
-  /** @type {boolean[]} */ #sublaunchFired = [];
+  /** @type {number} */ #launcherBalls = 0;
+  /** @type {boolean} */ #launcherFired = false;
   /** @type {import('../entities/layer.js').Layer[]} */ #layers = [];
   /** @type {Map<number, HTMLElement>} */ #layerEls = new Map();
   /** @type {Map<number, HTMLElement>} */ #pegEls = new Map();
@@ -98,31 +98,19 @@ export class GameController {
   start() {
     this.#levelId = this.#data?.levelId ?? 1;
 
-    /* Active bonuses can mutate the round shape (extra balls, extra
-       sublaunchers). Resolve once on round start and snapshot the values
-       in the round state — so a bonus expiring mid-round does not yank
-       balls/sublauncher away under the player. */
-    const sublaunchCount = Math.max(
-      1,
-      Math.floor(
-        bonusManager.resolve(
-          PARAM_KEYS.SUBLAUNCH_COUNT,
-          PLINKO.SUBLAUNCH_COUNT,
-        ),
-      ),
-    );
+    /* Active bonuses can add extra balls. Resolve once on round start and
+       snapshot the value so a bonus expiring mid-round does not affect
+       the current wave. */
     /* Tower-defense: ball count scales with the level — base + step * levelId.
-       Level 1 fires 20 balls per sublaunch, level 2 → 30, etc. Divided across
-       sublaunches so the total wave size stays consistent. */
+       Level 1 fires 20 balls, level 2 → 30, etc. */
     const levelBalls =
       PLINKO.BALLS_LEVEL_BASE + PLINKO.BALLS_LEVEL_STEP * this.#levelId;
     const scaledBase = bonusManager.resolve(
-      PARAM_KEYS.STARTING_BALLS_PER_SUBLAUNCH,
-      levelBalls / sublaunchCount,
+      PARAM_KEYS.STARTING_BALLS,
+      levelBalls,
     );
-    const ballsPerSublaunch = Math.max(1, Math.floor(scaledBase));
-    this.#sublaunchBalls = Array(sublaunchCount).fill(ballsPerSublaunch);
-    this.#sublaunchFired = Array(sublaunchCount).fill(false);
+    this.#launcherBalls = Math.max(1, Math.floor(scaledBase));
+    this.#launcherFired = false;
 
     this.#playerMaxHp = PLINKO.PLAYER_MAX_HP +
       bonusManager.resolve(PARAM_KEYS.PLAYER_MAX_HP_BONUS, 0);
@@ -153,7 +141,7 @@ export class GameController {
     this.#setupPegTap();
     this.#spawnHeldBalls();
     this.#applyRoundDirectives();
-    this.#refreshSublaunches();
+    this.#refreshLauncher();
     this.#renderHudBonuses();
     this.#updateInfoBar();
 
@@ -210,11 +198,10 @@ export class GameController {
       teleport_right: i18n.t("game.gate.teleport"),
     };
 
-    const sublaunchCount = this.#sublaunchBalls.length;
     safe.innerHTML = `
       <div class="pk-board-card">
-        <div class="pk-launch" data-role="launch" style="grid-template-columns: repeat(${sublaunchCount}, 1fr)">
-          ${Array.from({ length: sublaunchCount }, (_, i) => `<div class="pk-sublaunch" data-sublaunch="${i}"></div>`).join("")}
+        <div class="pk-launch" data-role="launch">
+          <div class="pk-sublaunch" data-sublaunch="0"></div>
         </div>
         <div class="pk-pinboard" data-role="pinboard">
           <div class="pk-hud-bonuses" data-role="hud-bonuses"></div>
@@ -235,7 +222,7 @@ export class GameController {
 
     this.#pinboardEl = safe.querySelector('[data-role="pinboard"]');
     this.#stackEl = safe.querySelector('[data-role="stack"]');
-    this.#sublaunchEls = Array.from(safe.querySelectorAll(".pk-sublaunch"));
+    this.#launcherEl = safe.querySelector(".pk-sublaunch");
 
     this.#bag.on(safe, "pointerdown", this.#onPointer);
   }
@@ -278,10 +265,8 @@ export class GameController {
       }
     }
 
-    const sub = target.closest("[data-sublaunch]");
-    if (sub) {
-      const i = Number(/** @type {HTMLElement} */ (sub).dataset.sublaunch);
-      this.#fireSublaunch(i);
+    if (target.closest("[data-sublaunch]")) {
+      this.#fireLauncher();
     }
   };
 
@@ -325,18 +310,15 @@ export class GameController {
   }
 
   #computeLaunchWalls() {
-    if (!this.#pinboardEl) return;
+    if (!this.#pinboardEl || !this.#launcherEl) return;
     const pr = this.#pinboardEl.getBoundingClientRect();
-    this.#launchWalls = [];
-    for (const el of this.#sublaunchEls) {
-      const r = el.getBoundingClientRect();
-      this.#launchWalls.push({
-        left: r.left - pr.left,
-        right: r.right - pr.left,
-        top: r.top - pr.top,
-        bottom: r.bottom - pr.top,
-      });
-    }
+    const r = this.#launcherEl.getBoundingClientRect();
+    this.#launchWalls = [{
+      left: r.left - pr.left,
+      right: r.right - pr.left,
+      top: r.top - pr.top,
+      bottom: r.bottom - pr.top,
+    }];
   }
 
   /* ──────────────────────────────────────────────────────────────────────
@@ -423,35 +405,31 @@ export class GameController {
      Launch
      ────────────────────────────────────────────────────────────────────── */
 
-  /** @param {number} index */
-  #fireSublaunch(index) {
+  #fireLauncher() {
     if (this.#ended) return;
-    if (this.#sublaunchFired[index]) return;
-    const held = this.#getHeldBalls(index);
+    if (this.#launcherFired) return;
+    const held = this.#getHeldBalls();
     if (held.length === 0) return;
 
-    this.#sublaunchFired[index] = true;
+    this.#launcherFired = true;
     this.#teardownPegTap();
-    const subEl = this.#sublaunchEls[index];
-    subEl?.setAttribute("data-firing", "true");
-    this.#bag.timeout(() => subEl?.removeAttribute("data-firing"), 400);
-    this.#emitReceptacleParticles(subEl);
+    this.#launcherEl?.setAttribute("data-firing", "true");
+    this.#bag.timeout(() => this.#launcherEl?.removeAttribute("data-firing"), 400);
+    this.#emitReceptacleParticles(this.#launcherEl);
 
     for (const { ball } of held) {
       ball.state = "active";
     }
-    this.#sublaunchBalls[index] = 0;
-    this.#refreshSublaunches();
+    this.#launcherBalls = 0;
+    this.#refreshLauncher();
     this.#updateInfoBar();
     this.#startLoop();
   }
 
-  /** @param {number} subIndex */
-  #getHeldBalls(subIndex) {
+  #getHeldBalls() {
     const result = [];
     for (const entry of this.#balls.values()) {
-      if (entry.ball.state === "held" && entry.ball.sublaunchIdx === subIndex)
-        result.push(entry);
+      if (entry.ball.state === "held") result.push(entry);
     }
     return result;
   }
@@ -495,7 +473,7 @@ export class GameController {
    */
   #openRadialMenu(peg, anchorEl) {
     if (this.#radialMenu) this.#radialMenu.close();
-    if (this.#sublaunchFired[0]) return; // wave already fired
+    if (this.#launcherFired) return; // wave already fired
 
     this.#radialMenu = new RadialPegMenu({
       anchorEl,
@@ -558,36 +536,29 @@ export class GameController {
   #spawnHeldBalls() {
     if (!this.#ballLayerEl) return;
     this.#computeLaunchWalls();
-    const count = this.#sublaunchEls.length;
-    for (let i = 0; i < count; i++) {
-      const n = this.#sublaunchBalls[i] ?? 0;
-      const box = this.#launchWalls[i];
-      if (!box) continue;
-      const cx = (box.left + box.right) / 2;
-      const boxW = box.right - box.left;
-      for (let b = 0; b < n; b++) {
-        const jx = (Math.random() - 0.5) * (boxW * 0.5);
-        const ball = new Ball({ x: cx + jx, y: box.top + 4 + b * 4 });
-        ball.state = "held";
-        ball.sublaunchIdx = i;
-        const el = this.#createBallEl(ball);
-        const oy = this.#pinboardOffsetTop;
-        el.style.transform = `translate(${ball.x}px, ${ball.y + oy}px)`;
-        this.#ballLayerEl.appendChild(el);
-        this.#balls.set(ball.id, { ball, el });
-      }
+    const box = this.#launchWalls[0];
+    if (!box) return;
+    const cx = (box.left + box.right) / 2;
+    const boxW = box.right - box.left;
+    for (let b = 0; b < this.#launcherBalls; b++) {
+      const jx = (Math.random() - 0.5) * (boxW * 0.5);
+      const ball = new Ball({ x: cx + jx, y: box.top + 4 + b * 4 });
+      ball.state = "held";
+      ball.sublaunchIdx = 0;
+      const el = this.#createBallEl(ball);
+      const oy = this.#pinboardOffsetTop;
+      el.style.transform = `translate(${ball.x}px, ${ball.y + oy}px)`;
+      this.#ballLayerEl.appendChild(el);
+      this.#balls.set(ball.id, { ball, el });
     }
     this.#startLoop();
   }
 
-  #refreshSublaunches() {
-    for (let i = 0; i < this.#sublaunchEls.length; i++) {
-      const el = this.#sublaunchEls[i];
-      if (this.#sublaunchFired[i]) {
-        el.setAttribute("data-empty", "true");
-      } else {
-        el.removeAttribute("data-empty");
-      }
+  #refreshLauncher() {
+    if (this.#launcherFired) {
+      this.#launcherEl?.setAttribute("data-empty", "true");
+    } else {
+      this.#launcherEl?.removeAttribute("data-empty");
     }
   }
 
@@ -826,11 +797,9 @@ export class GameController {
       if (reward.coins) currencyManager.add(reward.coins);
       if (reward.diamonds) gameEvents.emit("diamonds", reward.diamonds);
       if (reward.teleport) {
+        this.#emitPegTeleport(peg.x, peg.y, null);
         ball.teleportInside({ width: this.#pinboardWidth, height: this.#pinboardHeight });
         audioManager.playSfx("click");
-        if (reward.popText) {
-          this.#popText(reward.popText, peg.x, peg.y, reward.popClass ?? "pk-popup");
-        }
         const died = peg.takeDamage(1);
         if (died) {
           this.#startPegRescue(peg, ball);
@@ -843,9 +812,7 @@ export class GameController {
       if (reward.effect) {
         ball.applyEffect(reward.effect, performance.now());
         audioManager.playSfx("click");
-        if (reward.popText) {
-          this.#popText(reward.popText, peg.x, peg.y, reward.popClass ?? "pk-popup");
-        }
+        this.#popReward(reward, peg.x, peg.y);
         const died = peg.takeDamage(1);
         if (died) {
           this.#startPegRescue(peg, ball);
@@ -863,9 +830,7 @@ export class GameController {
       /* Black peg: instant kill — set ball HP to 0. */
       if (reward.instantKill) {
         audioManager.playSfx("click");
-        if (reward.popText) {
-          this.#popText(reward.popText, peg.x, peg.y, reward.popClass ?? "pk-popup");
-        }
+        this.#popReward(reward, peg.x, peg.y);
         ball.hp = 0;
         ball.alive = false;
         this.#updateBallEl(ball);
@@ -884,16 +849,12 @@ export class GameController {
            peg in every other respect. */
         ball.trapOn(peg);
         audioManager.playSfx("click");
-        if (reward.popText) {
-          this.#popText(reward.popText, peg.x, peg.y, reward.popClass ?? "pk-popup");
-        }
+        this.#popReward(reward, peg.x, peg.y);
       } else {
         /* Reward-per-hit pegs (coin, diamond) — credit the reward then apply
            normal HP damage so they survive multiple hits. */
         audioManager.playSfx("click");
-        if (reward.popText) {
-          this.#popText(reward.popText, peg.x, peg.y, reward.popClass ?? "pk-popup");
-        }
+        this.#popReward(reward, peg.x, peg.y);
         const died = peg.takeDamage(1);
         if (died) {
           this.#startPegRescue(peg, ball);
@@ -929,6 +890,22 @@ export class GameController {
     this.#vfx?.popText(text, x, y, cls);
   }
 
+  /**
+   * Pop a reward label: uses the rich floating-text effect when the reward
+   * provides HTML + color (coin, diamond), or falls back to the plain
+   * popup text for other reward types.
+   * @param {{ popHtml?: string, popColor?: string, popText?: string, popClass?: string }} reward
+   * @param {number} x
+   * @param {number} y
+   */
+  #popReward(reward, x, y) {
+    if (reward.popHtml) {
+      this.#vfx?.popFloatingText(reward.popHtml, x, y, reward.popColor);
+    } else if (reward.popText) {
+      this.#vfx?.popText(reward.popText, x, y, reward.popClass ?? "pk-popup");
+    }
+  }
+
   #popGateEvent(value, x, y) {
     this.#vfx?.popGateEvent(value, x, y);
   }
@@ -961,12 +938,9 @@ export class GameController {
 
     if (isTeleport && ball.recycles < maxRecycles) {
       ball.recycles += 1;
-      const sub = Math.floor(Math.random() * this.#sublaunchEls.length);
       const oldX = ball.x;
       const oldY = ball.y;
-      ball.x =
-        (w * (sub + 0.5)) / this.#sublaunchEls.length +
-        (Math.random() - 0.5) * 14;
+      ball.x = w / 2 + (Math.random() - 0.5) * 14;
       ball.y = -PLINKO.BALL_RADIUS * 2;
       ball.vx = (Math.random() - 0.5) * 60;
       ball.vy = 0;
@@ -1018,6 +992,10 @@ export class GameController {
     this.#vfx?.emitRecycleTeleport(bx, by, ballEl);
   }
 
+  #emitPegTeleport(bx, by, ballEl) {
+    this.#vfx?.emitPegTeleport(bx, by, ballEl);
+  }
+
   #flashGate(name) {
     this.#vfx?.flashGate(name);
   }
@@ -1035,16 +1013,12 @@ export class GameController {
         ballsByKind[kind] = (ballsByKind[kind] ?? 0) + 1;
       }
     }
-    let heldBalls = 0;
-    for (const count of this.#sublaunchBalls) {
-      heldBalls += count;
-    }
-    ballsByKind[BALL_KINDS.CLASSIC] = (ballsByKind[BALL_KINDS.CLASSIC] ?? 0) + heldBalls;
+    ballsByKind[BALL_KINDS.CLASSIC] = (ballsByKind[BALL_KINDS.CLASSIC] ?? 0) + this.#launcherBalls;
 
     this.#infoBar.setData("balls", ballsByKind);
     this.#infoBar.setData("launchers", {
-      total: this.#sublaunchBalls.length,
-      fired: this.#sublaunchFired.filter(Boolean).length,
+      total: 1,
+      fired: this.#launcherFired ? 1 : 0,
     });
     this.#infoBar.setData("hp", { current: this.#playerHp, max: this.#playerMaxHp });
   }
@@ -1146,15 +1120,25 @@ export class GameController {
       peg.trappedBall = null;
       if (this.#balls.has(freed.id)) freed.release();
     }
-    this.#vfx?.popText("💥", peg.x, peg.y, "pk-popup pk-popup--big");
     const el = this.#pegEls.get(peg.id);
-    el?.remove();
     this.#pegEls.delete(peg.id);
     for (const layer of this.#layers) {
       const idx = layer.pegs.indexOf(peg);
       if (idx !== -1) {
         layer.pegs.splice(idx, 1);
         break;
+      }
+    }
+    /* Implode animation: ring shrinks to centre then element is removed.
+       When the rescue-window early-implode already ran (dataset flag set),
+       the animation has already played — just remove the node outright. */
+    if (el) {
+      if (el.dataset.pkImploding) {
+        el.remove();
+      } else if (this.#vfx) {
+        this.#vfx.implodePeg(el);
+      } else {
+        el.remove();
       }
     }
     if (ball) {
@@ -1171,13 +1155,19 @@ export class GameController {
    */
   #removePegEl(peg) {
     const el = this.#pegEls.get(peg.id);
-    el?.remove();
     this.#pegEls.delete(peg.id);
     for (const layer of this.#layers) {
       const idx = layer.pegs.indexOf(peg);
       if (idx !== -1) {
         layer.pegs.splice(idx, 1);
         break;
+      }
+    }
+    if (el) {
+      if (this.#vfx) {
+        this.#vfx.implodePeg(el);
+      } else {
+        el.remove();
       }
     }
   }
@@ -1213,6 +1203,44 @@ export class GameController {
     /* Visual: mark peg as rescuable (triggers CSS ring + pulse). */
     el.classList.remove("pk-tremble", "pk-flash");
     el.classList.add("pk-peg--rescuable");
+
+    /* Trigger the peg implosion exactly when the rescue ring (scale 3→0 over
+       RESCUE_DURATION_MS) reaches scale 1 — i.e. at 2/3 of the duration.
+       We mark the element with a dataset flag so that #destroyPeg knows the
+       animation already ran and should just remove the node. */
+    const implodeAt = Math.round(PEG_SAVE.RESCUE_DURATION_MS * 2 / 3);
+    this.#bag.timeout(() => {
+      /* Guard: player may have tapped to save before this fires. */
+      if (!this.#pegSave.isRescuable(peg.id)) return;
+      const pegEl = this.#pegEls.get(peg.id);
+      if (!pegEl) return;
+      pegEl.dataset.pkImploding = "1";
+      pegEl.style.pointerEvents = "none";
+      /* Strip classes that would fight the implode. */
+      pegEl.classList.remove("pk-peg--rescuable");
+      void pegEl.offsetWidth; /* reflow so class removal is committed */
+      pegEl.style.animation = "pk-peg-implode 260ms ease-in forwards";
+
+      /* Glue peg: release the trapped ball exactly when the rescue ring
+         touches the peg ring (= implode start). Two things must happen
+         simultaneously:
+         1. Ball released — so it falls with the implode animation.
+         2. Peg spliced out of layer.pegs — so the freed ball cannot
+            re-trap on it in the very next physics tick (recentPegs was
+            cleared by trapOn, so the guard would not block a re-hit).
+         The DOM element is intentionally kept in #pegEls so that the
+         implode animation plays to completion; onExpire → #destroyPeg
+         will call el.remove() when the rescue timer expires. */
+      if (peg.type === "glue" && peg.trappedBall) {
+        const deathReward = peg.onDestroyed(ball);
+        for (const layer of this.#layers) {
+          const idx = layer.pegs.indexOf(peg);
+          if (idx !== -1) { layer.pegs.splice(idx, 1); break; }
+        }
+        if (deathReward) this.#applyDestroyReward(deathReward, peg);
+        this.#startLoop();
+      }
+    }, implodeAt);
 
     /* Kick ball away so it doesn't stick on the dead peg. */
     if (ball) {
@@ -1251,6 +1279,13 @@ export class GameController {
    */
   #onPegSaved(pegId, peg, el) {
     audioManager.playSfx("click");
+    /* If the early-implode animation already started (player saved within the
+       last ~667 ms of the rescue window), cancel it so the save flash plays. */
+    if (el.dataset.pkImploding) {
+      delete el.dataset.pkImploding;
+      el.style.animation = "";
+      el.style.pointerEvents = "";
+    }
     el.classList.remove("pk-peg--rescuable", "pk-tremble");
     el.classList.add("pk-peg--saved");
     this.#bag.timeout(() => el.classList.remove("pk-peg--saved"), 400);
@@ -1299,9 +1334,7 @@ export class GameController {
       reward.releaseBall.release();
     }
     if (reward.activate) bonusManager.activateSession(reward.activate);
-    if (reward.popText) {
-      this.#popText(reward.popText, peg.x, peg.y, reward.popClass ?? "pk-popup");
-    }
+    this.#popReward(reward, peg.x, peg.y);
   }
 
   /**
@@ -1354,13 +1387,10 @@ export class GameController {
     this.#vfx?.emitBombShockwave(bx, by, radius);
   }
 
-  /** Add extra balls to a random sublaunch. */
+  /** Add extra balls to the launcher. */
   #addExtraBalls(count) {
-    for (let i = 0; i < count; i++) {
-      const idx = Math.floor(Math.random() * this.#sublaunchBalls.length);
-      this.#sublaunchBalls[idx]++;
-    }
-    this.#refreshSublaunches();
+    this.#launcherBalls += count;
+    this.#refreshLauncher();
   }
 
   /** Reactivate shields whose cooldown has elapsed. */
@@ -1387,8 +1417,7 @@ export class GameController {
 
   #checkEndOfRound() {
     if (this.#ended) return;
-    const allFired = this.#sublaunchFired.every(Boolean);
-    if (!allFired) return;
+    if (!this.#launcherFired) return;
     /* A pending peg rescue can still resolve into freed balls (glue peg),
        so the round is not over until every rescue window has been closed. */
     if (this.#pegSave.rescuableCount > 0) return;
@@ -1565,6 +1594,7 @@ export class GameController {
 
   /**
    * Destroy a ball mid-flight (currently used by glass shatter).
+   * Plays the explosion destroy animation before removing the element.
    * @param {Ball} ball
    * @param {{ reason?: string }} [opts]
    */
@@ -1572,13 +1602,63 @@ export class GameController {
     const entry = this.#balls.get(ball.id);
     if (!entry) return;
     ball.alive = false;
+
+    /* Remove from simulation immediately so #renderBalls won't touch it. */
+    this.#balls.delete(ball.id);
+    this.#ballIdleTracker.delete(ball.id);
+
     if (reason === "shatter") {
       this.#popText("💥", ball.x, ball.y, "pk-popup pk-popup--big");
     }
-    entry.el.remove();
-    this.#balls.delete(ball.id);
-    this.#ballIdleTracker.delete(ball.id);
+
+    /* Freeze position via CSS vars and trigger explosion animation. */
+    const el = entry.el;
+    const oy = this.#pinboardOffsetTop;
+    el.style.setProperty("--bx", `${ball.x}px`);
+    el.style.setProperty("--by", `${ball.y + oy}px`);
+    el.classList.add("pk-ball--destroying");
+    this.#spawnDestroyParticles(ball.x, ball.y + oy);
+
+    /* Remove DOM element once animation completes. */
+    this.#bag.timeout(() => el.remove(), 600);
+
     this.#updateInfoBar();
+  }
+
+  /**
+   * Spawn explosion particles centered on the destroyed ball.
+   * @param {number} cx - X in ball-layer coordinates
+   * @param {number} cy - Y in ball-layer coordinates
+   */
+  #spawnDestroyParticles(cx, cy) {
+    if (!this.#ballLayerEl) return;
+    const COUNT = 10;
+    const COLORS = [
+      "var(--pk-gold)",
+      "var(--pk-gold-light)",
+      "var(--pk-crimson)",
+      "var(--pk-rose)",
+    ];
+    for (let i = 0; i < COUNT; i++) {
+      const p = document.createElement("div");
+      p.className = "pk-ball-explode-particle";
+      const angle = (Math.PI * 2 * i) / COUNT;
+      const dist = 18 + Math.random() * 16;
+      const size = 5 + Math.random() * 5;
+      p.style.left = `${cx}px`;
+      p.style.top = `${cy}px`;
+      p.style.width = `${size}px`;
+      p.style.height = `${size}px`;
+      p.style.marginLeft = `${-size / 2}px`;
+      p.style.marginTop = `${-size / 2}px`;
+      p.style.setProperty("--px", `${Math.cos(angle) * dist}px`);
+      p.style.setProperty("--py", `${Math.sin(angle) * dist}px`);
+      p.style.animationDelay = `${i * 20}ms`;
+      p.style.animationDuration = `${0.4 + Math.random() * 0.2}s`;
+      p.style.background = COLORS[i % COLORS.length];
+      this.#ballLayerEl.appendChild(p);
+      this.#bag.timeout(() => p.remove(), 700);
+    }
   }
 
   /**
@@ -1590,9 +1670,7 @@ export class GameController {
   #devSpawnBall(kind) {
     if (this.#ended || !this.#ballLayerEl) return;
     const w = this.#pinboardWidth || 1;
-    const subCount = Math.max(1, this.#sublaunchEls.length);
-    const sub = Math.floor(Math.random() * subCount);
-    const x = (w * (sub + 0.5)) / subCount + (Math.random() - 0.5) * 16;
+    const x = w / 2 + (Math.random() - 0.5) * 16;
     const ball = createBall(kind, {
       x,
       y: -PLINKO.BALL_RADIUS * 2,
@@ -1617,8 +1695,6 @@ export class GameController {
   #applyRoundDirectives() {
     const directives = bonusManager.consumeDirectives();
     if (directives.length === 0) return;
-    const subCount = this.#sublaunchEls.length;
-    if (subCount === 0) return;
 
     for (const d of directives) {
       const p = d.payload ?? {};
@@ -1626,14 +1702,8 @@ export class GameController {
         case DIRECTIVE_ACTIONS.ADD_BALL: {
           const kind = p.kind ?? BALL_KINDS.CLASSIC;
           const count = p.count ?? 1;
-          const targets =
-            p.target === "all"
-              ? Array.from({ length: subCount }, (_, i) => i)
-              : [Math.floor(Math.random() * subCount)];
-          for (const idx of targets) {
-            for (let i = 0; i < count; i++) {
-              this.#spawnHeldBall(idx, kind);
-            }
+          for (let i = 0; i < count; i++) {
+            this.#spawnHeldBall(kind);
           }
           break;
         }
@@ -1656,19 +1726,16 @@ export class GameController {
         case DIRECTIVE_ACTIONS.TRANSFORM_BALL: {
           const from = p.from ?? "classic";
           const to = p.to ?? "glass";
-          for (let i = 0; i < subCount; i++) {
-            for (const [id, entry] of this.#balls) {
-              if (
-                entry.ball.state === "held" &&
-                entry.ball.sublaunchIdx === i &&
-                (entry.ball.kind ?? "classic") === from
-              ) {
-                const { x, y } = entry.ball;
-                entry.el.remove();
-                this.#balls.delete(id);
-                this.#spawnHeldBall(i, to, { x, y });
-                break;
-              }
+          for (const [id, entry] of this.#balls) {
+            if (
+              entry.ball.state === "held" &&
+              (entry.ball.kind ?? "classic") === from
+            ) {
+              const { x, y } = entry.ball;
+              entry.el.remove();
+              this.#balls.delete(id);
+              this.#spawnHeldBall(to, { x, y });
+              break;
             }
           }
           break;
@@ -1679,15 +1746,14 @@ export class GameController {
   }
 
   /**
-   * Spawn a held ball of an arbitrary kind into a given sublauncher.
-   * @param {number} subIdx
+   * Spawn a held ball of an arbitrary kind into the launcher.
    * @param {string} kind
    * @param {{ x?: number, y?: number }} [opts]
    */
-  #spawnHeldBall(subIdx, kind, opts = {}) {
+  #spawnHeldBall(kind, opts = {}) {
     if (!this.#ballLayerEl) return;
     this.#computeLaunchWalls();
-    const box = this.#launchWalls[subIdx];
+    const box = this.#launchWalls[0];
     if (!box) return;
     const cx = (box.left + box.right) / 2;
     const boxW = box.right - box.left;
@@ -1695,7 +1761,7 @@ export class GameController {
     const y = opts.y ?? box.top + 4;
     const ball = createBall(kind, { x, y, vx: 0, vy: 0 });
     ball.state = "held";
-    ball.sublaunchIdx = subIdx;
+    ball.sublaunchIdx = 0;
     const el = this.#createBallEl(ball);
     const oy = this.#pinboardOffsetTop;
     el.style.transform = `translate(${ball.x}px, ${ball.y + oy}px)`;
