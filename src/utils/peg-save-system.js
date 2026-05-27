@@ -8,8 +8,7 @@ import { PEG_SAVE } from "../configs/constants.js";
  * is restored to 1 HP (saved). Otherwise the supplied `onExpire` callback
  * fires and the peg is destroyed normally.
  *
- * Consecutive saves build a **save combo multiplier** that is applied to the
- * total level score at round end. The combo decays after an idle period.
+ * Consecutive saves build a **save combo multiplier**. The combo decays after an idle period.
  *
  * This class is intentionally **not** a singleton — one instance per game
  * session, owned and disposed by `GameController`.

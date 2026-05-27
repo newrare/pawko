@@ -8,11 +8,9 @@ import { BombPeg } from "../../src/entities/peg-bomb.js";
 import { EFFECT_DEFS, BOMB_RADIUS } from "../../src/configs/constants.js";
 
 describe("FirePeg", () => {
-  it("has type 'fire' and scores 0", () => {
+  it("has type 'fire'", () => {
     const peg = new FirePeg();
     expect(peg.type).toBe("fire");
-    expect(peg.score).toBe(0);
-    expect(peg.scoreForContact()).toBe(0);
   });
 
   it("consumeReward returns { effect: 'burning' }", () => {
@@ -24,10 +22,9 @@ describe("FirePeg", () => {
 });
 
 describe("IcePeg", () => {
-  it("has type 'ice' and scores 0", () => {
+  it("has type 'ice'", () => {
     const peg = new IcePeg();
     expect(peg.type).toBe("ice");
-    expect(peg.score).toBe(0);
   });
 
   it("consumeReward returns { effect: 'frozen' }", () => {
@@ -39,10 +36,9 @@ describe("IcePeg", () => {
 });
 
 describe("ElectricalPeg", () => {
-  it("has type 'electrical' and scores 0", () => {
+  it("has type 'electrical'", () => {
     const peg = new ElectricalPeg();
     expect(peg.type).toBe("electrical");
-    expect(peg.score).toBe(0);
   });
 
   it("consumeReward returns { effect: 'electrified' }", () => {
@@ -54,10 +50,9 @@ describe("ElectricalPeg", () => {
 });
 
 describe("BlackPeg", () => {
-  it("has type 'black' and scores 0", () => {
+  it("has type 'black'", () => {
     const peg = new BlackPeg();
     expect(peg.type).toBe("black");
-    expect(peg.score).toBe(0);
   });
 
   it("consumeReward returns { instantKill: true }", () => {
@@ -69,10 +64,9 @@ describe("BlackPeg", () => {
 });
 
 describe("BombPeg", () => {
-  it("has type 'bomb' and scores 0", () => {
+  it("has type 'bomb'", () => {
     const peg = new BombPeg();
     expect(peg.type).toBe("bomb");
-    expect(peg.score).toBe(0);
   });
 
   it("blastRadius matches BOMB_RADIUS constant", () => {

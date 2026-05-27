@@ -12,14 +12,6 @@ export class TeleportPeg extends Peg {
     this._resolveHp();
   }
 
-  get score() {
-    return 0;
-  }
-
-  scoreForContact() {
-    return 0;
-  }
-
   /**
    * Signal the controller to teleport the ball.
    * @param {import('./ball-classic.js').Ball} _ball

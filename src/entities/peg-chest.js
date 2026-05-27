@@ -12,14 +12,6 @@ export class ChestPeg extends Peg {
     this._resolveHp();
   }
 
-  get score() {
-    return 0;
-  }
-
-  scoreForContact() {
-    return 0;
-  }
-
   /**
    * On destruction, roll a random reward.
    * The controller interprets the returned directive.

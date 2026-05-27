@@ -11,14 +11,6 @@ export class IcePeg extends Peg {
     this._resolveHp();
   }
 
-  get score() {
-    return 0;
-  }
-
-  scoreForContact() {
-    return 0;
-  }
-
   /**
    * Signal to the controller that the ball should receive the "frozen" effect.
    * @param {import('./ball-classic.js').Ball} _ball

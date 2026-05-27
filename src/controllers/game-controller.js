@@ -904,13 +904,6 @@ export class GameController {
       }
     }
 
-    /* 2) Score the contact. Bumpers opt out of the PEG_SCORE_MULTIPLIER
-          (they already encode the boost). */
-    const baseScore = peg.scoreForContact();
-    const score = peg.appliesPegMultiplier
-      ? Math.round(bonusManager.resolve(PARAM_KEYS.PEG_SCORE_MULTIPLIER, 1) * baseScore)
-      : baseScore;
-    ball.score += score;
     audioManager.playSfx("click");
 
     /* 3) HP damage — one hit = one damage. Destroy if depleted. */
@@ -922,15 +915,6 @@ export class GameController {
 
     /* Tremble + flash + HP label — same visual contract for every peg type. */
     this.#applyHitFeedback(peg);
-
-    if (score > 0) {
-      this.#popText(
-        `+${score}`,
-        peg.x,
-        peg.y,
-        `pk-popup${peg.type === "bumper" ? " pk-popup--big" : ""}`,
-      );
-    }
 
     /* 4) Tower-defense damage — every real peg contact subtracts 1 HP
           from the ball. Glue path already returned. */
@@ -945,8 +929,8 @@ export class GameController {
     this.#vfx?.popText(text, x, y, cls);
   }
 
-  #popGateScore(points, x, y) {
-    this.#vfx?.popGateScore(points, x, y);
+  #popGateEvent(value, x, y) {
+    this.#vfx?.popGateEvent(value, x, y);
   }
 
   /* ──────────────────────────────────────────────────────────────────────
@@ -1000,7 +984,7 @@ export class GameController {
       const coinMult = bonusManager.resolve(PARAM_KEYS.DESTROY_COIN_MULTIPLIER, 1);
       const coins = Math.max(0, Math.round(hp * PLINKO.DESTROY_COIN_PER_HP * coinMult));
       if (coins > 0) currencyManager.add(coins);
-      this.#popGateScore(coins, ball.x, this.#pinboardHeight);
+      this.#popGateEvent(coins, ball.x, this.#pinboardHeight);
       this.#captureBall(ball, gate);
       return;
     }
@@ -1008,7 +992,7 @@ export class GameController {
     if (gate === "hp") {
       this.#damagePlayer(PLINKO.HP_GATE_DAMAGE);
       this.#updateInfoBar();
-      this.#popGateScore(-PLINKO.HP_GATE_DAMAGE, ball.x, this.#pinboardHeight);
+      this.#popGateEvent(-PLINKO.HP_GATE_DAMAGE, ball.x, this.#pinboardHeight);
       this.#captureBall(ball, gate);
       return;
     }
@@ -1018,7 +1002,7 @@ export class GameController {
     const coinMult = bonusManager.resolve(PARAM_KEYS.DESTROY_COIN_MULTIPLIER, 1);
     const coins = Math.max(0, Math.round(hp * PLINKO.DESTROY_COIN_PER_HP * coinMult));
     if (coins > 0) currencyManager.add(coins);
-    this.#popGateScore(coins, ball.x, this.#pinboardHeight);
+    this.#popGateEvent(coins, ball.x, this.#pinboardHeight);
     this.#captureBall(ball, gate);
   }
 
@@ -1405,9 +1389,8 @@ export class GameController {
     if (this.#ended) return;
     const allFired = this.#sublaunchFired.every(Boolean);
     if (!allFired) return;
-    /* A pending peg rescue can still resolve into freed balls (glue peg)
-       or score (peg save combo), so the round is not over until every
-       rescue window has been closed. */
+    /* A pending peg rescue can still resolve into freed balls (glue peg),
+       so the round is not over until every rescue window has been closed. */
     if (this.#pegSave.rescuableCount > 0) return;
     for (const { ball } of this.#balls.values()) {
       if (!ball.alive) continue;
@@ -1466,7 +1449,6 @@ export class GameController {
   #markLevelComplete() {
     const data = saveManager.loadLevelProgress() ?? {
       completed: [],
-      globalScore: 0,
     };
     if (!data.completed.includes(this.#levelId)) {
       data.completed.push(this.#levelId);
@@ -1590,8 +1572,6 @@ export class GameController {
     const entry = this.#balls.get(ball.id);
     if (!entry) return;
     ball.alive = false;
-    /* Forfeit the ball's accumulated score — it never reaches a gate. */
-    ball.score = 0;
     if (reason === "shatter") {
       this.#popText("💥", ball.x, ball.y, "pk-popup pk-popup--big");
     }

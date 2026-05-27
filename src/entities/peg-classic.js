@@ -2,14 +2,14 @@ import { Entity } from "./entity.js";
 import { PLINKO, PEG_DEFS } from "../configs/constants.js";
 
 /**
- * Peg — basic metallic clou. Score +2 per ball contact.
+ * Peg — basic metallic clou.
  *
  * Pure data: position is set by the layer that owns this peg, in the
  * pinboard coordinate space. No DOM dependency — the controller renders
  * the corresponding `.gt-peg` element.
  *
- * Subclasses (Bumper, CoinPeg, etc.) override `score`, `restitution` and the
- * scoring / reward hooks. See `docs/SLOT.md` for the family hierarchy.
+ * Subclasses (Bumper, CoinPeg, etc.) override `restitution` and the
+ * reward hooks. See `docs/SLOT.md` for the family hierarchy.
  */
 export class Peg extends Entity {
   /** @type {number} */
@@ -49,26 +49,8 @@ export class Peg extends Entity {
     return PLINKO.PEG_RADIUS;
   }
 
-  /** Unmodified base score awarded for one clean contact. */
-  get score() {
-    return PLINKO.SCORE_PEG;
-  }
-
   get restitution() {
     return PLINKO.RESTITUTION_PEG;
-  }
-
-  /**
-   * Whether the PEG_SCORE_MULTIPLIER bonus applies to contacts with this
-   * peg. Bumpers opt out (their score is already an explicit boost).
-   */
-  get appliesPegMultiplier() {
-    return true;
-  }
-
-  /** Score awarded for a single ball contact. */
-  scoreForContact() {
-    return this.score;
   }
 
   /**

@@ -17,20 +17,20 @@ describe("bonusManager — permanent", () => {
   });
 
   it("rejects session bonus ids on unlockPermanent", () => {
-    expect(bonusManager.unlockPermanent("session_peg_score_x")).toBe(false);
+    expect(bonusManager.unlockPermanent("session_coin_drop_x2")).toBe(false);
   });
 
   it("rejects malus ids on unlockPermanent", () => {
-    expect(bonusManager.unlockPermanent("malus_score_reduce_next")).toBe(false);
+    expect(bonusManager.unlockPermanent("malus_player_hp_drain")).toBe(false);
   });
 });
 
 describe("bonusManager — session", () => {
   it("activateSession() registers with full duration", () => {
-    bonusManager.activateSession("session_peg_score_x");
+    bonusManager.activateSession("session_coin_drop_x2");
     const active = bonusManager.getActiveSession();
     expect(active).toHaveLength(1);
-    expect(active[0].id).toBe("session_peg_score_x");
+    expect(active[0].id).toBe("session_coin_drop_x2");
     expect(active[0].remaining).toBe(3);
   });
 
@@ -44,7 +44,7 @@ describe("bonusManager — session", () => {
   });
 
   it("onLevelUp() decrements remaining", () => {
-    bonusManager.activateSession("session_peg_score_x");
+    bonusManager.activateSession("session_coin_drop_x2");
     bonusManager.onLevelUp();
     expect(bonusManager.getActiveSession()[0].remaining).toBe(2);
   });
@@ -58,7 +58,7 @@ describe("bonusManager — session", () => {
 
   it("expires when remaining hits zero and fires onExpire", () => {
     const onExpire = vi.fn();
-    bonusManager.activateSession("session_peg_score_x");
+    bonusManager.activateSession("session_coin_drop_x2");
     const def = bonusManager.getActiveSession()[0].def;
     def.onExpire = onExpire;
 
@@ -72,7 +72,7 @@ describe("bonusManager — session", () => {
   });
 
   it("clearSession() drops every active entry and pending directives", () => {
-    bonusManager.activateSession("session_peg_score_x");
+    bonusManager.activateSession("session_coin_drop_x2");
     bonusManager.activateSession("session_extra_classic_ball_one");
     bonusManager.clearSession();
     expect(bonusManager.getActiveSession()).toEqual([]);
@@ -82,29 +82,29 @@ describe("bonusManager — session", () => {
 
 describe("bonusManager — maluses", () => {
   it("activateMalus() registers a MALUS-category def", () => {
-    expect(bonusManager.activateMalus("malus_score_reduce_next")).toBe(true);
-    expect(bonusManager.isSessionActive("malus_score_reduce_next")).toBe(true);
+    expect(bonusManager.activateMalus("malus_player_hp_drain")).toBe(true);
+    expect(bonusManager.isSessionActive("malus_player_hp_drain")).toBe(true);
   });
 
   it("activateMalus() rejects bonus ids", () => {
-    expect(bonusManager.activateMalus("session_peg_score_x")).toBe(false);
+    expect(bonusManager.activateMalus("session_coin_drop_x2")).toBe(false);
   });
 
   it("getAll() excludes maluses (shop catalogue)", () => {
     const ids = bonusManager.getAll().map((b) => b.id);
-    expect(ids).not.toContain("malus_score_reduce_next");
+    expect(ids).not.toContain("malus_player_hp_drain");
   });
 
   it("getAllMaluses() exposes the malus catalogue", () => {
     const ids = bonusManager.getAllMaluses().map((b) => b.id);
-    expect(ids).toContain("malus_score_reduce_next");
+    expect(ids).toContain("malus_player_hp_drain");
   });
 
   it("malus modifiers participate in resolve()", () => {
-    bonusManager.activateMalus("malus_score_reduce_next");
+    bonusManager.activateMalus("malus_player_hp_drain");
     expect(
-      bonusManager.resolve(PARAM_KEYS.NEXT_PINBOARD_SCORE_MULT, 1),
-    ).toBeCloseTo(0.8);
+      bonusManager.resolve(PARAM_KEYS.PLAYER_MAX_HP_BONUS, 0),
+    ).toBe(-3);
   });
 });
 
@@ -144,8 +144,8 @@ describe("bonusManager — resolve()", () => {
   });
 
   it("applies a multiplicative session bonus", () => {
-    bonusManager.activateSession("session_peg_score_x");
-    expect(bonusManager.resolve(PARAM_KEYS.PEG_SCORE_MULTIPLIER, 1)).toBe(3);
+    bonusManager.activateSession("session_coin_drop_x2");
+    expect(bonusManager.resolve(PARAM_KEYS.DESTROY_COIN_MULTIPLIER, 1)).toBe(2);
   });
 
   it("applies a 'set' bonus (set wins over numeric ops)", () => {
@@ -181,7 +181,7 @@ describe("bonusManager — persistence", () => {
   });
 
   it("does NOT persist session bonuses", async () => {
-    bonusManager.activateSession("session_peg_score_x");
+    bonusManager.activateSession("session_coin_drop_x2");
     const mod = await import(
       "../../src/managers/bonus-manager.js?freshsession"
     );
@@ -203,7 +203,7 @@ describe("bonusManager — resetAll", () => {
 describe("bonusManager — granular clear helpers", () => {
   it("clearPermanent() removes every owned permanent and leaves session alone", () => {
     bonusManager.unlockPermanent("perm_extra_ball_1");
-    bonusManager.activateSession("session_peg_score_x");
+    bonusManager.activateSession("session_coin_drop_x2");
     expect(bonusManager.clearPermanent()).toBe(true);
     expect(bonusManager.getUnlockedPermanent()).toEqual([]);
     expect(bonusManager.getActiveSession()).toHaveLength(1);
@@ -214,31 +214,31 @@ describe("bonusManager — granular clear helpers", () => {
   });
 
   it("clearSessionBonuses() drops only category=bonus session entries", () => {
-    bonusManager.activateSession("session_peg_score_x");
-    bonusManager.activateMalus("malus_score_reduce_next");
+    bonusManager.activateSession("session_coin_drop_x2");
+    bonusManager.activateMalus("malus_player_hp_drain");
     expect(bonusManager.clearSessionBonuses()).toBe(true);
     const remaining = bonusManager.getActiveSession();
     expect(remaining).toHaveLength(1);
-    expect(remaining[0].id).toBe("malus_score_reduce_next");
+    expect(remaining[0].id).toBe("malus_player_hp_drain");
   });
 
   it("clearSessionBonuses() returns false when no session bonus is active", () => {
-    bonusManager.activateMalus("malus_score_reduce_next");
+    bonusManager.activateMalus("malus_player_hp_drain");
     expect(bonusManager.clearSessionBonuses()).toBe(false);
     expect(bonusManager.getActiveSession()).toHaveLength(1);
   });
 
   it("clearSessionMaluses() drops only category=malus session entries", () => {
-    bonusManager.activateSession("session_peg_score_x");
-    bonusManager.activateMalus("malus_score_reduce_next");
+    bonusManager.activateSession("session_coin_drop_x2");
+    bonusManager.activateMalus("malus_player_hp_drain");
     expect(bonusManager.clearSessionMaluses()).toBe(true);
     const remaining = bonusManager.getActiveSession();
     expect(remaining).toHaveLength(1);
-    expect(remaining[0].id).toBe("session_peg_score_x");
+    expect(remaining[0].id).toBe("session_coin_drop_x2");
   });
 
   it("clearSessionMaluses() returns false when no malus is active", () => {
-    bonusManager.activateSession("session_peg_score_x");
+    bonusManager.activateSession("session_coin_drop_x2");
     expect(bonusManager.clearSessionMaluses()).toBe(false);
   });
 });

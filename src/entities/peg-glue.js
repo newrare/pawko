@@ -16,14 +16,6 @@ export class GluePeg extends Peg {
     this._resolveHp();
   }
 
-  get score() {
-    return 0;
-  }
-
-  scoreForContact() {
-    return 0;
-  }
-
   /** Whether this peg can still trap a ball. */
   get canTrap() {
     return this.trappedBall === null;

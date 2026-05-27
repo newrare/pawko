@@ -124,12 +124,12 @@ class SaveManager {
 
   // ─── Level progress ───────────────────────────────
 
-  /** @returns {{ completed: number[], globalScore: number } | null} */
+  /** @returns {{ completed: number[] } | null} */
   loadLevelProgress() {
     return this.#read(STORAGE_KEYS.LEVEL_PROGRESS);
   }
 
-  /** @param {{ completed: number[], globalScore: number }} data */
+  /** @param {{ completed: number[] }} data */
   saveLevelProgress(data) {
     this.#write(STORAGE_KEYS.LEVEL_PROGRESS, data);
   }

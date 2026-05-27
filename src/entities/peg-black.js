@@ -11,14 +11,6 @@ export class BlackPeg extends Peg {
     this._resolveHp();
   }
 
-  get score() {
-    return 0;
-  }
-
-  scoreForContact() {
-    return 0;
-  }
-
   /**
    * Signal to the controller that the ball should die instantly.
    * @param {import('./ball-classic.js').Ball} _ball

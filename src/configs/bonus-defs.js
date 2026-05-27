@@ -41,10 +41,6 @@ export const PARAM_KEYS = /** @type {const} */ ({
   STARTING_BALLS_PER_SUBLAUNCH: "startingBallsPerSublaunch",
   SUBLAUNCH_COUNT: "sublaunchCount",
 
-  /* Scoring (legacy — kept for backward compat) */
-  PEG_SCORE_MULTIPLIER: "pegScoreMultiplier",
-  NEXT_PINBOARD_SCORE_MULT: "nextPinboardScoreMult",
-
   /* Gates (legacy) */
   GATE_MALUS_REDUCTION: "gateMalusReduction",
   GATE_X_MULTIPLIER: "gateXMultiplier",
@@ -366,16 +362,16 @@ export const SESSION_BONUSES = [
   },
   ...buildLauncherBonuses(),
   {
-    id: "session_peg_score_x",
+    id: "session_coin_drop_x2",
     type: BONUS_TYPES.SESSION,
     category: BONUS_CATEGORIES.BONUS,
-    cost: 2000,
-    abilityRequired: "pinboard_2",
-    rarity: "legendary",
-    icon: "✨",
+    cost: 1500,
+    abilityRequired: null,
+    rarity: "rare",
+    icon: "🪙",
     durationLevels: 3,
     modifiers: [
-      { paramKey: PARAM_KEYS.PEG_SCORE_MULTIPLIER, op: "multiply", value: 3 },
+      { paramKey: PARAM_KEYS.DESTROY_COIN_MULTIPLIER, op: "multiply", value: 2 },
     ],
   },
   /* Tower-defense session bonuses */
@@ -454,19 +450,6 @@ function buildLauncherBonuses() {
 
 /** @type {BonusDef[]} */
 export const SESSION_MALUSES = [
-  {
-    id: "malus_score_reduce_next",
-    type: BONUS_TYPES.SESSION,
-    category: BONUS_CATEGORIES.MALUS,
-    cost: 0,
-    abilityRequired: null,
-    rarity: "malus",
-    icon: "📉",
-    durationLevels: 1,
-    modifiers: [
-      { paramKey: PARAM_KEYS.NEXT_PINBOARD_SCORE_MULT, op: "multiply", value: 0.8 },
-    ],
-  },
   {
     id: "malus_obfuscate_level_number",
     type: BONUS_TYPES.SESSION,

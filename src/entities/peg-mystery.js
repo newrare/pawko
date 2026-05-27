@@ -22,14 +22,6 @@ export class MysteryPeg extends Peg {
     this._resolveHp();
   }
 
-  get score() {
-    return 0;
-  }
-
-  scoreForContact() {
-    return 0;
-  }
-
   /** @returns {object | null} */
   onDestroyed(_ball) {
     const rollMalus = Math.random() < 0.3;

@@ -34,7 +34,7 @@ describe("ActiveListModal", () => {
   });
 
   it("lists active session bonuses", () => {
-    bonusManager.activateSession("session_peg_score_x");
+    bonusManager.activateSession("session_coin_drop_x2");
     const modal = new ActiveListModal();
     modal.open();
     const rows = document.querySelectorAll(".pk-al-table tr");

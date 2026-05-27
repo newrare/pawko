@@ -121,7 +121,7 @@ export const ABILITY_DEFS = [
     category: ABILITY_CATEGORIES.PINBOARD,
     level: 2,
     cost: diamondCost(2),
-    unlocks: ["session_peg_score_x"],
+    unlocks: [],
   },
   {
     id: "pinboard_3",

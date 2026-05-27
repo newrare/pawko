@@ -25,8 +25,6 @@ export class Ball extends Entity {
   recycles = 0;
   /** @type {boolean} */
   alive = true;
-  /** @type {number} Points accumulated by this ball during its path. */
-  score = 0;
   /** @type {number} Max HP for this ball. */
   maxHp = BALL_DEFS.classic.hp;
   /** @type {number} Current HP. Each peg contact subtracts 1. */

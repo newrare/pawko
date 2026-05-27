@@ -19,12 +19,6 @@ describe("GluePeg", () => {
     expect(g.canTrap).toBe(true);
   });
 
-  it("awards no score on contact (glue trap is the reward)", () => {
-    const g = new GluePeg();
-    expect(g.score).toBe(0);
-    expect(g.scoreForContact()).toBe(0);
-  });
-
   it("consumeReward traps the first ball and returns a trap directive", () => {
     const g = new GluePeg();
     const ball = { id: 42 };

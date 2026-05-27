@@ -16,19 +16,8 @@ describe("CoinPeg", () => {
     expect(c.type).toBe("coin");
   });
 
-  it("awards 0 score (so it does not interact with score gates)", () => {
-    expect(new CoinPeg().score).toBe(0);
-  });
-
   it("exposes COIN_VALUE as coinValue", () => {
     expect(new CoinPeg().coinValue).toBe(PLINKO.COIN_VALUE);
-  });
-
-  it("scoreForContact always returns 0", () => {
-    const c = new CoinPeg();
-    expect(c.scoreForContact()).toBe(0);
-    c.burned = true;
-    expect(c.scoreForContact()).toBe(0);
   });
 
   it("consumeReward describes a coin payout that the controller executes", () => {

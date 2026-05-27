@@ -23,14 +23,6 @@ export class ShieldPeg extends Peg {
     this.shieldHits = PLINKO.SHIELD_MAX_HITS;
   }
 
-  get score() {
-    return 0;
-  }
-
-  scoreForContact() {
-    return 0;
-  }
-
   /** Radius of the shield barrier (used for ball deflection). */
   get shieldRadius() {
     return this.radius * PLINKO.SHIELD_RADIUS_MULTIPLIER;

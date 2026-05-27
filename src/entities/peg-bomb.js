@@ -15,14 +15,6 @@ export class BombPeg extends Peg {
     this._resolveHp();
   }
 
-  get score() {
-    return 0;
-  }
-
-  scoreForContact() {
-    return 0;
-  }
-
   /** Bomb is tappable during play — opt into the global click SFX hook. */
   get extraCssClasses() {
     return ["gt-clickable"];

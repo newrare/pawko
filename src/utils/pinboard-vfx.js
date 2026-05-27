@@ -46,17 +46,18 @@ export class PinboardVfx {
   }
 
   /**
-   * Pop a floating score label at the pinboard bottom when a ball enters a gate.
-   * @param {number} points
+   * Pop a floating label at the pinboard bottom when a ball enters a gate
+   * (coins gained or HP damage).
+   * @param {number} value  positive = coins gained, negative = HP damage
    * @param {number} x
    * @param {number} y
    */
-  popGateScore(points, x, y) {
+  popGateEvent(value, x, y) {
     const { stackEl, bag } = this.deps;
-    if (!stackEl || points === 0) return;
+    if (!stackEl || value === 0) return;
     const pop = document.createElement("div");
-    pop.className = `pk-popup pk-popup--gate ${points > 0 ? "pk-popup--bonus" : "pk-popup--malus"}`;
-    pop.textContent = points > 0 ? `+${points}` : `${points}`;
+    pop.className = `pk-popup pk-popup--gate ${value > 0 ? "pk-popup--bonus" : "pk-popup--malus"}`;
+    pop.textContent = value > 0 ? `+${value}` : `${value}`;
     pop.style.left = `${x}px`;
     pop.style.top = `${y - 8}px`;
     stackEl.appendChild(pop);

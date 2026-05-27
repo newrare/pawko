@@ -51,6 +51,15 @@ export const SAFE_ZONE = {
   MAX_HEIGHT_LANDSCAPE: 480,
 };
 
+/**
+ * Toggles for dev-only overlays. Only consulted in DEV builds (the imports
+ * in `main.js` are already tree-shaken from production).
+ */
+export const DEV_FLAGS = {
+  /** Render the green dashed safe-zone outline + size readout. */
+  SHOW_SAFE_ZONE: false,
+};
+
 // ─── Animations ────────────────────────────────────────────────────────────
 
 /**
@@ -75,16 +84,6 @@ export const ANIM = {
  */
 export const SWIPE_THRESHOLD = 30;
 
-// ─── Dev-only flags ────────────────────────────────────────────────────────
-
-/**
- * Toggles for dev-only overlays. Only consulted in DEV builds (the imports
- * in `main.js` are already tree-shaken from production).
- */
-export const DEV_FLAGS = {
-  /** Render the green dashed safe-zone outline + size readout. */
-  SHOW_SAFE_ZONE: false,
-};
 
 // ─── Persistence ───────────────────────────────────────────────────────────
 
@@ -194,12 +193,6 @@ export const PLINKO = {
      Defines the empty zone reserved for the objective label and caps the
      gauge fill so its top edge meets the target line at 100%. */
   TARGET_LINE_OFFSET: 20,
-  /** Score / target ratio below which the floating "Score" label stays
-     hidden. Keeps it from appearing half-clipped behind the gates at the
-     start of the round; once the gauge crosses this ratio the label
-     reveals fully visible above the gate row. */
-  SCORE_LABEL_REVEAL_RATIO: 0.1,
-
   /* Physics */
   GRAVITY: 1400,
   RESTITUTION_PEG: 0.55,
@@ -212,10 +205,6 @@ export const PLINKO = {
   MAX_STEP: 1 / 60,
   /** Sub-steps per frame for collision stability. */
   SUBSTEPS: 3,
-
-  /* Scoring */
-  SCORE_PEG: 2,
-  SCORE_BUMPER: 10,
 
   /* Currency */
   /** Coins awarded when a ball touches a coin peg. */

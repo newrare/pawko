@@ -11,14 +11,6 @@ export class DiamondPeg extends Peg {
     this._resolveHp();
   }
 
-  get score() {
-    return 0;
-  }
-
-  scoreForContact() {
-    return 0;
-  }
-
   consumeReward(_ball) {
     return {
       diamonds: 1,
