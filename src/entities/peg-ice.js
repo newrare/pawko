@@ -17,6 +17,6 @@ export class IcePeg extends Peg {
    * @returns {{ effect: string, popText: string, popClass: string }}
    */
   consumeReward(_ball) {
-    return { effect: "frozen", popText: "❄️", popClass: "pk-popup pk-popup--ice" };
+    return { effect: "frozen" };
   }
 }

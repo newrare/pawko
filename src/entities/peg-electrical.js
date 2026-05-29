@@ -17,6 +17,6 @@ export class ElectricalPeg extends Peg {
    * @returns {{ effect: string, popText: string, popClass: string }}
    */
   consumeReward(_ball) {
-    return { effect: "electrified", popText: "⚡", popClass: "pk-popup pk-popup--electrical" };
+    return { effect: "electrified" };
   }
 }

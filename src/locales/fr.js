@@ -277,7 +277,6 @@ export const fr = {
   "peg.fire": "Feu",
   "peg.ice": "Glace",
   "peg.electrical": "Électrique",
-  "peg.black": "Noir",
   "peg.bomb": "Bombe",
   "peg.glue": "Colle",
   "peg.teleport": "Téléport",

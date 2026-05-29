@@ -70,6 +70,7 @@ export class StyleguideScene {
       ${this.#renderHeader()}
       ${this.#renderColors()}
       ${this.#renderTypography()}
+      ${this.#renderCards()}
       ${this.#renderButtons()}
       ${this.#renderToggles()}
       ${this.#renderPegs()}
@@ -92,27 +93,27 @@ export class StyleguideScene {
 
   #renderColors() {
     const colors = [
-      { name: "Background", hex: "#14040a" },
-      { name: "Surface", hex: "#1e080e" },
-      { name: "Card", hex: "#200a10" },
-      { name: "Muted Border", hex: "#3a0e18" },
-      { name: "Crimson Deep", hex: "#6a1828" },
-      { name: "Crimson", hex: "#cc2840" },
-      { name: "Rose", hex: "#f28090" },
-      { name: "Text Secondary", hex: "#a05868" },
-      { name: "Text Dim", hex: "#6a3040" },
-      { name: "Gold", hex: "#d4af37" },
-      { name: "Gold Light", hex: "#f5d77a" },
-      { name: "Gold Dim", hex: "#8a7040" },
+      { token: "--pk-bg",           label: "Background" },
+      { token: "--pk-bg-surface",   label: "Surface" },
+      { token: "--pk-bg-card",      label: "Card" },
+      { token: "--pk-crimson-muted",label: "Crimson Muted" },
+      { token: "--pk-crimson-deep", label: "Crimson Deep" },
+      { token: "--pk-crimson",      label: "Crimson" },
+      { token: "--pk-rose",         label: "Rose" },
+      { token: "--pk-rose-dim",     label: "Rose Dim" },
+      { token: "--pk-rose-muted",   label: "Rose Muted" },
+      { token: "--pk-gold",         label: "Gold" },
+      { token: "--pk-gold-light",   label: "Gold Light" },
+      { token: "--pk-gold-dim",     label: "Gold Dim" },
     ];
     const swatches = colors
       .map(
         (c) =>
           `<div class="gt-sg-swatch">
-            <div class="gt-sg-swatch-color" style="height:50px;background:${c.hex}"></div>
+            <div class="gt-sg-swatch-color" style="background:var(${c.token})"></div>
             <div class="gt-sg-swatch-label">
-              <span class="gt-sg-swatch-name">${c.name}</span>
-              <span class="gt-sg-swatch-hex">${c.hex}</span>
+              <span class="gt-sg-swatch-name">${c.label}</span>
+              <span class="gt-sg-swatch-hex">${c.token}</span>
             </div>
           </div>`,
       )
@@ -129,40 +130,34 @@ export class StyleguideScene {
   #renderTypography() {
     return `
       <section class="gt-sg-section">
-        <h2 class="gt-sg-h2">Typography</h2>
-        <div style="display:flex;flex-direction:column;gap:1.1rem;">
+        <h2 class="gt-sg-h2">Typography — Niveaux de titres</h2>
+        <div style="display:flex;flex-direction:column;gap:1.4rem;">
+
           <div>
-            <span class="gt-sg-sub-label">Game title · 3rem · 14px tracking</span>
-            <div style="font-size:3rem;letter-spacing:14px;text-transform:uppercase;color:var(--pk-gold);text-shadow:0 0 30px rgba(212,175,55,.22);">PAWKO</div>
+            <span class="gt-sg-sub-label">H1 Display — Titre de scène · 3rem · 14px tracking · .gt-sg-typo-h1</span>
+            <div class="gt-sg-typo-h1">PAWKO</div>
           </div>
+
           <div>
-            <span class="gt-sg-sub-label">Section heading · 0.6rem · 5px tracking</span>
-            <div style="font-size:.6rem;letter-spacing:5px;text-transform:uppercase;color:var(--gt-color-text-sec);">COLLECTION GATES</div>
+            <span class="gt-sg-sub-label">H2 Screen — Titre d'écran · 1.4rem · 6px tracking · .gt-sg-typo-h2</span>
+            <div class="gt-sg-typo-h2">Tableau de jeu</div>
           </div>
+
           <div>
-            <span class="gt-sg-sub-label">Score readout · 0.85rem · gold light</span>
-            <div style="font-size:.85rem;color:var(--pk-gold-light);display:flex;gap:16px;flex-wrap:wrap;">
-              <span><span style="color:var(--gt-color-text-sec);margin-right:4px;font-size:.7rem;">Hits</span>1 840</span>
-              <span><span style="color:var(--gt-color-text-sec);margin-right:4px;font-size:.7rem;">Saved</span>243</span>
-              <span><span style="color:var(--gt-color-text-sec);margin-right:4px;font-size:.7rem;">Level</span>12</span>
-            </div>
+            <span class="gt-sg-sub-label">H3 Section — En-tête de section · 0.85rem · 4px tracking · .gt-sg-typo-h3</span>
+            <div class="gt-sg-typo-h3">Mes récompenses</div>
           </div>
+
           <div>
-            <span class="gt-sg-sub-label">Gate labels · 0.6rem · bold</span>
-            <div style="display:flex;gap:12px;align-items:center;">
-              <span style="font-size:.6rem;letter-spacing:2px;text-transform:uppercase;font-weight:800;color:#22c55e;">SAVE</span>
-              <span style="font-size:.6rem;letter-spacing:2px;text-transform:uppercase;font-weight:800;color:#60a5fa;">RECYCLE</span>
-              <span style="font-size:.6rem;letter-spacing:2px;text-transform:uppercase;font-weight:800;color:#ef4444;">DRAIN</span>
-            </div>
+            <span class="gt-sg-sub-label">H4 Label — Sous-section · 0.6rem · 5px tracking uppercase · .gt-sg-typo-h4</span>
+            <div class="gt-sg-typo-h4">Collection Gates</div>
           </div>
+
           <div>
-            <span class="gt-sg-sub-label">Score popups</span>
-            <div style="display:flex;gap:12px;align-items:baseline;">
-              <span style="font-weight:800;font-size:.8rem;color:var(--pk-gold);text-shadow:0 1px 0 rgba(0,0,0,.6);">+1</span>
-              <span style="font-weight:800;font-size:.8rem;color:var(--pk-gold);text-shadow:0 1px 0 rgba(0,0,0,.6);">+10</span>
-              <span style="font-weight:800;font-size:1.1rem;color:var(--pk-crimson);text-shadow:0 1px 0 rgba(0,0,0,.6);">+50</span>
-            </div>
+            <span class="gt-sg-sub-label">Caption — Légende / tag · 0.5rem · 3px tracking · .gt-sg-typo-caption</span>
+            <div class="gt-sg-typo-caption">Niveau 12 — Actif</div>
           </div>
+
           <div>
             <span class="gt-sg-sub-label">Rarity tags</span>
             <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
@@ -178,97 +173,151 @@ export class StyleguideScene {
     `;
   }
 
+  #renderCards() {
+    return `
+      <section class="gt-sg-section">
+        <h2 class="gt-sg-h2">Cards — propositions</h2>
+        <div class="gt-sg-cards-grid">
+
+          <div class="gt-sg-card">
+            <div class="gt-sg-card-eyebrow">Base card</div>
+            <div class="gt-sg-card-title">Peg Glue</div>
+            <div class="gt-sg-card-body">Colle la balle sur le peg pendant 2 secondes puis la relâche.</div>
+          </div>
+
+          <div class="gt-sg-card gt-sg-card--surface">
+            <div class="gt-sg-card-eyebrow">Surface card</div>
+            <div class="gt-sg-card-title">Peg Teleport</div>
+            <div class="gt-sg-card-body">Téléporte la balle à un endroit aléatoire du tableau.</div>
+          </div>
+
+          <div class="gt-sg-card gt-sg-card--gold">
+            <div class="gt-sg-card-eyebrow">Gold accent card</div>
+            <div class="gt-sg-card-title">Peg Chest</div>
+            <div class="gt-sg-card-body">Récompense la balle avec un bonus aléatoire à l'impact.</div>
+            <div class="gt-sg-card-tag">Rare</div>
+          </div>
+
+          <div class="gt-sg-card gt-sg-card--stat">
+            <div class="gt-sg-card-eyebrow">Stat card</div>
+            <div class="gt-sg-card-value">42</div>
+            <div class="gt-sg-card-title">Pegs sauvés</div>
+          </div>
+
+          <div class="gt-sg-card gt-sg-card--danger">
+            <div class="gt-sg-card-eyebrow">Danger card</div>
+            <div class="gt-sg-card-title">Peg Fire</div>
+            <div class="gt-sg-card-body">Inflige des dégâts DoT à la balle sur toute la durée.</div>
+          </div>
+
+        </div>
+      </section>
+    `;
+  }
+
   #renderButtons() {
-    const buttons = [
-      buttonHtml({ action: "noop", label: "Drop Ball", variant: "primary" }),
-      buttonHtml({ action: "noop", label: "Play Again", variant: "primary" }),
-      buttonHtml({ action: "noop", label: "Upgrade", variant: "secondary" }),
-      buttonHtml({ action: "noop", label: "Back", variant: "secondary" }),
-      buttonHtml({ action: "noop", label: "Drain", variant: "danger" }),
-      buttonHtml({ action: "noop", label: "No Thanks", variant: "ghost" }),
-      buttonHtml({
-        action: "noop",
-        label: "Locked",
-        variant: "primary",
-        disabled: true,
-      }),
+    const rows = [
+      `<div>
+        <span class="gt-sg-sub-label">Primary — Action / Validation · variant="primary"</span>
+        <div class="gt-btn-group">
+          ${buttonHtml({ action: "noop", label: "Drop Ball", variant: "primary" })}
+          ${buttonHtml({ action: "noop", label: "Verrouillé", variant: "primary", disabled: true })}
+        </div>
+      </div>`,
+      `<div>
+        <span class="gt-sg-sub-label">Secondary — Annulation / Retour · variant="secondary"</span>
+        <div class="gt-btn-group">
+          ${buttonHtml({ action: "back", label: "Back", variant: "secondary" })}
+        </div>
+      </div>`,
     ].join("");
 
     return `
       <section class="gt-sg-section">
         <h2 class="gt-sg-h2">${i18n.t("styleguide.buttons")}</h2>
-        <div class="gt-btn-group">${buttons}</div>
+        <div style="display:flex;flex-direction:column;gap:1rem;">${rows}</div>
       </section>
     `;
   }
 
   #renderToggles() {
-    const toggles =
-      toggleRowHtml({ action: "noop", label: i18n.t("options.music"), checked: true }) +
-      toggleRowHtml({ action: "noop", label: i18n.t("options.sound"), checked: true });
+    const toggleOn  = toggleRowHtml({ action: "noop", label: i18n.t("options.sound"), checked: true });
+    const toggleOff = toggleRowHtml({ action: "noop", label: i18n.t("options.sound"), checked: false });
 
     return `
       <section class="gt-sg-section">
         <h2 class="gt-sg-h2">${i18n.t("styleguide.toggles")}</h2>
-        <div class="gt-stack" style="max-width:320px;">${toggles}</div>
+        <div class="gt-stack" style="max-width:320px;">
+          ${toggleOn}${toggleOff}
+        </div>
       </section>
     `;
   }
 
   #renderPegs() {
-    const cell = (inner, label, stageExtra = '') =>
+    const cell = (inner, label) =>
       `<div class="gt-sg-plinko-cell">
-        <div class="gt-sg-plinko-stage gt-sg-plinko-stage--overflow${stageExtra}">${inner}</div>
+        <div class="gt-sg-plinko-stage gt-sg-plinko-stage--overflow">${inner}</div>
         <span>${label}</span>
       </div>`;
 
+    const row = (cells) =>
+      `<div class="gt-sg-plinko-row" style="grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));">${cells}</div>`;
+
     return `
       <section class="gt-sg-section">
-        <h2 class="gt-sg-h2">Pegs — all types</h2>
-        <div class="gt-sg-plinko">
-          <div class="gt-sg-plinko-row gt-sg-plinko-row--4" style="grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));">
-            ${cell('<div class="pk-peg"></div>', "Classic<br>+2 pts")}
-            ${cell('<div class="pk-peg pk-peg--bumper"></div>', "Bumper<br>×10 pts")}
-            ${cell('<div class="pk-peg pk-peg--coin"></div>', "Coin<br>+1 coin")}
-            ${cell('<div class="pk-peg pk-peg--diamond"></div>', "Diamond<br>5 HP")}
-            ${cell('<div class="pk-peg pk-peg--glue"></div>', "Glue<br>5 HP")}
-            ${cell('<div class="pk-peg pk-peg--teleport"></div>', "Teleport<br>2 HP")}
-            ${cell('<div class="pk-peg pk-peg--chest"></div>', "Chest<br>2 HP")}
-            ${cell('<div class="pk-peg pk-peg--shield pk-peg--shield-active"></div>', "Shield<br>Active")}
+        <h2 class="gt-sg-h2">Pegs — regroupés par forme</h2>
+
+        <div class="gt-sg-peg-group">
+          <div class="gt-sg-peg-group-label">Cercles</div>
+          ${row(`
+            ${cell('<div class="pk-peg"></div>', "Classic")}
+            ${cell('<div class="pk-peg pk-peg--bumper"></div>', "Bumper")}
+            ${cell('<div class="pk-peg pk-peg--glue"></div>', "Glue")}
+            ${cell('<div class="pk-peg pk-peg--teleport"></div>', "Teleport")}
+            ${cell('<div class="pk-peg pk-peg--shield pk-peg--shield-active"></div>', "Shield<br>Actif")}
             ${cell('<div class="pk-peg pk-peg--shield pk-peg--shield-down"></div>', "Shield<br>Down")}
-            ${cell('<div class="pk-peg pk-peg--mystery"></div>', "Mystery<br>2 HP")}
-          </div>
+            ${cell('<div class="pk-peg pk-peg--ice"></div>', "Ice")}
+            ${cell('<div class="pk-peg pk-peg--fire"></div>', "Fire")}
+            ${cell('<div class="pk-peg pk-peg--electrical" data-sg-spark="peg"></div>', "Electrical")}
+            ${cell('<div class="pk-peg pk-peg--bomb"></div>', "Bomb")}
+          `)}
         </div>
 
-        <h2 class="gt-sg-h2" style="margin-top:1rem;">Pegs — elemental (tower-defense)</h2>
-        <div class="gt-sg-plinko">
-          <div class="gt-sg-plinko-row gt-sg-plinko-row--4" style="grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));">
-            ${cell('<div class="pk-peg pk-peg--ice"></div>', "Ice<br>freezes ball")}
-            ${cell('<div class="pk-peg pk-peg--fire"></div>', "Fire<br>burns ball")}
-            ${cell('<div class="pk-peg pk-peg--electrical" data-sg-spark="peg"></div>', "Electrical<br>shocks ball")}
-            ${cell('<div class="pk-peg pk-peg--bomb"></div>', "Bomb<br>tap to detonate")}
-          </div>
+        <div class="gt-sg-peg-group">
+          <div class="gt-sg-peg-group-label">Losanges (carré 45°)</div>
+          ${row(`
+            ${cell('<div class="pk-peg pk-peg--coin"></div>', "Coin")}
+            ${cell('<div class="pk-peg pk-peg--diamond"></div>', "Diamond")}
+          `)}
         </div>
 
-        <h2 class="gt-sg-h2" style="margin-top:1rem;">Pegs — HP remaining label (peg-color tinted, horizontal)</h2>
-        <div class="gt-sg-plinko">
-          <div class="gt-sg-plinko-row gt-sg-plinko-row--4" style="grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));">
-            ${cell('<div class="pk-peg"><span class="pk-peg-hp-label pk-peg-hp-label--persistent">7</span></div>', "Classic<br>7 HP")}
-            ${cell('<div class="pk-peg pk-peg--bumper"><span class="pk-peg-hp-label pk-peg-hp-label--persistent">4</span></div>', "Bumper<br>4 HP")}
-            ${cell('<div class="pk-peg pk-peg--coin"><span class="pk-peg-hp-label pk-peg-hp-label--persistent">5</span></div>', "Coin<br>5 HP")}
-            ${cell('<div class="pk-peg pk-peg--diamond"><span class="pk-peg-hp-label pk-peg-hp-label--persistent">3</span></div>', "Diamond<br>3 HP")}
-            ${cell('<div class="pk-peg pk-peg--glue"><span class="pk-peg-hp-label pk-peg-hp-label--persistent">4</span></div>', "Glue<br>4 HP")}
-            ${cell('<div class="pk-peg pk-peg--teleport"><span class="pk-peg-hp-label pk-peg-hp-label--persistent">2</span></div>', "Teleport<br>2 HP")}
-            ${cell('<div class="pk-peg pk-peg--chest"><span class="pk-peg-hp-label pk-peg-hp-label--persistent">2</span></div>', "Chest<br>2 HP")}
-            ${cell('<div class="pk-peg pk-peg--mystery"><span class="pk-peg-hp-label pk-peg-hp-label--persistent">2</span></div>', "Mystery<br>2 HP")}
-          </div>
+        <div class="gt-sg-peg-group">
+          <div class="gt-sg-peg-group-label">Carrés arrondis</div>
+          ${row(`
+            ${cell('<div class="pk-peg pk-peg--chest"></div>', "Chest")}
+            ${cell('<div class="pk-peg pk-peg--mystery"></div>', "Mystery")}
+          `)}
         </div>
 
-        <h2 class="gt-sg-h2" style="margin-top:1rem;">Pegs — tremble</h2>
-        <div class="gt-sg-plinko">
-          <div class="gt-sg-plinko-row gt-sg-plinko-row--4" style="grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));">
-            ${cell('<div class="pk-peg pk-tremble"></div>', "Tremble<br>1 HP left")}
-          </div>
+        <div class="gt-sg-peg-group">
+          <div class="gt-sg-peg-group-label">Labels HP (teinté par couleur du peg)</div>
+          ${row(`
+            ${cell('<div class="pk-peg"><span class="pk-peg-hp-label pk-peg-hp-label--persistent">7</span></div>', "Classic")}
+            ${cell('<div class="pk-peg pk-peg--bumper"><span class="pk-peg-hp-label pk-peg-hp-label--persistent">4</span></div>', "Bumper")}
+            ${cell('<div class="pk-peg pk-peg--coin"><span class="pk-peg-hp-label pk-peg-hp-label--persistent">5</span></div>', "Coin")}
+            ${cell('<div class="pk-peg pk-peg--diamond"><span class="pk-peg-hp-label pk-peg-hp-label--persistent">3</span></div>', "Diamond")}
+            ${cell('<div class="pk-peg pk-peg--glue"><span class="pk-peg-hp-label pk-peg-hp-label--persistent">4</span></div>', "Glue")}
+            ${cell('<div class="pk-peg pk-peg--chest"><span class="pk-peg-hp-label pk-peg-hp-label--persistent">2</span></div>', "Chest")}
+            ${cell('<div class="pk-peg pk-peg--mystery"><span class="pk-peg-hp-label pk-peg-hp-label--persistent">2</span></div>', "Mystery")}
+          `)}
+        </div>
+
+        <div class="gt-sg-peg-group">
+          <div class="gt-sg-peg-group-label">Tremble — dernier HP restant</div>
+          ${row(`
+            ${cell('<div class="pk-peg pk-tremble"></div>', "Classic<br>1 HP")}
+          `)}
         </div>
       </section>
     `;
@@ -277,22 +326,16 @@ export class StyleguideScene {
   #renderBalls() {
     const cell = (inner, label) =>
       `<div class="gt-sg-plinko-cell">
-        <div class="gt-sg-plinko-stage">${inner}</div>
+        <div class="gt-sg-plinko-stage gt-sg-plinko-stage--overflow">${inner}</div>
         <span>${label}</span>
       </div>`;
 
     return `
       <section class="gt-sg-section">
-        <h2 class="gt-sg-h2">Balls — kinds</h2>
+        <h2 class="gt-sg-h2">Balls</h2>
         <div class="gt-sg-plinko">
           <div class="gt-sg-plinko-row" style="grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));">
             ${cell('<div class="pk-ball"></div>', "Classic")}
-          </div>
-        </div>
-
-        <h2 class="gt-sg-h2" style="margin-top:1rem;">Ball — peg-driven effect overlays</h2>
-        <div class="gt-sg-plinko">
-          <div class="gt-sg-plinko-row" style="grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));">
             ${cell('<div class="pk-ball pk-ball--on-fire"></div>', "On fire<br>(burning)")}
             ${cell('<div class="pk-ball pk-ball--frozen"></div>', "Frozen<br>(0.5× speed)")}
             ${cell('<div class="pk-ball pk-ball--electrified"></div>', "Electrified<br>(DoT)")}

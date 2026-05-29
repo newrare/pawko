@@ -1,19 +1,13 @@
 import { Peg } from "./peg-classic.js";
-import { bonusManager } from "../managers/bonus-manager.js";
-import {
-  SESSION_BONUSES,
-  SESSION_MALUSES,
-  BONUS_CATEGORIES,
-} from "../configs/bonus-defs.js";
+import { SESSION_BONUSES } from "../configs/bonus-defs.js";
 
 /**
- * MysteryPeg — when destroyed, rolls a random session entry (70% bonus,
- * 30% malus) and immediately activates it via `bonusManager`. The
- * resulting popup tells the player what they got.
+ * MysteryPeg — when destroyed, rolls a random session bonus and queues it
+ * for the NEXT pinboard via `bonusManager.queueSessionNext`. A multicolor
+ * floating label shows the fire icon + bonus name at the peg position.
  *
- * The activation goes through the controller's destroy-reward channel
- * so the standard peg rescue ring still lets the player cancel the
- * outcome by tapping in time.
+ * Rescue is disabled for this peg type (like chest/coin/diamond) — the
+ * reward is unambiguous and the player cannot cancel it.
  */
 export class MysteryPeg extends Peg {
   constructor(opts = {}) {
@@ -24,18 +18,12 @@ export class MysteryPeg extends Peg {
 
   /** @returns {object | null} */
   onDestroyed(_ball) {
-    const rollMalus = Math.random() < 0.3;
-    const pool = rollMalus ? SESSION_MALUSES : SESSION_BONUSES;
-    if (!pool.length) return null;
-    const def = pool[Math.floor(Math.random() * pool.length)];
-    const isMalus = def.category === BONUS_CATEGORIES.MALUS;
+    if (!SESSION_BONUSES.length) return null;
+    const def = SESSION_BONUSES[Math.floor(Math.random() * SESSION_BONUSES.length)];
     return {
-      activate: def.id,
-      popText: `${def.icon} ${isMalus ? "!" : "+"}`,
-      popClass: `pk-popup pk-popup--mystery-${isMalus ? "bad" : "good"}`,
+      queueSession: def.id,
+      popHtml: `<span class="pk-float-icon pk-float-icon--fire"></span> <span class="pk-float-mystery-name">${def.name ?? def.id}</span>`,
+      mystery: true,
     };
   }
 }
-
-/* Re-export so the controller can apply activation in #applyDestroyReward. */
-export { bonusManager };

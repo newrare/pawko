@@ -97,6 +97,7 @@ export const DIRECTIVE_ACTIONS = /** @type {const} */ ({
 /**
  * @typedef {object} BonusDef
  * @property {string} id
+ * @property {string} [name]               — short display name (used by MysteryPeg floating label)
  * @property {'permanent' | 'session'} type
  * @property {'bonus' | 'malus'} category
  * @property {number} cost                 — coins (0 for maluses)
@@ -306,6 +307,7 @@ export const PERMANENT_BONUSES = [
 export const SESSION_BONUSES = [
   {
     id: "session_extra_classic_ball_one",
+    name: "+1 Ball",
     type: BONUS_TYPES.SESSION,
     category: BONUS_CATEGORIES.BONUS,
     cost: 100,
@@ -322,6 +324,7 @@ export const SESSION_BONUSES = [
   },
   {
     id: "session_gate_malus_reduce",
+    name: "Gate Shield",
     type: BONUS_TYPES.SESSION,
     category: BONUS_CATEGORIES.BONUS,
     cost: 1000,
@@ -335,6 +338,7 @@ export const SESSION_BONUSES = [
   },
   {
     id: "session_gate_x_boost",
+    name: "Gate Boost",
     type: BONUS_TYPES.SESSION,
     category: BONUS_CATEGORIES.BONUS,
     cost: 1500,
@@ -348,6 +352,7 @@ export const SESSION_BONUSES = [
   },
   {
     id: "session_gate_x_double",
+    name: "Gate ×2",
     type: BONUS_TYPES.SESSION,
     category: BONUS_CATEGORIES.BONUS,
     cost: 10000,
@@ -361,6 +366,7 @@ export const SESSION_BONUSES = [
   },
   {
     id: "session_coin_drop_x2",
+    name: "Coins ×2",
     type: BONUS_TYPES.SESSION,
     category: BONUS_CATEGORIES.BONUS,
     cost: 1500,
@@ -375,6 +381,7 @@ export const SESSION_BONUSES = [
   /* Tower-defense session bonuses */
   {
     id: "session_extra_recycles",
+    name: "Recycles",
     type: BONUS_TYPES.SESSION,
     category: BONUS_CATEGORIES.BONUS,
     cost: 800,
@@ -388,6 +395,7 @@ export const SESSION_BONUSES = [
   },
   {
     id: "session_destroy_coins_x3",
+    name: "Coins ×3",
     type: BONUS_TYPES.SESSION,
     category: BONUS_CATEGORIES.BONUS,
     cost: 3000,
@@ -401,6 +409,7 @@ export const SESSION_BONUSES = [
   },
   {
     id: "session_peg_discount_20",
+    name: "Peg -20%",
     type: BONUS_TYPES.SESSION,
     category: BONUS_CATEGORIES.BONUS,
     cost: 1500,

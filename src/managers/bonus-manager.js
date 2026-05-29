@@ -39,6 +39,9 @@ class BonusManager extends EventEmitter {
   /** @type {import('../configs/bonus-defs.js').BonusDirective[]} */
   #directives = [];
 
+  /** @type {string[]} session ids queued to activate at the next pinboard start */
+  #pendingSession = [];
+
   constructor() {
     super();
     this.#load();
@@ -132,6 +135,28 @@ class BonusManager extends EventEmitter {
   }
 
   /**
+   * Queue a session bonus to be activated at the start of the next pinboard.
+   * Used by MysteryPeg so the bonus takes effect on the following level, not
+   * the current one.
+   * @param {string} id
+   */
+  queueSessionNext(id) {
+    const def = findBonus(id);
+    if (!def || def.type !== BONUS_TYPES.SESSION) return;
+    this.#pendingSession.push(id);
+  }
+
+  /**
+   * Activate every pending queued session bonus. Called once at the start
+   * of each pinboard round (alongside consumeDirectives).
+   */
+  consumeQueuedSessions() {
+    if (this.#pendingSession.length === 0) return;
+    for (const id of this.#pendingSession) this.activateSession(id);
+    this.#pendingSession = [];
+  }
+
+  /**
    * Tick session counters down by one level. Entries with Infinity
    * remaining (run-scoped) are skipped. Expiring entries' `onExpire`
    * callbacks run before they are removed.
@@ -154,11 +179,12 @@ class BonusManager extends EventEmitter {
     this.emit("change");
   }
 
-  /** Clears every session entry + pending directive (used on game over / new run). */
+  /** Clears every session entry + pending directive + queued sessions (used on game over / new run). */
   clearSession() {
-    if (this.#session.size === 0 && this.#directives.length === 0) return;
+    if (this.#session.size === 0 && this.#directives.length === 0 && this.#pendingSession.length === 0) return;
     this.#session.clear();
     this.#directives = [];
+    this.#pendingSession = [];
     this.emit("change");
   }
 
@@ -232,6 +258,7 @@ class BonusManager extends EventEmitter {
     this.#unlocked.clear();
     this.#session.clear();
     this.#directives = [];
+    this.#pendingSession = [];
     this.#save();
     this.emit("change");
   }
@@ -292,6 +319,7 @@ class BonusManager extends EventEmitter {
     this.#unlocked.clear();
     this.#session.clear();
     this.#directives = [];
+    this.#pendingSession = [];
     localStorage.removeItem(STORAGE_KEYS.BONUSES);
     this.clear();
   }

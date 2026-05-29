@@ -206,6 +206,11 @@ export const PLINKO = {
   /** Points deducted when a ball lands in the malus gate (legacy — kept for tests). */
   MALUS_POINTS: 10,
 
+  /** Radius (px) within which an electrified ball attracts nearby active balls. */
+  ELEC_ATTRACT_RADIUS: 90,
+  /** Acceleration (px/s²) applied to balls being pulled toward an electrified ball. */
+  ELEC_ATTRACT_FORCE: 250,
+
   /* Collection gates — 5 equal-width zones (sum = 1). Tower-defense mode:
      teleport_left | destroy_left | hp | destroy_right | teleport_right */
   GATE_WIDTHS: {
@@ -267,7 +272,6 @@ export const PEG_DEFS = {
   fire: { hp: 10 },
   ice: { hp: 10 },
   electrical: { hp: 10 },
-  black: { hp: 10 },
   bomb: { hp: 10 },
 };
 
@@ -310,7 +314,6 @@ export const PEG_REPLACE_COSTS = {
   fire: 50,
   ice: 50,
   electrical: 75,
-  black: 100,
   bomb: 80,
   glue: 30,
   teleport: 60,

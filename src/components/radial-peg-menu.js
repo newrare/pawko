@@ -116,7 +116,6 @@ export class RadialPegMenu {
       case "fire": return "🔥";
       case "ice": return "❄️";
       case "electrical": return "⚡";
-      case "black": return "💀";
       case "bomb": return "💣";
       case "glue": return "🟢";
       case "teleport": return "🌀";

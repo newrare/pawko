@@ -10,7 +10,6 @@ import { MysteryPeg } from "./peg-mystery.js";
 import { FirePeg } from "./peg-fire.js";
 import { IcePeg } from "./peg-ice.js";
 import { ElectricalPeg } from "./peg-electrical.js";
-import { BlackPeg } from "./peg-black.js";
 import { BombPeg } from "./peg-bomb.js";
 
 /**
@@ -32,7 +31,6 @@ export const PEG_TYPES = /** @type {const} */ ({
   FIRE: "fire",
   ICE: "ice",
   ELECTRICAL: "electrical",
-  BLACK: "black",
   BOMB: "bomb",
 });
 
@@ -50,7 +48,6 @@ const PEG_REGISTRY = {
   [PEG_TYPES.FIRE]: FirePeg,
   [PEG_TYPES.ICE]: IcePeg,
   [PEG_TYPES.ELECTRICAL]: ElectricalPeg,
-  [PEG_TYPES.BLACK]: BlackPeg,
   [PEG_TYPES.BOMB]: BombPeg,
 };
 

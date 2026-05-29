@@ -54,7 +54,6 @@
 .pk-radial-btn--fire       { --pk-peg-accent: var(--pk-peg-fire); }
 .pk-radial-btn--ice        { --pk-peg-accent: var(--pk-peg-ice); }
 .pk-radial-btn--electrical { --pk-peg-accent: var(--pk-peg-electrical); }
-.pk-radial-btn--black      { --pk-peg-accent: var(--pk-peg-black); }
 .pk-radial-btn--bomb       { --pk-peg-accent: var(--pk-peg-bomb); }
 .pk-radial-btn--glue       { --pk-peg-accent: var(--pk-peg-glue); }
 .pk-radial-btn--teleport   { --pk-peg-accent: var(--pk-teleport-ring); }

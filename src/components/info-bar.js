@@ -396,7 +396,6 @@ export class InfoBar {
       [PEG_TYPES.FIRE]: "var(--pk-peg-fire)",
       [PEG_TYPES.ICE]: "var(--pk-peg-ice)",
       [PEG_TYPES.ELECTRICAL]: "var(--pk-peg-electrical)",
-      [PEG_TYPES.BLACK]: "var(--pk-peg-black)",
       [PEG_TYPES.BOMB]: "var(--pk-peg-bomb)",
     };
     return map[type] ?? "var(--gt-color-text)";

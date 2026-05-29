@@ -21,6 +21,10 @@
   --gt-color-bg: var(--pk-bg);
   --gt-color-surface: var(--pk-bg-card);
   --gt-color-surface-2: var(--pk-bg-surface);
+  /* Aliases used by radial-menu.css (shorter form). */
+  --gt-surface-1: var(--pk-bg-card);
+  --gt-surface-2: var(--pk-bg-surface);
+  --gt-text-2: var(--pk-rose-dim);
   --gt-color-text: var(--pk-gold-light);
   --gt-color-text-dim: var(--pk-rose-dim);
   --gt-color-text-sec: var(--pk-rose);
@@ -85,8 +89,11 @@
   --pk-peg-fire: #ef4444;
   --pk-peg-ice: #38bdf8;
   --pk-peg-electrical: #a78bfa;
-  --pk-peg-black: #6b7280;
-  --pk-peg-bomb: #1f2937;
+  --pk-peg-bomb: #c8cdd4;
+  /* --- Fire-effect colors (trail particles, damage labels). --- */
+  --pk-fire-trail: #ff6a00;
+  --pk-fire-dmg: #ffb020;
+
   --pk-ball-bg: radial-gradient(circle at 30% 30%, #c4a0b0, #9a7080);
   --pk-ball-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 

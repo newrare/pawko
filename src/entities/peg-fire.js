@@ -18,6 +18,6 @@ export class FirePeg extends Peg {
    * @returns {{ effect: string, popText: string, popClass: string }}
    */
   consumeReward(_ball) {
-    return { effect: "burning", popText: "🔥", popClass: "pk-popup pk-popup--fire" };
+    return { effect: "burning" };
   }
 }

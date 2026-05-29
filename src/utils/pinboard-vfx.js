@@ -230,21 +230,96 @@ export class PinboardVfx {
   }
 
   /**
-   * Bomb shockwave ring rendered at (x, y) inside the pinboard.
+   * Pop a large chest-reward floating label that stays visible for ~2 s.
+   * Uses the .pk-float-text--chest modifier for a bigger, slower animation.
+   * @param {string} html  — safe inner HTML (no user input)
+   * @param {number} x
+   * @param {number} y
+   * @param {string} [color]  — CSS color applied to text and icon
+   */
+  popChestFloatingText(html, x, y, color) {
+    const { stackEl, bag } = this.deps;
+    if (!stackEl) return;
+    const pop = document.createElement("div");
+    pop.className = "pk-float-text pk-float-text--chest";
+    pop.innerHTML = html;
+    if (color) pop.style.color = color;
+    pop.style.left = `${x}px`;
+    pop.style.top = `${y - 16}px`;
+    stackEl.appendChild(pop);
+    bag.timeout(() => pop.remove(), 2400);
+  }
+
+  /**
+   * Pop a multicolor mystery-bonus floating label that stays visible for ~2 s.
+   * Uses the same large animation as the chest variant but with a rainbow
+   * gradient text instead of a solid color.
+   * @param {string} html  — safe inner HTML (no user input)
+   * @param {number} x
+   * @param {number} y
+   */
+  popMysteryFloatingText(html, x, y) {
+    const { stackEl, bag } = this.deps;
+    if (!stackEl) return;
+    const pop = document.createElement("div");
+    pop.className = "pk-float-text pk-float-text--chest pk-float-text--mystery";
+    pop.innerHTML = html;
+    pop.style.left = `${x}px`;
+    pop.style.top = `${y - 16}px`;
+    stackEl.appendChild(pop);
+    bag.timeout(() => pop.remove(), 2400);
+  }
+
+  /**
+   * Full bomb explosion effect at (x, y) inside the pinboard:
+   * central flash, inner ring, outer ring, and debris particles.
    * @param {number} x
    * @param {number} y
    * @param {number} radius
    */
-  emitBombShockwave(x, y, radius) {
+  emitBombExplosion(x, y, radius) {
     const { stackEl, bag } = this.deps;
     if (!stackEl) return;
+    const r = `${radius}px`;
+    const pos = `left:${x}px;top:${y}px`;
+
+    /* Blast zone disc — filled, expands to exact damage radius, shows player where blast hit. */
+    const zone = document.createElement("div");
+    zone.className = "pk-bomb-blast-zone";
+    zone.style.cssText = pos;
+    zone.style.setProperty("--pk-bomb-radius", r);
+    stackEl.appendChild(zone);
+    bag.timeout(() => zone.remove(), 750);
+
+    /* Central bright flash — inside the blast zone. */
+    const flash = document.createElement("div");
+    flash.className = "pk-bomb-flash";
+    flash.style.cssText = pos;
+    flash.style.setProperty("--pk-bomb-radius", r);
+    stackEl.appendChild(flash);
+    bag.timeout(() => flash.remove(), 350);
+
+    /* Boundary ring — expands to exact damage radius edge. */
     const wave = document.createElement("div");
     wave.className = "pk-bomb-shockwave";
-    wave.style.left = `${x}px`;
-    wave.style.top = `${y}px`;
-    wave.style.setProperty("--pk-bomb-radius", `${radius}px`);
+    wave.style.cssText = pos;
+    wave.style.setProperty("--pk-bomb-radius", r);
     stackEl.appendChild(wave);
-    bag.timeout(() => wave.remove(), 600);
+    bag.timeout(() => wave.remove(), 650);
+
+    /* Debris particles — stay within the blast zone. */
+    const SHARDS = 10;
+    for (let i = 0; i < SHARDS; i++) {
+      const angle = (Math.PI * 2 * i) / SHARDS + (Math.random() - 0.5) * 0.5;
+      const dist = radius * 0.3 + Math.random() * radius * 0.6;
+      const p = document.createElement("div");
+      p.className = "pk-bomb-debris";
+      p.style.cssText = pos;
+      p.style.setProperty("--dx", `${(Math.cos(angle) * dist).toFixed(1)}px`);
+      p.style.setProperty("--dy", `${(Math.sin(angle) * dist).toFixed(1)}px`);
+      stackEl.appendChild(p);
+      bag.timeout(() => p.remove(), 620);
+    }
   }
 
   /**

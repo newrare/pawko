@@ -54,6 +54,8 @@ export class GameController {
   /** @type {Map<number, HTMLElement>} */ #pegEls = new Map();
   /** @type {Map<number, { ball: Ball, el: HTMLElement }>} */ #balls = new Map();
   /** @type {Map<number, { x: number, y: number, since: number }>} */ #ballIdleTracker = new Map();
+  /** @type {Map<number, number>} ball id → last fire-trail spawn timestamp */ #fireTrailTs = new Map();
+  /** @type {Map<number, () => void>} ball id → spark-web unmount for electrified effect */ #elecSparkUnmounts = new Map();
   /** @type {number} */ #pinboardWidth = 0;
   /** @type {number} */ #pinboardHeight = 0;
   /** @type {boolean} */ #ended = false;
@@ -170,9 +172,12 @@ export class GameController {
     this.#pegSave.dispose();
     this.#saveComboHudEl?.remove();
     this.#saveComboHudEl = null;
+    for (const unmount of this.#elecSparkUnmounts.values()) unmount();
+    this.#elecSparkUnmounts.clear();
     this.#bag.dispose();
     this.#balls.clear();
     this.#ballIdleTracker.clear();
+    this.#fireTrailTs.clear();
     this.#pegEls.clear();
     this.#layerEls.clear();
     this.#layers = [];
@@ -626,6 +631,9 @@ export class GameController {
       const ball = entry.ball;
       if (!ball.alive) continue;
       const dead = ball.tickEffects(now);
+      for (const evt of ball.dotEvents) {
+        if (evt.id === "burning") this.#popBurningDot(ball, evt.damage);
+      }
       if (dead) {
         this.#updateBallEl(ball);
         this.#destroyBall(ball, { reason: "effect" });
@@ -635,12 +643,24 @@ export class GameController {
     }
   }
 
+  /** Pop a fire damage label anchored to the burning ball element so it follows the ball. */
+  #popBurningDot(ball, damage) {
+    const entry = this.#balls.get(ball.id);
+    if (!entry?.el) return;
+    const label = document.createElement("div");
+    label.className = "pk-ball-fire-dmg";
+    label.textContent = `-${damage}`;
+    entry.el.appendChild(label);
+    this.#bag.timeout(() => label.remove(), 950);
+  }
+
   /** Sync CSS effect classes on the ball element. */
   #syncBallEffectClasses(ball) {
     const entry = this.#balls.get(ball.id);
     if (!entry?.el) return;
     const el = entry.el;
     const active = ball.getActiveEffectIds();
+    const isElectrified = active.includes("electrified");
     for (const cls of ["pk-ball--on-fire", "pk-ball--frozen", "pk-ball--electrified"]) {
       el.classList.remove(cls);
     }
@@ -648,6 +668,12 @@ export class GameController {
       if (id === "burning") el.classList.add("pk-ball--on-fire");
       else if (id === "frozen") el.classList.add("pk-ball--frozen");
       else if (id === "electrified") el.classList.add("pk-ball--electrified");
+    }
+    if (isElectrified && !this.#elecSparkUnmounts.has(ball.id)) {
+      this.#elecSparkUnmounts.set(ball.id, mountSparkWeb(el, { radius: 9, padding: 12 }));
+    } else if (!isElectrified) {
+      this.#elecSparkUnmounts.get(ball.id)?.();
+      this.#elecSparkUnmounts.delete(ball.id);
     }
   }
 
@@ -683,7 +709,7 @@ export class GameController {
         continue;
       }
 
-      ball.vy += gravity * dt;
+      ball.vy += gravity * dt * ball.getGravityMultiplier();
       const v = clampVelocity(ball.vx, ball.vy, maxV);
       ball.vx = v.vx;
       ball.vy = v.vy;
@@ -725,6 +751,25 @@ export class GameController {
     for (let i = 0; i < activeBalls.length; i++) {
       for (let j = i + 1; j < activeBalls.length; j++) {
         collideBalls(activeBalls[i], activeBalls[j]);
+      }
+    }
+
+    /* Electric attraction: each electrified active ball pulls nearby active
+       balls toward it with linear force falloff from the edge to the center. */
+    const attractR = PLINKO.ELEC_ATTRACT_RADIUS;
+    const attractR2 = attractR * attractR;
+    for (const eBall of activeBalls) {
+      if (!eBall.effects.has("electrified") || eBall.state !== "active") continue;
+      for (const other of activeBalls) {
+        if (other === eBall || other.state !== "active") continue;
+        const dx = eBall.x - other.x;
+        const dy = eBall.y - other.y;
+        const dist2 = dx * dx + dy * dy;
+        if (dist2 <= 0 || dist2 > attractR2) continue;
+        const dist = Math.sqrt(dist2);
+        const strength = (1 - dist / attractR) * PLINKO.ELEC_ATTRACT_FORCE * dt;
+        other.vx += (dx / dist) * strength;
+        other.vy += (dy / dist) * strength;
       }
     }
   }
@@ -808,11 +853,23 @@ export class GameController {
         }
         return;
       }
-      /* Elemental peg: apply a timed effect (burning, frozen, electrified). */
+      /* Elemental peg: apply a timed effect (burning, frozen, electrified).
+         Ice + burning and fire + frozen are opposites — they cancel each other
+         instead of stacking. The ball returns to neutral with no effect applied. */
       if (reward.effect) {
-        ball.applyEffect(reward.effect, performance.now());
+        const cancelsFire = reward.effect === "frozen" && ball.effects.has("burning");
+        const cancelsIce  = reward.effect === "burning" && ball.effects.has("frozen");
+        if (cancelsFire) {
+          ball.effects.delete("burning");
+          this.#syncBallEffectClasses(ball);
+        } else if (cancelsIce) {
+          ball.effects.delete("frozen");
+          this.#syncBallEffectClasses(ball);
+        } else {
+          ball.applyEffect(reward.effect, performance.now());
+          this.#popReward(reward, peg.x, peg.y);
+        }
         audioManager.playSfx("click");
-        this.#popReward(reward, peg.x, peg.y);
         const died = peg.takeDamage(1);
         if (died) {
           this.#startPegRescue(peg, ball);
@@ -900,7 +957,13 @@ export class GameController {
    */
   #popReward(reward, x, y) {
     if (reward.popHtml) {
-      this.#vfx?.popFloatingText(reward.popHtml, x, y, reward.popColor);
+      if (reward.mystery) {
+        this.#vfx?.popMysteryFloatingText(reward.popHtml, x, y);
+      } else if (reward.chest) {
+        this.#vfx?.popChestFloatingText(reward.popHtml, x, y, reward.popColor);
+      } else {
+        this.#vfx?.popFloatingText(reward.popHtml, x, y, reward.popColor);
+      }
     } else if (reward.popText) {
       this.#vfx?.popText(reward.popText, x, y, reward.popClass ?? "pk-popup");
     }
@@ -1190,10 +1253,9 @@ export class GameController {
       return;
     }
 
-    /* Reward pegs (chest, coin, diamond) self-consume on death and cannot
-       be rescued — the player already collected the reward, so reviving
-       them would let them be milked indefinitely. */
-    if (peg.type === "chest" || peg.type === "coin" || peg.type === "diamond") {
+    /* Reward pegs (chest, coin, diamond, mystery) self-consume on death and
+       cannot be rescued — reviving them would let them be milked. */
+    if (peg.type === "chest" || peg.type === "coin" || peg.type === "diamond" || peg.type === "mystery") {
       const deathReward = peg.onDestroyed(ball);
       if (deathReward) this.#applyDestroyReward(deathReward, peg);
       this.#destroyPeg(peg, ball);
@@ -1334,6 +1396,7 @@ export class GameController {
       reward.releaseBall.release();
     }
     if (reward.activate) bonusManager.activateSession(reward.activate);
+    if (reward.queueSession) bonusManager.queueSessionNext(reward.queueSession);
     this.#popReward(reward, peg.x, peg.y);
   }
 
@@ -1352,18 +1415,36 @@ export class GameController {
     audioManager.playSfx("click");
     this.#popText("💣", bx, by, "pk-popup pk-popup--bomb");
 
-    /* Destroy nearby pegs. */
+    /* Collect pegs in blast radius first — avoids skipping elements when
+       #removePegEl splices layer.pegs during iteration. */
+    const pegsInRange = [];
     for (const layer of this.#layers) {
       for (const p of layer.pegs) {
-        if (p === peg) continue;
-        if (!p.alive) continue;
+        if (p === peg || !p.alive) continue;
         const dx = p.x - bx;
         const dy = p.y - by;
-        if (dx * dx + dy * dy <= r2) {
-          p.hp = 0;
-          p.alive = false;
-          this.#removePegEl(p);
-        }
+        const dist2 = dx * dx + dy * dy;
+        console.log(`[bomb] peg id=${p.id} type=${p.type} dist=${Math.sqrt(dist2).toFixed(1)} radius=${radius} inRange=${dist2 <= r2}`);
+        if (dist2 <= r2) pegsInRange.push(p);
+      }
+    }
+    console.log(`[bomb] total in range: ${pegsInRange.length}, bombs in range: ${pegsInRange.filter(p => p.type === "bomb").length}`);
+
+    /* Destroy or chain-detonate each peg in range. */
+    for (const p of pegsInRange) {
+      if (p.type === "bomb" && !p.detonated) {
+        /* Chain reaction: tremble the primed bomb, then detonate it. */
+        console.log(`[bomb chain] scheduling bomb id=${p.id}`);
+        const chainEl = this.#pegEls.get(p.id);
+        if (chainEl) chainEl.classList.add("pk-tremble");
+        this.#bag.timeout(() => {
+          console.log(`[bomb chain] firing chain on id=${p.id} detonated=${p.detonated}`);
+          this.#detonateBomb(p);
+        }, 220);
+      } else {
+        p.hp = 0;
+        p.alive = false;
+        this.#removePegEl(p);
       }
     }
 
@@ -1384,7 +1465,7 @@ export class GameController {
     /* Remove the bomb peg itself. */
     this.#removePegEl(peg);
 
-    this.#vfx?.emitBombShockwave(bx, by, radius);
+    this.#vfx?.emitBombExplosion(bx, by, radius);
   }
 
   /** Add extra balls to the launcher. */
@@ -1408,6 +1489,39 @@ export class GameController {
     const oy = this.#pinboardOffsetTop;
     for (const { ball, el } of this.#balls.values()) {
       el.style.transform = `translate(${ball.x}px, ${ball.y + oy}px)`;
+      if (ball.alive && ball.state === "active" && ball.effects.has("burning")) {
+        this.#maybeEmitFireTrail(ball, oy);
+      }
+    }
+  }
+
+  /**
+   * Emit fire trail particles at the ball's position, throttled per-ball.
+   * Spawns 3 dots with size/position jitter for an organic fire look.
+   * @param {Ball} ball
+   * @param {number} oy — pinboard offset top
+   */
+  #maybeEmitFireTrail(ball, oy) {
+    if (!this.#ballLayerEl) return;
+    const now = performance.now();
+    if (now - (this.#fireTrailTs.get(ball.id) ?? 0) < 30) return;
+    this.#fireTrailTs.set(ball.id, now);
+    for (let i = 0; i < 3; i++) {
+      const size = 10 + Math.random() * 8;
+      const jx = (Math.random() - 0.5) * 6;
+      const jy = (Math.random() - 0.5) * 6;
+      const p = document.createElement("div");
+      p.className = "pk-fire-trail-dot";
+      p.style.left = `${ball.x + jx}px`;
+      p.style.top = `${ball.y + oy + jy}px`;
+      p.style.width = `${size}px`;
+      p.style.height = `${size}px`;
+      p.style.marginLeft = `${-size / 2}px`;
+      p.style.marginTop = `${-size / 2}px`;
+      p.style.animationDuration = `${0.28 + Math.random() * 0.15}s`;
+      p.style.animationDelay = `${i * 12}ms`;
+      this.#ballLayerEl.appendChild(p);
+      this.#bag.timeout(() => p.remove(), 480);
     }
   }
 
@@ -1606,6 +1720,9 @@ export class GameController {
     /* Remove from simulation immediately so #renderBalls won't touch it. */
     this.#balls.delete(ball.id);
     this.#ballIdleTracker.delete(ball.id);
+    this.#fireTrailTs.delete(ball.id);
+    this.#elecSparkUnmounts.get(ball.id)?.();
+    this.#elecSparkUnmounts.delete(ball.id);
 
     if (reason === "shatter") {
       this.#popText("💥", ball.x, ball.y, "pk-popup pk-popup--big");
@@ -1693,6 +1810,7 @@ export class GameController {
    * start().
    */
   #applyRoundDirectives() {
+    bonusManager.consumeQueuedSessions();
     const directives = bonusManager.consumeDirectives();
     if (directives.length === 0) return;
 

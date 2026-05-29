@@ -13,27 +13,55 @@
   to   { box-shadow: 0 0 14px 5px rgba(249, 115, 22, 0.9); }
 }
 
-/* Frozen — blue tint + slight scale pulse */
+/* Frozen — blue glow pulse (no transform to avoid conflicting with JS translate) */
 .pk-ball--frozen {
-  box-shadow: 0 0 8px 2px rgba(56, 189, 248, 0.6);
-  filter: brightness(1.1) saturate(0.7) hue-rotate(-10deg);
+  filter: brightness(1.1) saturate(0.6) hue-rotate(-30deg);
   animation: pk-ball-freeze 0.6s ease-in-out infinite alternate;
 }
 @keyframes pk-ball-freeze {
-  from { transform: scale(1); }
-  to   { transform: scale(0.94); }
+  from { box-shadow: 0 0 6px 2px rgba(56, 189, 248, 0.5); filter: brightness(1.0) saturate(0.6) hue-rotate(-20deg); }
+  to   { box-shadow: 0 0 16px 6px rgba(147, 220, 255, 0.95); filter: brightness(1.35) saturate(0.4) hue-rotate(-40deg); }
 }
 
-/* Electrified — yellow flash + jitter */
+/* Electrified — purple glow matching the electrical peg identity (box-shadow only;
+   no filter so it doesn't conflict with will-change: transform on mobile WebViews) */
 .pk-ball--electrified {
-  box-shadow: 0 0 12px 3px rgba(251, 191, 36, 0.8);
-  animation: pk-ball-zap 0.15s ease-in-out infinite;
+  box-shadow:
+    0 0 6px rgba(167, 139, 250, 0.85),
+    0 0 14px rgba(124, 58, 237, 0.6),
+    inset 0 0 4px rgba(196, 181, 253, 0.35);
+  animation: pk-ball-zap 0.15s steps(2) infinite alternate;
 }
 @keyframes pk-ball-zap {
-  0%, 100% { transform: translate(0, 0); }
-  25%      { transform: translate(-1px, 0.5px); }
-  50%      { transform: translate(1px, -0.5px); }
-  75%      { transform: translate(-0.5px, 1px); }
+  from {
+    box-shadow:
+      0 0 6px rgba(167, 139, 250, 0.7),
+      0 0 14px rgba(124, 58, 237, 0.5),
+      inset 0 0 3px rgba(196, 181, 253, 0.25);
+  }
+  to {
+    box-shadow:
+      0 0 10px rgba(196, 181, 253, 1),
+      0 0 20px rgba(124, 58, 237, 0.85),
+      inset 0 0 6px rgba(221, 214, 254, 0.5);
+  }
+}
+
+/* --- Fire trail dot (burning ball locomotion trail) --- */
+
+.pk-fire-trail-dot {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 185, 40, 0.95) 0%, rgba(249, 115, 22, 0.6) 100%);
+  box-shadow: 0 0 8px 3px rgba(249, 115, 22, 0.55), 0 0 18px 6px rgba(249, 115, 22, 0.3);
+  filter: blur(1.8px);
+  pointer-events: none;
+  animation: pk-fire-trail-fade 0.38s ease-out forwards;
+}
+
+@keyframes pk-fire-trail-fade {
+  0%   { opacity: 0.9; transform: scale(1); }
+  100% { opacity: 0;   transform: scale(0.15); }
 }
 
 /* --- Shared keyframes used by elemental peg visuals (game.css) ----- */

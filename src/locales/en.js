@@ -280,7 +280,6 @@ export const en = {
   "peg.fire": "Fire",
   "peg.ice": "Ice",
   "peg.electrical": "Electrical",
-  "peg.black": "Black",
   "peg.bomb": "Bomb",
   "peg.glue": "Glue",
   "peg.teleport": "Teleport",

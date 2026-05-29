@@ -52,6 +52,13 @@ export class Ball extends Entity {
   effects = new Map();
 
   /**
+   * DoT events that fired during the last tickEffects call.
+   * Cleared at the start of each call. Read by the controller to show damage labels.
+   * @type {Array<{id: string, damage: number}>}
+   */
+  dotEvents = [];
+
+  /**
    * @param {{ x?: number, y?: number, vx?: number, vy?: number }} [opts]
    */
   constructor({ x = 0, y = 0, vx = 0, vy = 0 } = {}) {
@@ -101,6 +108,7 @@ export class Ball extends Entity {
    * @returns {boolean} true if ball died
    */
   tickEffects(now) {
+    this.dotEvents.length = 0;
     for (const [id, eff] of this.effects) {
       if (now >= eff.expiresAt) {
         this.effects.delete(id);
@@ -108,6 +116,7 @@ export class Ball extends Entity {
       }
       if (eff.tickMs > 0 && now >= eff.nextTickAt) {
         eff.nextTickAt = now + eff.tickMs;
+        this.dotEvents.push({ id, damage: 1 });
         const dead = this.takeDamage(1);
         if (dead) return true;
       }
@@ -118,6 +127,12 @@ export class Ball extends Entity {
   /** Speed multiplier from active effects (ice halves speed). */
   getSpeedMultiplier() {
     if (this.effects.has("frozen")) return 0.5;
+    return 1;
+  }
+
+  /** Gravity multiplier from active effects (ice reduces gravity to 1/3). */
+  getGravityMultiplier() {
+    if (this.effects.has("frozen")) return 1 / 3;
     return 1;
   }
 

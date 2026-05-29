@@ -183,8 +183,12 @@
    the same treatment so the mesh isn't cropped at the peg's bounding box. */
 .gt-sg-plinko-stage--overflow,
 .gt-sg-plinko-stage:has([data-sg-spark]) { overflow: visible; }
+/* Reset game-controller positioning in the static gallery.
+   pk-tremble is excluded: its keyframes use transform and must be free to run. */
 .gt-sg-plinko-stage .pk-peg,
-.gt-sg-plinko-stage .pk-ball { position: relative; margin: 0; left: auto; top: auto; transform: none !important; }
+.gt-sg-plinko-stage .pk-ball { position: relative; margin: 0; left: auto; top: auto; }
+.gt-sg-plinko-stage .pk-peg:not(.pk-tremble),
+.gt-sg-plinko-stage .pk-ball { transform: none !important; }
 .gt-sg-plinko-stage .pk-sublaunch { width: 100%; height: 100%; }
 .gt-sg-plinko-gates {
   display: flex; height: 70px; gap: 0;
@@ -195,6 +199,185 @@
   font-size: 0.5rem; font-weight: 600; color: var(--gt-color-text-dim);
   text-transform: uppercase; letter-spacing: 3px;
   margin: 4px 0 0;
+}
+
+/* --- Peg shape group sub-header --- */
+.gt-sg-peg-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gt-space-2);
+}
+.gt-sg-peg-group-label {
+  font-size: 0.52rem;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--pk-gold-dim);
+  padding: 0.4rem 0 0.2rem;
+  border-bottom: 1px dashed var(--pk-crimson-muted);
+}
+
+/* --- Typography proposals --- */
+.gt-sg-typo-h1 {
+  font-size: 3rem;
+  letter-spacing: 14px;
+  text-transform: uppercase;
+  color: var(--pk-gold);
+  text-shadow: 0 0 30px rgba(212, 175, 55, 0.22);
+}
+.gt-sg-typo-h2 {
+  font-size: 1.4rem;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: var(--pk-gold-light);
+  font-weight: 800;
+}
+.gt-sg-typo-h3 {
+  font-size: 0.85rem;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--pk-rose);
+  font-weight: 600;
+}
+.gt-sg-typo-h4 {
+  font-size: 0.6rem;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: var(--gt-color-text-sec);
+  font-weight: 400;
+}
+.gt-sg-typo-caption {
+  font-size: 0.5rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gt-color-text-dim);
+}
+
+/* --- Card proposals --- */
+.gt-sg-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--gt-space-3);
+}
+.gt-sg-card {
+  background: var(--pk-bg-card);
+  border: 1px solid var(--pk-crimson-muted);
+  border-radius: 4px;
+  padding: var(--gt-space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gt-space-2);
+}
+.gt-sg-card--surface {
+  background: var(--pk-bg-surface);
+  border-color: var(--pk-crimson-deep);
+}
+.gt-sg-card--gold {
+  background: var(--pk-bg-card);
+  border-color: var(--pk-crimson-muted);
+  border-top: 2px solid var(--pk-gold-dim);
+}
+.gt-sg-card--danger {
+  background: var(--pk-bg-card);
+  border-color: var(--gt-color-danger);
+}
+.gt-sg-card--stat {
+  background: var(--pk-bg-surface);
+  border-color: var(--pk-crimson-deep);
+  align-items: center;
+  text-align: center;
+  gap: var(--gt-space-1);
+}
+.gt-sg-card-eyebrow {
+  font-size: 0.48rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gt-color-text-dim);
+}
+.gt-sg-card-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--gt-color-text);
+  letter-spacing: 1px;
+}
+.gt-sg-card-value {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: var(--pk-gold);
+  line-height: 1;
+}
+.gt-sg-card-body {
+  font-size: 0.65rem;
+  color: var(--gt-color-text-sec);
+  line-height: 1.5;
+}
+.gt-sg-card-tag {
+  display: inline-block;
+  font-size: 0.45rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 2px;
+  background: rgba(212, 175, 55, 0.1);
+  color: var(--pk-gold-dim);
+  border: 1px solid var(--pk-gold-dim);
+}
+.gt-sg-card--danger .gt-sg-card-title { color: var(--gt-color-danger); }
+
+/* --- VFX gallery --- */
+.gt-sg-vfx-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: var(--gt-space-2);
+}
+.gt-sg-vfx-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.gt-sg-vfx-stage {
+  position: relative;
+  width: 72px;
+  height: 56px;
+  background: var(--pk-bg-surface);
+  border: 1px solid var(--pk-crimson-muted);
+  border-radius: 4px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: border-color 0.15s ease;
+}
+.gt-sg-vfx-stage:hover { border-color: var(--pk-crimson-deep); }
+.gt-sg-vfx-label {
+  font-size: 0.48rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gt-color-text-dim);
+  text-align: center;
+}
+.gt-sg-vfx-category {
+  font-size: 0.52rem;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--pk-gold-dim);
+  margin-bottom: var(--gt-space-2);
+}
+
+/* --- Fire trail dots — burning ball ambient trail simulation --- */
+.gt-sg-fire-dot {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 185, 40, 0.95) 0%, rgba(249, 115, 22, 0.6) 100%);
+  box-shadow: 0 0 8px 3px rgba(249, 115, 22, 0.55), 0 0 18px 6px rgba(249, 115, 22, 0.3);
+  filter: blur(1.8px);
+  pointer-events: none;
+  animation: gt-sg-fire-trail-pulse 0.5s ease-in-out infinite alternate;
+}
+.gt-sg-fire-dot--a { width: 12px; height: 12px; left: 11px; top: 5px; animation-delay: 0ms; }
+.gt-sg-fire-dot--b { width: 9px;  height: 9px;  left: 27px; top: 2px; animation-delay: 140ms; opacity: 0.75; }
+.gt-sg-fire-dot--c { width: 7px;  height: 7px;  left: 20px; top: 0px; animation-delay: 270ms; opacity: 0.5; }
+@keyframes gt-sg-fire-trail-pulse {
+  from { opacity: 0.85; transform: scale(1); }
+  to   { opacity: 0.1;  transform: scale(0.5); }
 }
 
 
