@@ -11,7 +11,7 @@ import {
 } from "../configs/bonus-defs.js";
 import { ListenerBag } from "../utils/listener-bag.js";
 import { notify } from "../managers/notification-manager.js";
-import { BackgroundAnimator } from "../utils/background-animator.js";
+import { SlowFloatBackground } from "../utils/slow-float-background.js";
 import { InfoBar, INFO_BAR_MODES } from "../components/info-bar.js";
 import {
   LevelGrid,
@@ -42,7 +42,7 @@ export class LevelSelectorScene {
   /** @type {ListenerBag} */
   #bag = new ListenerBag();
 
-  /** @type {BackgroundAnimator | null} */
+  /** @type {SlowFloatBackground | null} */
   #bg = null;
 
   /** @type {LevelGrid} */
@@ -62,7 +62,7 @@ export class LevelSelectorScene {
 
   /** @param {HTMLElement} root */
   mount(root) {
-    this.#bg = new BackgroundAnimator(root, 'calm');
+    this.#bg = new SlowFloatBackground(root);
     this.#bag.add(() => this.#bg?.destroy());
 
     this.#el = document.createElement("div");

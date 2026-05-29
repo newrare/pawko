@@ -1,6 +1,7 @@
 import { audioManager } from "../managers/audio-manager.js";
 import { i18n } from "../managers/i18n-manager.js";
 import { ListenerBag } from "../utils/listener-bag.js";
+import { SlowFloatBackground } from "../utils/slow-float-background.js";
 import { LevelSelectorScene } from "./level-selector-scene.js";
 
 /**
@@ -19,6 +20,9 @@ export class TitleScene {
   /** @type {ListenerBag} */
   #bag = new ListenerBag();
 
+  /** @type {SlowFloatBackground | null} */
+  #bg = null;
+
   /** @type {boolean} */
   #transitioning = false;
 
@@ -29,6 +33,9 @@ export class TitleScene {
 
   /** @param {HTMLElement} root */
   mount(root) {
+    this.#bg = new SlowFloatBackground(root);
+    this.#bag.add(() => this.#bg?.destroy());
+
     this.#el = document.createElement("div");
     this.#el.className = "gt-scene-center";
     this.#el.innerHTML = this.#renderInner();
@@ -52,7 +59,7 @@ export class TitleScene {
     return `
       <div class="gt-title">
         <h1 class="gt-title-name">${i18n.t("app.name")}</h1>
-        <p class="gt-title-tag">${i18n.t("app.tagline")}</p>
+        <img class="gt-title-image" src="/images/title.png" alt="Pawko" />
       </div>
     `;
   }
@@ -60,9 +67,7 @@ export class TitleScene {
   #refresh() {
     if (!this.#el) return;
     const name = this.#el.querySelector(".gt-title-name");
-    const tag = this.#el.querySelector(".gt-title-tag");
     if (name) name.textContent = i18n.t("app.name");
-    if (tag) tag.textContent = i18n.t("app.tagline");
   }
 
   destroy() {

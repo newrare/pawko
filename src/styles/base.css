@@ -19,16 +19,7 @@ html {
   font-family: var(--gt-font-body);
   font-size: clamp(13px, 4vmin, 17px);
   color: var(--gt-color-text);
-  background-color: var(--gt-color-bg);
-  background-image:
-    radial-gradient(ellipse at 50% 100%, #2a0814 0%, transparent 65%),
-    repeating-linear-gradient(
-      45deg,
-      transparent,
-      transparent 10px,
-      rgba(212, 175, 55, 0.03) 10px,
-      rgba(212, 175, 55, 0.03) 20px
-    );
+  background: radial-gradient(ellipse at 50% 40%, #38122a 0%, #1e0814 55%, #0c0408 100%);
 }
 
 html,

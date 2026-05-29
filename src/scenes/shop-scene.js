@@ -3,7 +3,7 @@ import { currencyManager } from "../managers/currency-manager.js";
 import { abilityManager } from "../managers/ability-manager.js";
 import { bonusManager } from "../managers/bonus-manager.js";
 import { ListenerBag } from "../utils/listener-bag.js";
-import { BackgroundAnimator } from "../utils/background-animator.js";
+import { SlowFloatBackground } from "../utils/slow-float-background.js";
 import { BONUS_TYPES, PARAM_KEYS } from "../configs/bonus-defs.js";
 import { SHOP_SLOT_COUNT, SWIPE_THRESHOLD } from "../configs/constants.js";
 import { LevelSelectorScene } from "./level-selector-scene.js";
@@ -46,7 +46,7 @@ export class ShopScene {
   /** @type {HTMLElement | null} */
   #el = null;
 
-  /** @type {BackgroundAnimator | null} */
+  /** @type {SlowFloatBackground | null} */
   #bg = null;
 
   /** @type {HTMLElement | null} */
@@ -80,7 +80,7 @@ export class ShopScene {
 
   /** @param {HTMLElement} root */
   mount(root) {
-    this.#bg = new BackgroundAnimator(root, 'shop');
+    this.#bg = new SlowFloatBackground(root);
     this.#bag.add(() => this.#bg?.destroy());
 
     this.#fillSlots();

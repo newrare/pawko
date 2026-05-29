@@ -7,7 +7,7 @@
   gap: 14px;
   text-align: center;
   padding: 3rem 2rem 2.5rem;
-  border-bottom: 1px solid var(--pk-crimson-deep);
+
   animation: gt-pop-in var(--anim-modal-open, 200ms) ease-out forwards;
 }
 
@@ -33,6 +33,13 @@
   letter-spacing: 5px;
   text-transform: uppercase;
   color: var(--gt-color-text-sec);
+}
+
+.gt-title-image {
+  width: clamp(200px, 70vmin, 380px);
+  height: auto;
+  display: block;
+  margin-top: 1rem;
 }
 
 .gt-title-hint {

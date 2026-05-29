@@ -97,7 +97,7 @@ export const DIRECTIVE_ACTIONS = /** @type {const} */ ({
 /**
  * @typedef {object} BonusDef
  * @property {string} id
- * @property {string} [name]               — short display name (used by MysteryPeg floating label)
+ * @property {string} [name]
  * @property {'permanent' | 'session'} type
  * @property {'bonus' | 'malus'} category
  * @property {number} cost                 — coins (0 for maluses)

@@ -2,7 +2,7 @@ import { i18n } from "../managers/i18n-manager.js";
 import { diamondManager } from "../managers/diamond-manager.js";
 import { abilityManager } from "../managers/ability-manager.js";
 import { ListenerBag } from "../utils/listener-bag.js";
-import { BackgroundAnimator } from "../utils/background-animator.js";
+import { SlowFloatBackground } from "../utils/slow-float-background.js";
 import { ABILITY_CATEGORIES } from "../configs/ability-defs.js";
 
 /* Visual mapping per category — display order, chip color, and icon. */
@@ -29,7 +29,7 @@ export class AbilityScene {
   #el = null;
   /** @type {ListenerBag} */
   #bag = new ListenerBag();
-  /** @type {BackgroundAnimator | null} */
+  /** @type {SlowFloatBackground | null} */
   #bg = null;
   /** @type {string | null} */
   #selectedId = null;
@@ -38,7 +38,7 @@ export class AbilityScene {
 
   /** @param {HTMLElement} root */
   mount(root) {
-    this.#bg = new BackgroundAnimator(root, "shop");
+    this.#bg = new SlowFloatBackground(root);
     this.#bag.add(() => this.#bg?.destroy());
 
     this.#el = document.createElement("div");

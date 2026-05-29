@@ -1,5 +1,5 @@
 import { ListenerBag } from "../utils/listener-bag.js";
-import { BackgroundAnimator } from "../utils/background-animator.js";
+import { SlowFloatBackground } from "../utils/slow-float-background.js";
 import { layout } from "../managers/layout-manager.js";
 import { i18n } from "../managers/i18n-manager.js";
 import { saveManager } from "../managers/save-manager.js";
@@ -69,7 +69,7 @@ export class GameController {
   /** @type {{ left: number, right: number, top: number, bottom: number }[]} */ #launchWalls = [];
 
   /** @type {import('../components/modal-base.js').BaseModal | null} */ #overModal = null;
-  /** @type {BackgroundAnimator | null} */ #bg = null;
+  /** @type {SlowFloatBackground | null} */ #bg = null;
 
   /* --- Peg Save System --- */
   /** @type {PegSaveSystem} */
@@ -189,7 +189,7 @@ export class GameController {
 
   #buildDom() {
     this.#root.classList.add("gt-game");
-    this.#bg = new BackgroundAnimator(this.#root, 'plinko');
+    this.#bg = new SlowFloatBackground(this.#root);
     this.#bag.add(() => this.#bg?.destroy());
 
     const safe = document.createElement("div");

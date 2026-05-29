@@ -1,6 +1,7 @@
 import { ListenerBag } from "../utils/listener-bag.js";
 import { i18n } from "../managers/i18n-manager.js";
 import { layout } from "../managers/layout-manager.js";
+import { SlowFloatBackground } from "../utils/slow-float-background.js";
 import { buttonHtml } from "../components/ui/button.js";
 import { toggleRowHtml } from "../components/ui/toggle-row.js";
 import { mountSparkWeb } from "../utils/spark-web.js";
@@ -22,6 +23,9 @@ export class StyleguideScene {
   /** @type {ListenerBag} */
   #bag = new ListenerBag();
 
+  /** @type {SlowFloatBackground | null} */
+  #bg = null;
+
   /** @type {Array<() => void>} Spark-web/arc unmount fns, cleared on each refresh. */
   #sparkUnmounts = [];
 
@@ -34,6 +38,9 @@ export class StyleguideScene {
 
   /** @param {HTMLElement} root */
   mount(root) {
+    this.#bg = new SlowFloatBackground(root);
+    this.#bag.add(() => this.#bg?.destroy());
+
     this.#el = document.createElement("div");
     this.#el.className = "gt-sg gt-safe-box";
     this.#el.innerHTML = this.#renderInner();
