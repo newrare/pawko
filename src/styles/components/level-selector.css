@@ -140,6 +140,37 @@
   user-select: none;
 }
 
+/* Velvet texture overlay — above cell background, below icon (z-index: 2) */
+.pk-map-cell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    repeating-linear-gradient(
+      135deg,
+      transparent 0,
+      transparent 2px,
+      rgba(210, 130, 155, 0.22) 2px,
+      rgba(210, 130, 155, 0.22) 3.5px
+    ),
+    radial-gradient(
+      ellipse 150% 140% at 50% 45%,
+      transparent 20%,
+      rgba(4, 1, 2, 0.30) 100%
+    ),
+    linear-gradient(
+      135deg,
+      rgba(100, 22, 38, 0.35) 0%,
+      rgba(40, 8, 15, 0.06) 40%,
+      rgba(15, 3, 7, 0.08) 65%,
+      rgba(55, 11, 22, 0.33) 100%
+    ),
+    rgba(22, 5, 9, 0.55);
+}
+
 /* --- Cell states --- */
 
 /* Hidden — clearly visible ghost silhouette so the map terrain is readable */
@@ -223,6 +254,8 @@
 /* --- Cell type content (icon only) --- */
 
 .pk-map-cell-icon {
+  position: relative;
+  z-index: 2;
   font-size: 0.95rem;
   line-height: 1;
   display: flex;

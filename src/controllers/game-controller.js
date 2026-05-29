@@ -1420,29 +1420,21 @@ export class GameController {
     const pegsInRange = [];
     for (const layer of this.#layers) {
       for (const p of layer.pegs) {
-        if (p === peg || !p.alive) continue;
+        if (p === peg || p.alive === false) continue;
         const dx = p.x - bx;
         const dy = p.y - by;
-        const dist2 = dx * dx + dy * dy;
-        console.log(`[bomb] peg id=${p.id} type=${p.type} dist=${Math.sqrt(dist2).toFixed(1)} radius=${radius} inRange=${dist2 <= r2}`);
-        if (dist2 <= r2) pegsInRange.push(p);
+        if (dx * dx + dy * dy <= r2) pegsInRange.push(p);
       }
     }
-    console.log(`[bomb] total in range: ${pegsInRange.length}, bombs in range: ${pegsInRange.filter(p => p.type === "bomb").length}`);
 
     /* Destroy or chain-detonate each peg in range. */
     for (const p of pegsInRange) {
       if (p.type === "bomb" && !p.detonated) {
         /* Chain reaction: tremble the primed bomb, then detonate it. */
-        console.log(`[bomb chain] scheduling bomb id=${p.id}`);
         const chainEl = this.#pegEls.get(p.id);
         if (chainEl) chainEl.classList.add("pk-tremble");
-        this.#bag.timeout(() => {
-          console.log(`[bomb chain] firing chain on id=${p.id} detonated=${p.detonated}`);
-          this.#detonateBomb(p);
-        }, 220);
+        this.#bag.timeout(() => this.#detonateBomb(p), 220);
       } else {
-        p.hp = 0;
         p.alive = false;
         this.#removePegEl(p);
       }
