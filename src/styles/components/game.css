@@ -336,7 +336,7 @@
 }
 
 .pk-gate {
-  flex: 1 1 20%;
+  flex: var(--pk-gate-flex, 0.2) 1 0;
   position: relative;
   display: flex;
   flex-direction: column;

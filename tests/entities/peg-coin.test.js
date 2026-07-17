@@ -28,6 +28,6 @@ describe("CoinPeg", () => {
     /* Rich floating-text with SVG icon — controller reads popHtml + popColor. */
     expect(reward.popHtml).toContain(`+${PLINKO.COIN_VALUE}`);
     expect(reward.popHtml).toContain("pk-float-icon--coin");
-    expect(reward.popColor).toBe("#facc15");
+    expect(reward.popColor).toBe("var(--pk-gold)");
   });
 });

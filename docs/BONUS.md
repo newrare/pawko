@@ -21,16 +21,16 @@ by design. To enumerate every entry use `ALL_BONUSES` directly.
 
 ```js
 {
-  id: "session_peg_score_x",
+  id: "session_coin_drop_x2",
   type: BONUS_TYPES.SESSION,
   category: BONUS_CATEGORIES.BONUS,
-  cost: 30,                     // coins for shop entries, 0 for mystery-only
-  abilityRequired: "pinboard_2", // null = no gate
+  cost: 1500,                   // coins for shop entries, 0 for mystery-only
+  abilityRequired: null,        // ability id or null = no gate
   rarity: "rare",               // visual tier in shop card
-  icon: "✖️",
+  icon: "🪙",
   durationLevels: 3,            // null = run-scoped (Infinity)
   modifiers: [
-    { paramKey: PARAM_KEYS.PEG_SCORE_MULTIPLIER, op: "multiply", value: 3 },
+    { paramKey: PARAM_KEYS.DESTROY_COIN_MULTIPLIER, op: "multiply", value: 2 },
   ],
   directives: [
     // optional — drained once per round by the controller
@@ -95,7 +95,6 @@ exists.
 
 | id                                | Effect                                           |
 | --------------------------------- | ------------------------------------------------ |
-| `malus_score_reduce_next`         | × 0.8 score on the next pinboard                 |
 | `malus_obfuscate_level_number`    | hides level numbers on the map for one selection |
 | `malus_player_hp_drain`           | -3 max HP for the run                            |
 

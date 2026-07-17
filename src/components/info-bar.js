@@ -158,16 +158,14 @@ export class InfoBar {
           const cells = this.#flattenGridCells();
           let levelsDone = 0;
           let shopsDone = 0;
-          let abilitiesDone = 0;
           let mysteriesDone = 0;
           for (const c of cells) {
             if (c.state !== "used") continue;
             if (c.type === "level" || c.type === "boss") levelsDone++;
             else if (c.type === "shop") shopsDone++;
-            else if (c.type === "ability") abilitiesDone++;
             else if (c.type === "mystery") mysteriesDone++;
           }
-          return `${levelsDone} | ${shopsDone} | ${abilitiesDone} | ${mysteriesDone}`;
+          return `${levelsDone} | ${shopsDone} | ${mysteriesDone}`;
         },
         renderDrawer: () => this.#renderProgressDrawer(),
       },
@@ -282,7 +280,6 @@ export class InfoBar {
     }
     const levels = { done: 0, total: 0 };
     const shops = { done: 0, total: 0 };
-    const abilities = { done: 0, total: 0 };
     const mysteries = { done: 0, total: 0 };
 
     for (const c of cells) {
@@ -292,9 +289,6 @@ export class InfoBar {
       } else if (c.type === "shop") {
         shops.total++;
         if (c.state === "used") shops.done++;
-      } else if (c.type === "ability") {
-        abilities.total++;
-        if (c.state === "used") abilities.done++;
       } else if (c.type === "mystery") {
         mysteries.total++;
         if (c.state === "used") mysteries.done++;
@@ -310,10 +304,6 @@ export class InfoBar {
         <div class="pk-info-drawer-progress-item">
           <span>${i18n.t("info_bar.shops")}</span>
           <span>${shops.done}/${shops.total}</span>
-        </div>
-        <div class="pk-info-drawer-progress-item">
-          <span>${i18n.t("info_bar.abilities")}</span>
-          <span>${abilities.done}/${abilities.total}</span>
         </div>
         <div class="pk-info-drawer-progress-item">
           <span>${i18n.t("info_bar.mysteries")}</span>

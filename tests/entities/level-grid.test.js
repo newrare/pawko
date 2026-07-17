@@ -47,7 +47,7 @@ describe("LevelGrid", () => {
         expect([
           CELL_TYPES.LEVEL,
           CELL_TYPES.SHOP,
-          CELL_TYPES.ABILITY,
+          CELL_TYPES.MYSTERY,
           CELL_TYPES.EMPTY,
         ]).toContain(c.type);
       });

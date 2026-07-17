@@ -77,8 +77,13 @@ export class LevelSelectorScene {
       );
       saveManager.saveGridState(this.#grid.serialize());
     } else {
+      /* New grid: persist it so the upcoming AbilityScene visit, then a
+         click on Home, can re-enter this scene and load the saved grid
+         instead of generating another one. */
       this.#grid.init();
       saveManager.saveGridState(this.#grid.serialize());
+      this.#router.start(AbilityScene);
+      return;
     }
 
     this.#el.innerHTML = this.#render();
@@ -156,9 +161,6 @@ export class LevelSelectorScene {
         break;
       case CELL_TYPES.SHOP:
         this.#router.start(ShopScene);
-        break;
-      case CELL_TYPES.ABILITY:
-        this.#router.start(AbilityScene);
         break;
       case CELL_TYPES.MYSTERY:
         this.#rollMystery();
@@ -281,8 +283,7 @@ export class LevelSelectorScene {
       cell.state === CELL_STATES.CURRENT &&
       (cell.type === CELL_TYPES.LEVEL ||
         cell.type === CELL_TYPES.BOSS ||
-        cell.type === CELL_TYPES.SHOP ||
-        cell.type === CELL_TYPES.ABILITY)
+        cell.type === CELL_TYPES.SHOP)
         ? "pk-map-cell--completed"
         : "";
 
@@ -293,8 +294,6 @@ export class LevelSelectorScene {
       const reveal =
         (cell.type === CELL_TYPES.SHOP &&
           bonusManager.resolve(PARAM_KEYS.REVEAL_SHOPS, false)) ||
-        (cell.type === CELL_TYPES.ABILITY &&
-          bonusManager.resolve(PARAM_KEYS.REVEAL_ABILITIES, false)) ||
         (cell.type === CELL_TYPES.MYSTERY &&
           bonusManager.resolve(PARAM_KEYS.REVEAL_MYSTERY, false)) ||
         (cell.type === CELL_TYPES.BOSS &&
@@ -330,8 +329,6 @@ export class LevelSelectorScene {
       }
       case CELL_TYPES.SHOP:
         return '<span class="pk-map-cell-icon"><img src="/images/icon-coin.svg" class="pk-svg-icon" alt=""></span>';
-      case CELL_TYPES.ABILITY:
-        return '<span class="pk-map-cell-icon"><img src="/images/icon-chip.svg" class="pk-svg-icon" alt=""></span>';
       case CELL_TYPES.MYSTERY:
         return '<span class="pk-map-cell-icon">?</span>';
       case CELL_TYPES.BOSS:

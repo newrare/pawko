@@ -11,7 +11,6 @@ export const CELL_TYPES = /** @type {const} */ ({
   EMPTY: "empty",
   LEVEL: "level",
   SHOP: "shop",
-  ABILITY: "ability",
   MYSTERY: "mystery",
   START: "start",
   BOSS: "boss",
@@ -43,15 +42,14 @@ const DIRECTIONS = [
   [0, 1], // east
 ];
 
-/** Weighted pool for random cell type assignment — more shop & ability. */
+/** Weighted pool for random cell type assignment. */
 const TYPE_VALUES = [
   CELL_TYPES.LEVEL,
   CELL_TYPES.SHOP,
-  CELL_TYPES.ABILITY,
   CELL_TYPES.MYSTERY,
   CELL_TYPES.EMPTY,
 ];
-const TYPE_WEIGHTS = [0.33, 0.2, 0.18, 0.08, 0.21];
+const TYPE_WEIGHTS = [0.42, 0.25, 0.12, 0.21];
 
 /**
  * Encode a directed edge between two orthogonal cells as a string key.
@@ -203,31 +201,26 @@ export class LevelGrid {
    * Totals include ALL cells (hidden + visible) so the counter is stable.
    * @returns {{ total: number, remaining: number, used: number,
    *   levelsAvail: number, levelsCompleted: number, levelsTotal: number,
-   *   shopsAvail: number, shopsTotal: number,
-   *   abilitiesAvail: number, abilitiesTotal: number }}
+   *   shopsAvail: number, shopsTotal: number }}
    */
   getStats() {
     let remaining = 0;
     let used = 0;
     let levelsAvail = 0, levelsCompleted = 0, levelsTotal = 0;
     let shopsAvail = 0, shopsTotal = 0;
-    let abilitiesAvail = 0, abilitiesTotal = 0;
 
     for (const cell of this.getCells()) {
       const isLevel = cell.type === CELL_TYPES.LEVEL;
       const isShop = cell.type === CELL_TYPES.SHOP;
-      const isAbility = cell.type === CELL_TYPES.ABILITY;
 
       /* Count ALL cells of each type regardless of visibility */
       if (isLevel) levelsTotal++;
       else if (isShop) shopsTotal++;
-      else if (isAbility) abilitiesTotal++;
 
       if (cell.state === CELL_STATES.REVEALED) {
         remaining++;
         if (isLevel) levelsAvail++;
         else if (isShop) shopsAvail++;
-        else if (isAbility) abilitiesAvail++;
       } else if (
         cell.state === CELL_STATES.USED ||
         cell.state === CELL_STATES.CURRENT
@@ -246,8 +239,6 @@ export class LevelGrid {
       levelsTotal,
       shopsAvail,
       shopsTotal,
-      abilitiesAvail,
-      abilitiesTotal,
     };
   }
 
@@ -425,7 +416,7 @@ export class LevelGrid {
 
   /**
    * Pre-assign types to every non-start cell in a single pass, ensuring
-   * the grid always has enough levels, shops and abilities regardless of
+   * the grid always has enough levels, shops and mystery cells regardless of
    * the order cells are explored.
    * @param {number} startRow
    * @param {number} startCol
@@ -436,12 +427,11 @@ export class LevelGrid {
     );
     const count = nonStart.length;
 
-    /* Guaranteed minimums: 10 levels, 4 shops, 4 abilities, 3 mystery. */
+    /* Guaranteed minimums: 12 levels, 5 shops, 4 mystery. */
     const guaranteed = [
-      ...Array(10).fill(CELL_TYPES.LEVEL),
-      ...Array(4).fill(CELL_TYPES.SHOP),
-      ...Array(4).fill(CELL_TYPES.ABILITY),
-      ...Array(3).fill(CELL_TYPES.MYSTERY),
+      ...Array(12).fill(CELL_TYPES.LEVEL),
+      ...Array(5).fill(CELL_TYPES.SHOP),
+      ...Array(4).fill(CELL_TYPES.MYSTERY),
     ];
     const types = [...guaranteed];
     for (let i = guaranteed.length; i < count; i++) {

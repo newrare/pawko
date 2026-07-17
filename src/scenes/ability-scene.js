@@ -7,11 +7,12 @@ import { ABILITY_CATEGORIES } from "../configs/ability-defs.js";
 
 /* Visual mapping per category — display order, chip color, and icon. */
 const CATEGORY_VIEW = [
-  { id: ABILITY_CATEGORIES.BALL, color: "crimson", icon: "🎱" },
+  { id: ABILITY_CATEGORIES.SHOP, color: "crimson", icon: "🛒" },
+  { id: ABILITY_CATEGORIES.ECONOMY, color: "green", icon: "💸" },
+  { id: ABILITY_CATEGORIES.PEG, color: "epic", icon: "🎯" },
   { id: ABILITY_CATEGORIES.GATE, color: "blue", icon: "🚪" },
-  { id: ABILITY_CATEGORIES.LAUNCHER, color: "epic", icon: "🚀" },
-  { id: ABILITY_CATEGORIES.PINBOARD, color: "ice", icon: "🎯" },
-  { id: ABILITY_CATEGORIES.AVANTAGE, color: "green", icon: "👁" },
+  { id: ABILITY_CATEGORIES.PLAYER, color: "ice", icon: "❤️" },
+  { id: ABILITY_CATEGORIES.MAP, color: "crimson", icon: "🗺️" },
 ];
 
 /**

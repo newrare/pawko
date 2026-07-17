@@ -1,5 +1,14 @@
 import { Entity } from "./entity.js";
 import { PLINKO, EFFECT_DEFS, BALL_DEFS } from "../configs/constants.js";
+import { bonusManager } from "../managers/bonus-manager.js";
+import { PARAM_KEYS } from "../configs/bonus-defs.js";
+
+/** Bonus param keys keyed by effect id. Effects without a bonus map to null. */
+const EFFECT_DURATION_BONUS = {
+  burning: PARAM_KEYS.FIRE_DURATION_BONUS_MS,
+  frozen: PARAM_KEYS.ICE_DURATION_BONUS_MS,
+  electrified: PARAM_KEYS.ELECTRICAL_DURATION_BONUS_MS,
+};
 
 /**
  * Ball — classic ball, the only ball type for now.
@@ -93,8 +102,10 @@ export class Ball extends Entity {
   applyEffect(id, now) {
     const def = EFFECT_DEFS[id];
     if (!def) return;
+    const bonusKey = EFFECT_DURATION_BONUS[id];
+    const bonusMs = bonusKey ? bonusManager.resolve(bonusKey, 0) : 0;
     this.effects.set(id, {
-      expiresAt: now + def.durationMs,
+      expiresAt: now + def.durationMs + bonusMs,
       tickMs: def.tickMs,
       nextTickAt: def.tickMs > 0 ? now + def.tickMs : Infinity,
     });

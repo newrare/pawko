@@ -18,6 +18,7 @@ import { PARAM_KEYS, DIRECTIVE_ACTIONS } from "../configs/bonus-defs.js";
 import { LevelSelectorScene } from "../scenes/level-selector-scene.js";
 import { PegSaveSystem } from "../utils/peg-save-system.js";
 import { createPeg } from "../entities/peg-factory.js";
+import { computeGateWidths, gateBounds, gateAt } from "../utils/gate-widths.js";
 import { loadPinboard, persistPinboard } from "../utils/pinboard-state.js";
 import { PinboardVfx } from "../utils/pinboard-vfx.js";
 import { buildTestLayers } from "../utils/dev-game-helpers.js";
@@ -100,18 +101,11 @@ export class GameController {
   start() {
     this.#levelId = this.#data?.levelId ?? 1;
 
-    /* Active bonuses can add extra balls. Resolve once on round start and
-       snapshot the value so a bonus expiring mid-round does not affect
-       the current wave. */
     /* Tower-defense: ball count scales with the level — base + step * levelId.
        Level 1 fires 20 balls, level 2 → 30, etc. */
     const levelBalls =
       PLINKO.BALLS_LEVEL_BASE + PLINKO.BALLS_LEVEL_STEP * this.#levelId;
-    const scaledBase = bonusManager.resolve(
-      PARAM_KEYS.STARTING_BALLS,
-      levelBalls,
-    );
-    this.#launcherBalls = Math.max(1, Math.floor(scaledBase));
+    this.#launcherBalls = Math.max(1, Math.floor(levelBalls));
     this.#launcherFired = false;
 
     this.#playerMaxHp = PLINKO.PLAYER_MAX_HP +
@@ -307,11 +301,20 @@ export class GameController {
 
   #computeGateWalls() {
     const w = this.#pinboardWidth;
-    const gateWidth = w * 0.2;
-    this.#gateWalls = PLINKO.GATE_ORDER.map((_, i) => ({
-      left: i * gateWidth,
-      right: (i + 1) * gateWidth,
-    }));
+    const widths = computeGateWidths({
+      backReduction: bonusManager.resolve(PARAM_KEYS.GATE_BACK_WIDTH_REDUCTION, 0),
+      hpReduction: bonusManager.resolve(PARAM_KEYS.GATE_HP_WIDTH_REDUCTION, 0),
+    });
+    this.#gateWalls = gateBounds(widths, w);
+    this.#applyGateFlex(widths);
+  }
+
+  #applyGateFlex(widths) {
+    if (!this.#safeEl) return;
+    for (const g of PLINKO.GATE_ORDER) {
+      const el = this.#safeEl.querySelector(`.pk-gate--${g}`);
+      if (el) el.style.setProperty("--pk-gate-flex", String(widths[g]));
+    }
   }
 
   #computeLaunchWalls() {
@@ -981,16 +984,11 @@ export class GameController {
   #handleBottom(ball) {
     const w = this.#pinboardWidth || 1;
     const fx = ball.x / w;
-    const gateWidth = 0.2;
-    let gate = PLINKO.GATE_ORDER[PLINKO.GATE_ORDER.length - 1];
-    let cumulative = 0;
-    for (const g of PLINKO.GATE_ORDER) {
-      cumulative += gateWidth;
-      if (fx < cumulative) {
-        gate = g;
-        break;
-      }
-    }
+    const widths = computeGateWidths({
+      backReduction: bonusManager.resolve(PARAM_KEYS.GATE_BACK_WIDTH_REDUCTION, 0),
+      hpReduction: bonusManager.resolve(PARAM_KEYS.GATE_HP_WIDTH_REDUCTION, 0),
+    });
+    const gate = gateAt(fx, widths);
     this.#flashGate(gate);
 
     const isTeleport = gate === "teleport_left" || gate === "teleport_right";

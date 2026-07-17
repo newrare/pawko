@@ -9,11 +9,12 @@
  */
 
 export const ABILITY_CATEGORIES = /** @type {const} */ ({
-  BALL: "ball",
+  SHOP: "shop",
+  ECONOMY: "economy",
+  PEG: "peg",
   GATE: "gate",
-  LAUNCHER: "launcher",
-  PINBOARD: "pinboard",
-  AVANTAGE: "avantage",
+  PLAYER: "player",
+  MAP: "map",
 });
 
 /**
@@ -27,138 +28,73 @@ export const ABILITY_CATEGORIES = /** @type {const} */ ({
 
 const diamondCost = (level) => Math.pow(2, Math.max(0, level - 1));
 
+const ability = (id, category, level, unlocks) => ({
+  id,
+  category,
+  level,
+  cost: diamondCost(level),
+  unlocks,
+});
+
 /** @type {AbilityDef[]} */
 export const ABILITY_DEFS = [
-  {
-    id: "ball_1",
-    category: ABILITY_CATEGORIES.BALL,
-    level: 1,
-    cost: diamondCost(1),
-    unlocks: ["session_extra_classic_ball_one", "perm_extra_ball_1"],
-  },
-  {
-    id: "ball_2",
-    category: ABILITY_CATEGORIES.BALL,
-    level: 2,
-    cost: diamondCost(2),
-    unlocks: ["perm_extra_ball_2"],
-  },
-  {
-    id: "ball_3",
-    category: ABILITY_CATEGORIES.BALL,
-    level: 3,
-    cost: diamondCost(3),
-    unlocks: ["perm_extra_ball_3"],
-  },
+  /* SHOP — discount tiers on shop prices. */
+  ability("shop_1", ABILITY_CATEGORIES.SHOP, 1, ["perm_shop_discount_1"]),
+  ability("shop_2", ABILITY_CATEGORIES.SHOP, 2, ["perm_shop_discount_2"]),
+  ability("shop_3", ABILITY_CATEGORIES.SHOP, 3, ["perm_shop_discount_3"]),
+  ability("shop_4", ABILITY_CATEGORIES.SHOP, 4, ["perm_shop_discount_4"]),
+  ability("shop_5", ABILITY_CATEGORIES.SHOP, 5, ["perm_shop_discount_5"]),
+  ability("shop_6", ABILITY_CATEGORIES.SHOP, 6, ["perm_shop_discount_6"]),
 
-  {
-    id: "gate_1",
-    category: ABILITY_CATEGORIES.GATE,
-    level: 1,
-    cost: diamondCost(1),
-    unlocks: ["session_gate_malus_reduce"],
-  },
-  {
-    id: "gate_2",
-    category: ABILITY_CATEGORIES.GATE,
-    level: 2,
-    cost: diamondCost(2),
-    unlocks: ["session_gate_x_boost"],
-  },
-  {
-    id: "gate_3",
-    category: ABILITY_CATEGORIES.GATE,
-    level: 3,
-    cost: diamondCost(3),
-    unlocks: ["session_gate_x_double"],
-  },
+  /* ECONOMY — discount tiers on peg replacement. */
+  ability("economy_1", ABILITY_CATEGORIES.ECONOMY, 1, ["perm_peg_discount_1"]),
+  ability("economy_2", ABILITY_CATEGORIES.ECONOMY, 2, ["perm_peg_discount_2"]),
+  ability("economy_3", ABILITY_CATEGORIES.ECONOMY, 3, ["perm_peg_discount_3"]),
+  ability("economy_4", ABILITY_CATEGORIES.ECONOMY, 4, ["perm_peg_discount_4"]),
+  ability("economy_5", ABILITY_CATEGORIES.ECONOMY, 5, ["perm_peg_discount_5"]),
+  ability("economy_6", ABILITY_CATEGORIES.ECONOMY, 6, ["perm_peg_discount_6"]),
 
-  {
-    id: "launcher_1",
-    category: ABILITY_CATEGORIES.LAUNCHER,
-    level: 1,
-    cost: diamondCost(1),
-    unlocks: ["session_launcher_4"],
-  },
-  {
-    id: "launcher_2",
-    category: ABILITY_CATEGORIES.LAUNCHER,
-    level: 2,
-    cost: diamondCost(2),
-    unlocks: ["session_launcher_5"],
-  },
-  {
-    id: "launcher_3",
-    category: ABILITY_CATEGORIES.LAUNCHER,
-    level: 3,
-    cost: diamondCost(3),
-    unlocks: ["session_launcher_6"],
-  },
-  {
-    id: "launcher_4",
-    category: ABILITY_CATEGORIES.LAUNCHER,
-    level: 4,
-    cost: diamondCost(4),
-    unlocks: ["session_launcher_7"],
-  },
-  {
-    id: "launcher_5",
-    category: ABILITY_CATEGORIES.LAUNCHER,
-    level: 5,
-    cost: diamondCost(5),
-    unlocks: ["session_launcher_8"],
-  },
-  {
-    id: "launcher_6",
-    category: ABILITY_CATEGORIES.LAUNCHER,
-    level: 6,
-    cost: diamondCost(6),
-    unlocks: ["session_launcher_9"],
-  },
+  /* PEG — special peg permanent boosts. */
+  ability("peg_1", ABILITY_CATEGORIES.PEG, 1, ["perm_bomb_radius_xl"]),
+  ability("peg_2", ABILITY_CATEGORIES.PEG, 2, [
+    "perm_fire_duration_1",
+    "perm_fire_duration_2",
+    "perm_fire_duration_3",
+  ]),
+  ability("peg_3", ABILITY_CATEGORIES.PEG, 3, [
+    "perm_ice_duration_1",
+    "perm_ice_duration_2",
+    "perm_ice_duration_3",
+  ]),
+  ability("peg_4", ABILITY_CATEGORIES.PEG, 4, [
+    "perm_electrical_duration_1",
+    "perm_electrical_duration_2",
+    "perm_electrical_duration_3",
+  ]),
+  ability("peg_5", ABILITY_CATEGORIES.PEG, 5, [
+    "perm_glue_hp_1",
+    "perm_glue_hp_2",
+    "perm_glue_hp_3",
+  ]),
 
-  {
-    id: "pinboard_2",
-    category: ABILITY_CATEGORIES.PINBOARD,
-    level: 2,
-    cost: diamondCost(2),
-    unlocks: [],
-  },
-  {
-    id: "pinboard_3",
-    category: ABILITY_CATEGORIES.PINBOARD,
-    level: 3,
-    cost: diamondCost(3),
-    unlocks: ["perm_shop_discount"],
-  },
+  /* GATE — coins ×2, then width reductions for back & hp gates. */
+  ability("gate_1", ABILITY_CATEGORIES.GATE, 1, ["perm_destroy_coins_x2"]),
+  ability("gate_2", ABILITY_CATEGORIES.GATE, 2, ["perm_gate_back_width_1"]),
+  ability("gate_3", ABILITY_CATEGORIES.GATE, 3, ["perm_gate_back_width_2"]),
+  ability("gate_4", ABILITY_CATEGORIES.GATE, 4, ["perm_gate_hp_width_1"]),
+  ability("gate_5", ABILITY_CATEGORIES.GATE, 5, ["perm_gate_hp_width_2"]),
 
-  {
-    id: "avantage_1",
-    category: ABILITY_CATEGORIES.AVANTAGE,
-    level: 1,
-    cost: diamondCost(1),
-    unlocks: ["perm_reveal_abilities"],
-  },
-  {
-    id: "avantage_2",
-    category: ABILITY_CATEGORIES.AVANTAGE,
-    level: 2,
-    cost: diamondCost(2),
-    unlocks: ["perm_reveal_mystery", "perm_reveal_shops"],
-  },
-  {
-    id: "avantage_3",
-    category: ABILITY_CATEGORIES.AVANTAGE,
-    level: 3,
-    cost: diamondCost(3),
-    unlocks: ["perm_reveal_paths"],
-  },
-  {
-    id: "avantage_4",
-    category: ABILITY_CATEGORIES.AVANTAGE,
-    level: 4,
-    cost: diamondCost(4),
-    unlocks: ["perm_reveal_boss"],
-  },
+  /* PLAYER — tower-defense HP tiers. */
+  ability("player_1", ABILITY_CATEGORIES.PLAYER, 1, ["perm_extra_hp_1"]),
+  ability("player_2", ABILITY_CATEGORIES.PLAYER, 2, ["perm_extra_hp_2"]),
+  ability("player_3", ABILITY_CATEGORIES.PLAYER, 3, ["perm_extra_hp_3"]),
+  ability("player_4", ABILITY_CATEGORIES.PLAYER, 4, ["perm_extra_hp_4"]),
+
+  /* MAP — grid reveal tiers. */
+  ability("map_1", ABILITY_CATEGORIES.MAP, 1, ["perm_reveal_mystery"]),
+  ability("map_2", ABILITY_CATEGORIES.MAP, 2, ["perm_reveal_shops"]),
+  ability("map_3", ABILITY_CATEGORIES.MAP, 3, ["perm_reveal_paths"]),
+  ability("map_4", ABILITY_CATEGORIES.MAP, 4, ["perm_reveal_boss"]),
 ];
 
 /**

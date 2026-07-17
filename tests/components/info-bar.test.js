@@ -230,7 +230,7 @@ describe("InfoBar", () => {
 
     it("drawer lists each active entry with icon", () => {
       bonusManager.getActiveSession.mockReturnValue([
-        { id: "session_launcher_4", remaining: Infinity, def: { category: "bonus", icon: "🚀" } },
+        { id: "session_destroy_coins_x3", remaining: Infinity, def: { category: "bonus", icon: "🪙" } },
         { id: "malus_add_ice_ball", remaining: 1, def: { category: "malus", icon: "🧊" } },
       ]);
       infoBar = new InfoBar({ mode: INFO_BAR_MODES.EXPLORATION });
@@ -253,8 +253,8 @@ describe("InfoBar", () => {
     });
 
     it("counts abilities and permanent bonuses separately", () => {
-      abilityManager.getUnlocked.mockReturnValue(["ball_1", "gate_1", "launcher_1"]);
-      bonusManager.getUnlockedPermanent.mockReturnValue(["perm_extra_ball_1"]);
+      abilityManager.getUnlocked.mockReturnValue(["shop_1", "gate_1", "peg_1"]);
+      bonusManager.getUnlockedPermanent.mockReturnValue(["perm_extra_hp_1"]);
       infoBar = new InfoBar({ mode: INFO_BAR_MODES.EXPLORATION });
       infoBar.mount(root);
       const count = root.querySelector('[data-pill="permanent"] .pk-info-pill-count');
@@ -274,8 +274,8 @@ describe("InfoBar", () => {
     });
 
     it("drawer renders ability and bonus entries", () => {
-      abilityManager.getUnlocked.mockReturnValue(["ball_1"]);
-      bonusManager.getUnlockedPermanent.mockReturnValue(["perm_extra_ball_1"]);
+      abilityManager.getUnlocked.mockReturnValue(["gate_1"]);
+      bonusManager.getUnlockedPermanent.mockReturnValue(["perm_extra_hp_1"]);
       infoBar = new InfoBar({ mode: INFO_BAR_MODES.EXPLORATION });
       infoBar.mount(root);
       root.querySelector('[data-pill="permanent"]').click();

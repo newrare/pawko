@@ -11,6 +11,8 @@ import { FirePeg } from "./peg-fire.js";
 import { IcePeg } from "./peg-ice.js";
 import { ElectricalPeg } from "./peg-electrical.js";
 import { BombPeg } from "./peg-bomb.js";
+import { bonusManager } from "../managers/bonus-manager.js";
+import { PARAM_KEYS } from "../configs/bonus-defs.js";
 
 /**
  * Peg kinds — string ids used to identify a variant in saves, admin
@@ -59,6 +61,10 @@ const PEG_REGISTRY = {
  */
 export function createPeg(type, opts = {}) {
   const Ctor = PEG_REGISTRY[type] || Peg;
+  if (type === PEG_TYPES.GLUE) {
+    const hpBonus = bonusManager.resolve(PARAM_KEYS.GLUE_PEG_HP_BONUS, 0);
+    return new Ctor({ ...opts, hpBonus });
+  }
   return new Ctor(opts);
 }
 

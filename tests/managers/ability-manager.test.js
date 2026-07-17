@@ -10,9 +10,9 @@ describe("abilityManager", () => {
   });
 
   it("unlock() persists and is idempotent", () => {
-    expect(abilityManager.unlock("ball_1")).toBe(true);
-    expect(abilityManager.unlock("ball_1")).toBe(false);
-    expect(abilityManager.isUnlocked("ball_1")).toBe(true);
+    expect(abilityManager.unlock("gate_1")).toBe(true);
+    expect(abilityManager.unlock("gate_1")).toBe(false);
+    expect(abilityManager.isUnlocked("gate_1")).toBe(true);
   });
 
   it("rejects unknown ability ids", () => {
@@ -21,9 +21,9 @@ describe("abilityManager", () => {
   });
 
   it("canBuyBonus() reflects ability gates", () => {
-    expect(abilityManager.canBuyBonus("perm_extra_ball_1")).toBe(false);
-    abilityManager.unlock("ball_1");
-    expect(abilityManager.canBuyBonus("perm_extra_ball_1")).toBe(true);
+    expect(abilityManager.canBuyBonus("perm_destroy_coins_x2")).toBe(false);
+    abilityManager.unlock("gate_1");
+    expect(abilityManager.canBuyBonus("perm_destroy_coins_x2")).toBe(true);
   });
 
   it("canBuyBonus() returns true for ungated bonuses", () => {
@@ -43,8 +43,8 @@ describe("abilityManager", () => {
   });
 
   it("reset() wipes every unlock", () => {
-    abilityManager.unlock("ball_1");
     abilityManager.unlock("gate_1");
+    abilityManager.unlock("shop_1");
     abilityManager.reset();
     expect(abilityManager.getUnlocked()).toEqual([]);
   });

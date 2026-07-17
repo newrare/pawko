@@ -37,14 +37,6 @@ export const BONUS_CATEGORIES = /** @type {const} */ ({
  * outside this map are a bug.
  */
 export const PARAM_KEYS = /** @type {const} */ ({
-  /* Launcher / ball composition */
-  STARTING_BALLS: "startingBalls",
-
-  /* Gates (legacy) */
-  GATE_MALUS_REDUCTION: "gateMalusReduction",
-  GATE_X_MULTIPLIER: "gateXMultiplier",
-  GATE_X_DOUBLE: "gateXDouble",
-
   /* Economy / shop */
   SHOP_DISCOUNT: "shopDiscount",
 
@@ -52,7 +44,6 @@ export const PARAM_KEYS = /** @type {const} */ ({
   SHOP_MAGNET_ENABLED: "shopMagnetEnabled",
 
   /* Grid visibility */
-  REVEAL_ABILITIES: "revealAbilities",
   REVEAL_MYSTERY: "revealMystery",
   REVEAL_SHOPS: "revealShops",
   REVEAL_PATHS: "revealPaths",
@@ -65,6 +56,18 @@ export const PARAM_KEYS = /** @type {const} */ ({
   PEG_REPLACE_DISCOUNT: "pegReplaceDiscount",
   BOMB_RADIUS_BONUS: "bombRadiusBonus",
   TELEPORT_RECYCLE_MAX_BONUS: "teleportRecycleMaxBonus",
+
+  /* Elemental peg effect durations (additive ms) */
+  FIRE_DURATION_BONUS_MS: "fireDurationBonusMs",
+  ICE_DURATION_BONUS_MS: "iceDurationBonusMs",
+  ELECTRICAL_DURATION_BONUS_MS: "electricalDurationBonusMs",
+
+  /* Glue peg durability (additive hp) */
+  GLUE_PEG_HP_BONUS: "gluePegHpBonus",
+
+  /* Gate width reductions (fraction 0..1 subtracted from each gate) */
+  GATE_BACK_WIDTH_REDUCTION: "gateBackWidthReduction",
+  GATE_HP_WIDTH_REDUCTION: "gateHpWidthReduction",
 });
 
 /**
@@ -114,189 +117,144 @@ export const DIRECTIVE_ACTIONS = /** @type {const} */ ({
 // Permanent bonuses (bought in the shop with coins)
 // ────────────────────────────────────────────────────────────────────
 
+const perm = (id, abilityRequired, cost, icon, modifiers) => ({
+  id,
+  type: BONUS_TYPES.PERMANENT,
+  category: BONUS_CATEGORIES.BONUS,
+  cost,
+  abilityRequired,
+  rarity: "permanent",
+  icon,
+  modifiers,
+});
+
 /** @type {BonusDef[]} */
 export const PERMANENT_BONUSES = [
-  {
-    id: "perm_extra_ball_1",
-    type: BONUS_TYPES.PERMANENT,
-    category: BONUS_CATEGORIES.BONUS,
-    cost: 700,
-    abilityRequired: "ball_1",
-    rarity: "permanent",
-    icon: "🟢",
-    modifiers: [
-      { paramKey: PARAM_KEYS.STARTING_BALLS, op: "add", value: 1 },
-    ],
-  },
-  {
-    id: "perm_extra_ball_2",
-    type: BONUS_TYPES.PERMANENT,
-    category: BONUS_CATEGORIES.BONUS,
-    cost: 4000,
-    abilityRequired: "ball_2",
-    rarity: "permanent",
-    icon: "🟢",
-    modifiers: [
-      { paramKey: PARAM_KEYS.STARTING_BALLS, op: "add", value: 1 },
-    ],
-  },
-  {
-    id: "perm_extra_ball_3",
-    type: BONUS_TYPES.PERMANENT,
-    category: BONUS_CATEGORIES.BONUS,
-    cost: 9000,
-    abilityRequired: "ball_3",
-    rarity: "permanent",
-    icon: "🟢",
-    modifiers: [
-      { paramKey: PARAM_KEYS.STARTING_BALLS, op: "add", value: 1 },
-    ],
-  },
-  {
-    id: "perm_shop_discount",
-    type: BONUS_TYPES.PERMANENT,
-    category: BONUS_CATEGORIES.BONUS,
-    cost: 5000,
-    abilityRequired: "pinboard_3",
-    rarity: "permanent",
-    icon: "💸",
-    modifiers: [
-      { paramKey: PARAM_KEYS.SHOP_DISCOUNT, op: "add", value: 0.1 },
-    ],
-  },
-  {
-    id: "perm_reveal_abilities",
-    type: BONUS_TYPES.PERMANENT,
-    category: BONUS_CATEGORIES.BONUS,
-    cost: 5000,
-    abilityRequired: "avantage_1",
-    rarity: "permanent",
-    icon: "👁️",
-    modifiers: [
-      { paramKey: PARAM_KEYS.REVEAL_ABILITIES, op: "set", value: true },
-    ],
-  },
-  {
-    id: "perm_reveal_mystery",
-    type: BONUS_TYPES.PERMANENT,
-    category: BONUS_CATEGORIES.BONUS,
-    cost: 7000,
-    abilityRequired: "avantage_2",
-    rarity: "permanent",
-    icon: "👁️",
-    modifiers: [
-      { paramKey: PARAM_KEYS.REVEAL_MYSTERY, op: "set", value: true },
-    ],
-  },
-  {
-    id: "perm_reveal_shops",
-    type: BONUS_TYPES.PERMANENT,
-    category: BONUS_CATEGORIES.BONUS,
-    cost: 10000,
-    abilityRequired: "avantage_2",
-    rarity: "permanent",
-    icon: "👁️",
-    modifiers: [
-      { paramKey: PARAM_KEYS.REVEAL_SHOPS, op: "set", value: true },
-    ],
-  },
-  {
-    id: "perm_reveal_paths",
-    type: BONUS_TYPES.PERMANENT,
-    category: BONUS_CATEGORIES.BONUS,
-    cost: 20000,
-    abilityRequired: "avantage_3",
-    rarity: "permanent",
-    icon: "👁️",
-    modifiers: [
-      { paramKey: PARAM_KEYS.REVEAL_PATHS, op: "set", value: true },
-    ],
-  },
-  {
-    id: "perm_reveal_boss",
-    type: BONUS_TYPES.PERMANENT,
-    category: BONUS_CATEGORIES.BONUS,
-    cost: 25000,
-    abilityRequired: "avantage_4",
-    rarity: "permanent",
-    icon: "👁️",
-    modifiers: [
-      { paramKey: PARAM_KEYS.REVEAL_BOSS, op: "set", value: true },
-    ],
-  },
-  /* Tower-defense permanent bonuses */
-  {
-    id: "perm_extra_hp_1",
-    type: BONUS_TYPES.PERMANENT,
-    category: BONUS_CATEGORIES.BONUS,
-    cost: 2000,
-    abilityRequired: null,
-    rarity: "permanent",
-    icon: "❤️",
-    modifiers: [
-      { paramKey: PARAM_KEYS.PLAYER_MAX_HP_BONUS, op: "add", value: 5 },
-    ],
-  },
-  {
-    id: "perm_extra_hp_2",
-    type: BONUS_TYPES.PERMANENT,
-    category: BONUS_CATEGORIES.BONUS,
-    cost: 5000,
-    abilityRequired: null,
-    rarity: "permanent",
-    icon: "❤️",
-    modifiers: [
-      { paramKey: PARAM_KEYS.PLAYER_MAX_HP_BONUS, op: "add", value: 10 },
-    ],
-  },
-  {
-    id: "perm_extra_hp_3",
-    type: BONUS_TYPES.PERMANENT,
-    category: BONUS_CATEGORIES.BONUS,
-    cost: 12000,
-    abilityRequired: null,
-    rarity: "permanent",
-    icon: "❤️",
-    modifiers: [
-      { paramKey: PARAM_KEYS.PLAYER_MAX_HP_BONUS, op: "add", value: 15 },
-    ],
-  },
-  {
-    id: "perm_destroy_coins_x2",
-    type: BONUS_TYPES.PERMANENT,
-    category: BONUS_CATEGORIES.BONUS,
-    cost: 8000,
-    abilityRequired: null,
-    rarity: "permanent",
-    icon: "🪙",
-    modifiers: [
-      { paramKey: PARAM_KEYS.DESTROY_COIN_MULTIPLIER, op: "multiply", value: 2 },
-    ],
-  },
-  {
-    id: "perm_bomb_radius_xl",
-    type: BONUS_TYPES.PERMANENT,
-    category: BONUS_CATEGORIES.BONUS,
-    cost: 6000,
-    abilityRequired: null,
-    rarity: "permanent",
-    icon: "💣",
-    modifiers: [
-      { paramKey: PARAM_KEYS.BOMB_RADIUS_BONUS, op: "add", value: 25 },
-    ],
-  },
-  {
-    id: "perm_peg_discount_10",
-    type: BONUS_TYPES.PERMANENT,
-    category: BONUS_CATEGORIES.BONUS,
-    cost: 4000,
-    abilityRequired: null,
-    rarity: "permanent",
-    icon: "💸",
-    modifiers: [
-      { paramKey: PARAM_KEYS.PEG_REPLACE_DISCOUNT, op: "multiply", value: 0.9 },
-    ],
-  },
+  /* SHOP — shop price discount tiers (additive, applied in shop pricing). */
+  perm("perm_shop_discount_1", "shop_1", 1500, "🛒", [
+    { paramKey: PARAM_KEYS.SHOP_DISCOUNT, op: "add", value: 0.05 },
+  ]),
+  perm("perm_shop_discount_2", "shop_2", 3000, "🛒", [
+    { paramKey: PARAM_KEYS.SHOP_DISCOUNT, op: "add", value: 0.10 },
+  ]),
+  perm("perm_shop_discount_3", "shop_3", 5000, "🛒", [
+    { paramKey: PARAM_KEYS.SHOP_DISCOUNT, op: "add", value: 0.15 },
+  ]),
+  perm("perm_shop_discount_4", "shop_4", 8000, "🛒", [
+    { paramKey: PARAM_KEYS.SHOP_DISCOUNT, op: "add", value: 0.20 },
+  ]),
+  perm("perm_shop_discount_5", "shop_5", 12000, "🛒", [
+    { paramKey: PARAM_KEYS.SHOP_DISCOUNT, op: "add", value: 0.25 },
+  ]),
+  perm("perm_shop_discount_6", "shop_6", 18000, "🛒", [
+    { paramKey: PARAM_KEYS.SHOP_DISCOUNT, op: "add", value: 0.30 },
+  ]),
+
+  /* ECONOMY — peg replacement discount tiers (multiplicative). */
+  perm("perm_peg_discount_1", "economy_1", 1500, "💸", [
+    { paramKey: PARAM_KEYS.PEG_REPLACE_DISCOUNT, op: "multiply", value: 0.95 },
+  ]),
+  perm("perm_peg_discount_2", "economy_2", 3000, "💸", [
+    { paramKey: PARAM_KEYS.PEG_REPLACE_DISCOUNT, op: "multiply", value: 0.90 },
+  ]),
+  perm("perm_peg_discount_3", "economy_3", 5000, "💸", [
+    { paramKey: PARAM_KEYS.PEG_REPLACE_DISCOUNT, op: "multiply", value: 0.85 },
+  ]),
+  perm("perm_peg_discount_4", "economy_4", 8000, "💸", [
+    { paramKey: PARAM_KEYS.PEG_REPLACE_DISCOUNT, op: "multiply", value: 0.80 },
+  ]),
+  perm("perm_peg_discount_5", "economy_5", 12000, "💸", [
+    { paramKey: PARAM_KEYS.PEG_REPLACE_DISCOUNT, op: "multiply", value: 0.75 },
+  ]),
+  perm("perm_peg_discount_6", "economy_6", 18000, "💸", [
+    { paramKey: PARAM_KEYS.PEG_REPLACE_DISCOUNT, op: "multiply", value: 0.70 },
+  ]),
+
+  /* PEG — special peg permanent boosts. */
+  perm("perm_bomb_radius_xl", "peg_1", 6000, "💣", [
+    { paramKey: PARAM_KEYS.BOMB_RADIUS_BONUS, op: "add", value: 25 },
+  ]),
+  perm("perm_fire_duration_1", "peg_2", 2000, "🔥", [
+    { paramKey: PARAM_KEYS.FIRE_DURATION_BONUS_MS, op: "add", value: 1000 },
+  ]),
+  perm("perm_fire_duration_2", "peg_2", 5000, "🔥", [
+    { paramKey: PARAM_KEYS.FIRE_DURATION_BONUS_MS, op: "add", value: 2000 },
+  ]),
+  perm("perm_fire_duration_3", "peg_2", 10000, "🔥", [
+    { paramKey: PARAM_KEYS.FIRE_DURATION_BONUS_MS, op: "add", value: 3000 },
+  ]),
+  perm("perm_ice_duration_1", "peg_3", 2000, "❄️", [
+    { paramKey: PARAM_KEYS.ICE_DURATION_BONUS_MS, op: "add", value: 1000 },
+  ]),
+  perm("perm_ice_duration_2", "peg_3", 5000, "❄️", [
+    { paramKey: PARAM_KEYS.ICE_DURATION_BONUS_MS, op: "add", value: 2000 },
+  ]),
+  perm("perm_ice_duration_3", "peg_3", 10000, "❄️", [
+    { paramKey: PARAM_KEYS.ICE_DURATION_BONUS_MS, op: "add", value: 3000 },
+  ]),
+  perm("perm_electrical_duration_1", "peg_4", 2000, "⚡", [
+    { paramKey: PARAM_KEYS.ELECTRICAL_DURATION_BONUS_MS, op: "add", value: 1000 },
+  ]),
+  perm("perm_electrical_duration_2", "peg_4", 5000, "⚡", [
+    { paramKey: PARAM_KEYS.ELECTRICAL_DURATION_BONUS_MS, op: "add", value: 2000 },
+  ]),
+  perm("perm_electrical_duration_3", "peg_4", 10000, "⚡", [
+    { paramKey: PARAM_KEYS.ELECTRICAL_DURATION_BONUS_MS, op: "add", value: 3000 },
+  ]),
+  perm("perm_glue_hp_1", "peg_5", 2000, "🩹", [
+    { paramKey: PARAM_KEYS.GLUE_PEG_HP_BONUS, op: "add", value: 5 },
+  ]),
+  perm("perm_glue_hp_2", "peg_5", 5000, "🩹", [
+    { paramKey: PARAM_KEYS.GLUE_PEG_HP_BONUS, op: "add", value: 10 },
+  ]),
+  perm("perm_glue_hp_3", "peg_5", 10000, "🩹", [
+    { paramKey: PARAM_KEYS.GLUE_PEG_HP_BONUS, op: "add", value: 15 },
+  ]),
+
+  /* GATE — destroy coin x2 + width reductions for back & hp gates. */
+  perm("perm_destroy_coins_x2", "gate_1", 4000, "🪙", [
+    { paramKey: PARAM_KEYS.DESTROY_COIN_MULTIPLIER, op: "multiply", value: 2 },
+  ]),
+  perm("perm_gate_back_width_1", "gate_2", 3000, "🚪", [
+    { paramKey: PARAM_KEYS.GATE_BACK_WIDTH_REDUCTION, op: "add", value: 0.05 },
+  ]),
+  perm("perm_gate_back_width_2", "gate_3", 7000, "🚪", [
+    { paramKey: PARAM_KEYS.GATE_BACK_WIDTH_REDUCTION, op: "add", value: 0.05 },
+  ]),
+  perm("perm_gate_hp_width_1", "gate_4", 5000, "🚪", [
+    { paramKey: PARAM_KEYS.GATE_HP_WIDTH_REDUCTION, op: "add", value: 0.05 },
+  ]),
+  perm("perm_gate_hp_width_2", "gate_5", 10000, "🚪", [
+    { paramKey: PARAM_KEYS.GATE_HP_WIDTH_REDUCTION, op: "add", value: 0.05 },
+  ]),
+
+  /* PLAYER — tower-defense HP tiers. */
+  perm("perm_extra_hp_1", "player_1", 2000, "❤️", [
+    { paramKey: PARAM_KEYS.PLAYER_MAX_HP_BONUS, op: "add", value: 5 },
+  ]),
+  perm("perm_extra_hp_2", "player_2", 5000, "❤️", [
+    { paramKey: PARAM_KEYS.PLAYER_MAX_HP_BONUS, op: "add", value: 10 },
+  ]),
+  perm("perm_extra_hp_3", "player_3", 12000, "❤️", [
+    { paramKey: PARAM_KEYS.PLAYER_MAX_HP_BONUS, op: "add", value: 15 },
+  ]),
+  perm("perm_extra_hp_4", "player_4", 25000, "❤️", [
+    { paramKey: PARAM_KEYS.PLAYER_MAX_HP_BONUS, op: "add", value: 20 },
+  ]),
+
+  /* MAP — grid reveal tiers. */
+  perm("perm_reveal_mystery", "map_1", 5000, "👁️", [
+    { paramKey: PARAM_KEYS.REVEAL_MYSTERY, op: "set", value: true },
+  ]),
+  perm("perm_reveal_shops", "map_2", 8000, "👁️", [
+    { paramKey: PARAM_KEYS.REVEAL_SHOPS, op: "set", value: true },
+  ]),
+  perm("perm_reveal_paths", "map_3", 15000, "👁️", [
+    { paramKey: PARAM_KEYS.REVEAL_PATHS, op: "set", value: true },
+  ]),
+  perm("perm_reveal_boss", "map_4", 25000, "👁️", [
+    { paramKey: PARAM_KEYS.REVEAL_BOSS, op: "set", value: true },
+  ]),
 ];
 
 // ────────────────────────────────────────────────────────────────────
@@ -311,7 +269,7 @@ export const SESSION_BONUSES = [
     type: BONUS_TYPES.SESSION,
     category: BONUS_CATEGORIES.BONUS,
     cost: 100,
-    abilityRequired: "ball_1",
+    abilityRequired: null,
     rarity: "common",
     icon: "🔵",
     durationLevels: 1,
@@ -320,48 +278,6 @@ export const SESSION_BONUSES = [
         action: DIRECTIVE_ACTIONS.ADD_BALL,
         payload: { kind: "classic", count: 1, target: "one" },
       },
-    ],
-  },
-  {
-    id: "session_gate_malus_reduce",
-    name: "Gate Shield",
-    type: BONUS_TYPES.SESSION,
-    category: BONUS_CATEGORIES.BONUS,
-    cost: 1000,
-    abilityRequired: "gate_1",
-    rarity: "epic",
-    icon: "🛡️",
-    durationLevels: null,
-    modifiers: [
-      { paramKey: PARAM_KEYS.GATE_MALUS_REDUCTION, op: "multiply", value: 0.5 },
-    ],
-  },
-  {
-    id: "session_gate_x_boost",
-    name: "Gate Boost",
-    type: BONUS_TYPES.SESSION,
-    category: BONUS_CATEGORIES.BONUS,
-    cost: 1500,
-    abilityRequired: "gate_2",
-    rarity: "epic",
-    icon: "🚪",
-    durationLevels: null,
-    modifiers: [
-      { paramKey: PARAM_KEYS.GATE_X_MULTIPLIER, op: "multiply", value: 1.5 },
-    ],
-  },
-  {
-    id: "session_gate_x_double",
-    name: "Gate ×2",
-    type: BONUS_TYPES.SESSION,
-    category: BONUS_CATEGORIES.BONUS,
-    cost: 10000,
-    abilityRequired: "gate_3",
-    rarity: "legendary",
-    icon: "🚪",
-    durationLevels: null,
-    modifiers: [
-      { paramKey: PARAM_KEYS.GATE_X_DOUBLE, op: "set", value: true },
     ],
   },
   {
@@ -378,7 +294,6 @@ export const SESSION_BONUSES = [
       { paramKey: PARAM_KEYS.DESTROY_COIN_MULTIPLIER, op: "multiply", value: 2 },
     ],
   },
-  /* Tower-defense session bonuses */
   {
     id: "session_extra_recycles",
     name: "Recycles",
@@ -442,7 +357,6 @@ export const SESSION_MALUSES = [
       { paramKey: PARAM_KEYS.REVEAL_LEVEL_NUMBER, op: "set", value: false },
     ],
   },
-  /* Tower-defense maluses */
   {
     id: "malus_player_hp_drain",
     type: BONUS_TYPES.SESSION,

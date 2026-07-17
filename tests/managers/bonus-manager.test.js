@@ -10,9 +10,9 @@ describe("bonusManager — permanent", () => {
   });
 
   it("unlockPermanent() stores and is idempotent", () => {
-    expect(bonusManager.unlockPermanent("perm_extra_ball_1")).toBe(true);
-    expect(bonusManager.unlockPermanent("perm_extra_ball_1")).toBe(false);
-    expect(bonusManager.isPermanentUnlocked("perm_extra_ball_1")).toBe(true);
+    expect(bonusManager.unlockPermanent("perm_extra_hp_1")).toBe(true);
+    expect(bonusManager.unlockPermanent("perm_extra_hp_1")).toBe(false);
+    expect(bonusManager.isPermanentUnlocked("perm_extra_hp_1")).toBe(true);
   });
 
   it("rejects session bonus ids on unlockPermanent", () => {
@@ -34,11 +34,11 @@ describe("bonusManager — session", () => {
   });
 
   it("rejects permanent ids on activateSession", () => {
-    expect(bonusManager.activateSession("perm_extra_ball_1")).toBe(false);
+    expect(bonusManager.activateSession("perm_extra_hp_1")).toBe(false);
   });
 
   it("stores Infinity for run-scoped bonuses (durationLevels: null)", () => {
-    bonusManager.activateSession("session_gate_malus_reduce");
+    bonusManager.activateSession("session_destroy_coins_x3");
     expect(bonusManager.getActiveSession()[0].remaining).toBe(Infinity);
   });
 
@@ -49,7 +49,7 @@ describe("bonusManager — session", () => {
   });
 
   it("onLevelUp() does not decrement run-scoped bonuses", () => {
-    bonusManager.activateSession("session_gate_malus_reduce");
+    bonusManager.activateSession("session_destroy_coins_x3");
     bonusManager.onLevelUp();
     bonusManager.onLevelUp();
     expect(bonusManager.getActiveSession()[0].remaining).toBe(Infinity);
@@ -125,13 +125,13 @@ describe("bonusManager — directives", () => {
 
 describe("bonusManager — resolve()", () => {
   it("returns the base value when no bonus is active", () => {
-    const v = bonusManager.resolve(PARAM_KEYS.STARTING_BALLS, 20);
+    const v = bonusManager.resolve(PARAM_KEYS.PLAYER_MAX_HP_BONUS, 20);
     expect(v).toBe(20);
   });
 
   it("applies an additive permanent bonus", () => {
-    bonusManager.unlockPermanent("perm_extra_ball_1");
-    expect(bonusManager.resolve(PARAM_KEYS.STARTING_BALLS, 20)).toBe(21);
+    bonusManager.unlockPermanent("perm_extra_hp_1");
+    expect(bonusManager.resolve(PARAM_KEYS.PLAYER_MAX_HP_BONUS, 20)).toBe(25);
   });
 
   it("applies a multiplicative session bonus", () => {
@@ -140,25 +140,25 @@ describe("bonusManager — resolve()", () => {
   });
 
   it("applies a 'set' bonus (set wins over numeric ops)", () => {
-    bonusManager.activateSession("session_gate_x_double");
-    expect(bonusManager.resolve(PARAM_KEYS.GATE_X_DOUBLE, false)).toBe(true);
+    bonusManager.activateMalus("malus_obfuscate_level_number");
+    expect(bonusManager.resolve(PARAM_KEYS.REVEAL_LEVEL_NUMBER, true)).toBe(false);
   });
 
   it("stacks permanent and session modifiers independently", () => {
-    bonusManager.unlockPermanent("perm_extra_ball_1");
+    bonusManager.unlockPermanent("perm_extra_hp_1");
     bonusManager.activateSession("session_extra_recycles");
-    expect(bonusManager.resolve(PARAM_KEYS.STARTING_BALLS, 20)).toBe(21);
+    expect(bonusManager.resolve(PARAM_KEYS.PLAYER_MAX_HP_BONUS, 20)).toBe(25);
     expect(bonusManager.resolve(PARAM_KEYS.TELEPORT_RECYCLE_MAX_BONUS, 0)).toBe(2);
   });
 });
 
 describe("bonusManager — persistence", () => {
   it("persists permanent unlocks across reloads", async () => {
-    bonusManager.unlockPermanent("perm_extra_ball_1");
+    bonusManager.unlockPermanent("perm_extra_hp_1");
     const mod = await import(
       "../../src/managers/bonus-manager.js?freshpermanent"
     );
-    expect(mod.bonusManager.isPermanentUnlocked("perm_extra_ball_1")).toBe(true);
+    expect(mod.bonusManager.isPermanentUnlocked("perm_extra_hp_1")).toBe(true);
   });
 
   it("does NOT persist session bonuses", async () => {
@@ -172,7 +172,7 @@ describe("bonusManager — persistence", () => {
 
 describe("bonusManager — resetAll", () => {
   it("clears unlocked + session + directives", () => {
-    bonusManager.unlockPermanent("perm_extra_ball_1");
+    bonusManager.unlockPermanent("perm_extra_hp_1");
     bonusManager.activateSession("session_extra_classic_ball_one");
     bonusManager.resetAll();
     expect(bonusManager.getUnlockedPermanent()).toEqual([]);
@@ -183,7 +183,7 @@ describe("bonusManager — resetAll", () => {
 
 describe("bonusManager — granular clear helpers", () => {
   it("clearPermanent() removes every owned permanent and leaves session alone", () => {
-    bonusManager.unlockPermanent("perm_extra_ball_1");
+    bonusManager.unlockPermanent("perm_extra_hp_1");
     bonusManager.activateSession("session_coin_drop_x2");
     expect(bonusManager.clearPermanent()).toBe(true);
     expect(bonusManager.getUnlockedPermanent()).toEqual([]);

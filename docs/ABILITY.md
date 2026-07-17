@@ -3,23 +3,34 @@
 **Abilities** are permanent unlocks bought with **diamonds** 💎 in the
 Ability scene. They never affect gameplay directly — instead they act as
 **gates** that make new bonuses, ball kinds, and reveal flags available
-in the shop and on the level map.
+in the shop.
 
 Definitions live in [`src/configs/ability-defs.js`](../src/configs/ability-defs.js)
 and are accessed through `abilityManager`.
 
+## Flow
+
+A fresh run opens the Ability scene **before** the level grid is shown:
+when `LevelSelectorScene` mounts and finds no persisted grid state, it
+generates one, persists it, and routes to `AbilityScene` immediately.
+Clicking Home from the Ability scene loads the persisted grid normally.
+On subsequent visits the grid already exists, so the Ability scene is
+not re-entered automatically — open it from the HUD if needed.
+
+There is no longer an `ability` cell type on the grid map.
+
 ## Categories
 
-Abilities are grouped into five categories. Each category is a vertical
-progression: `level 2` requires `level 1`, etc.
+Six categories, each a vertical progression (`level N+1` requires `level N`):
 
-| Category   | Theme                                          |
-| ---------- | ---------------------------------------------- |
-| `BALL`     | Extra starting balls per sublauncher           |
-| `GATE`     | Gate reveal & gate-multiplier upgrades         |
-| `LAUNCHER` | Extra sublaunchers (run-scoped, fed by shop)   |
-| `PINBOARD` | One-shot pinboard score bonuses                |
-| `AVANTAGE` | Quality-of-life reveals (shops, mystery, boss) |
+| Category   | Theme                                                        |
+| ---------- | ------------------------------------------------------------ |
+| `SHOP`     | Tiered discounts on shop prices                              |
+| `ECONOMY`  | Tiered discounts on peg replacement                          |
+| `PEG`      | Boosts on special pegs (bomb radius, effect duration, glue)  |
+| `GATE`     | Destroy-coin multiplier + width reductions on back & hp gates |
+| `PLAYER`   | Max HP tiers (tower-defense)                                 |
+| `MAP`      | Reveal flags (mystery, shops, paths, boss)                   |
 
 ## Diamond cost
 
@@ -40,33 +51,79 @@ Use the helper `diamondCost(level)` rather than hard-coding.
 
 ## Catalogue
 
-| id              | Cat      | Lvl | Unlocks (bonus id)                                     |
-| --------------- | -------- | --- | ------------------------------------------------------ |
-| `ball_1`        | BALL     | 1   | `perm_extra_ball_1`, `session_extra_classic_ball_one`  |
-| `ball_2`        | BALL     | 2   | `perm_extra_ball_2`                                    |
-| `ball_3`        | BALL     | 3   | `perm_extra_ball_3`                                    |
-| `gate_1`        | GATE     | 1   | `session_gate_malus_reduce`                            |
-| `gate_2`        | GATE     | 2   | `session_gate_x_boost` (×1.5 on every gate multiplier) |
-| `gate_3`        | GATE     | 3   | `session_gate_x_double`                                |
-| `launcher_1`    | LAUNCHER | 1   | nothing (gate only)                                    |
-| `launcher_2`    | LAUNCHER | 2   | shop now lists `session_launcher_4` (+1 sublauncher)   |
-| `launcher_3..6` | LAUNCHER | 3-6 | unlock `session_launcher_5..9` progressively           |
-| `pinboard_2`    | PINBOARD | 2   | shop now lists +50% next-pinboard score bonus          |
-| `pinboard_3`    | PINBOARD | 3   | +100% next-pinboard score bonus                        |
-| `avantage_1`    | AVANTAGE | 1   | `perm_reveal_shops`                                    |
-| `avantage_2`    | AVANTAGE | 2   | `perm_reveal_abilities`                                |
-| `avantage_3`    | AVANTAGE | 3   | `perm_reveal_mystery`, `perm_reveal_paths`             |
-| `avantage_4`    | AVANTAGE | 4   | `perm_reveal_boss`                                     |
+### SHOP — 6 levels
+
+| id       | Lvl | Unlocks                  |
+| -------- | --- | ------------------------ |
+| `shop_1` | 1   | `perm_shop_discount_1` (-5%)  |
+| `shop_2` | 2   | `perm_shop_discount_2` (-10%) |
+| `shop_3` | 3   | `perm_shop_discount_3` (-15%) |
+| `shop_4` | 4   | `perm_shop_discount_4` (-20%) |
+| `shop_5` | 5   | `perm_shop_discount_5` (-25%) |
+| `shop_6` | 6   | `perm_shop_discount_6` (-30%) |
+
+### ECONOMY — 6 levels
+
+| id          | Lvl | Unlocks                 |
+| ----------- | --- | ----------------------- |
+| `economy_1` | 1   | `perm_peg_discount_1` (-5%)  |
+| `economy_2` | 2   | `perm_peg_discount_2` (-10%) |
+| `economy_3` | 3   | `perm_peg_discount_3` (-15%) |
+| `economy_4` | 4   | `perm_peg_discount_4` (-20%) |
+| `economy_5` | 5   | `perm_peg_discount_5` (-25%) |
+| `economy_6` | 6   | `perm_peg_discount_6` (-30%) |
+
+### PEG — 5 levels
+
+| id      | Lvl | Unlocks                                                      |
+| ------- | --- | ------------------------------------------------------------ |
+| `peg_1` | 1   | `perm_bomb_radius_xl` (+25 blast radius)                     |
+| `peg_2` | 2   | `perm_fire_duration_1/2/3` (+1s/+2s/+3s burning)             |
+| `peg_3` | 3   | `perm_ice_duration_1/2/3` (+1s/+2s/+3s frozen)               |
+| `peg_4` | 4   | `perm_electrical_duration_1/2/3` (+1s/+2s/+3s electrified)   |
+| `peg_5` | 5   | `perm_glue_hp_1/2/3` (+5/+10/+15 HP on glue pegs)            |
+
+### GATE — 5 levels
+
+| id       | Lvl | Unlocks                                            |
+| -------- | --- | -------------------------------------------------- |
+| `gate_1` | 1   | `perm_destroy_coins_x2` (destroy gates ×2 coins)   |
+| `gate_2` | 2   | `perm_gate_back_width_1` (-5% width on back gates) |
+| `gate_3` | 3   | `perm_gate_back_width_2` (-10% width on back gates)|
+| `gate_4` | 4   | `perm_gate_hp_width_1` (-5% width on hp gate)      |
+| `gate_5` | 5   | `perm_gate_hp_width_2` (-10% width on hp gate)     |
+
+### PLAYER — 4 levels
+
+| id         | Lvl | Unlocks                          |
+| ---------- | --- | -------------------------------- |
+| `player_1` | 1   | `perm_extra_hp_1` (+5 max HP)    |
+| `player_2` | 2   | `perm_extra_hp_2` (+10 max HP)   |
+| `player_3` | 3   | `perm_extra_hp_3` (+15 max HP)   |
+| `player_4` | 4   | `perm_extra_hp_4` (+20 max HP)   |
+
+### MAP — 4 levels
+
+| id      | Lvl | Unlocks                  |
+| ------- | --- | ------------------------ |
+| `map_1` | 1   | `perm_reveal_mystery`    |
+| `map_2` | 2   | `perm_reveal_shops`      |
+| `map_3` | 3   | `perm_reveal_paths`      |
+| `map_4` | 4   | `perm_reveal_boss`       |
 
 ## Anatomy of a def
 
 ```js
 {
-  id: "ball_2",
-  category: ABILITY_CATEGORIES.BALL,
+  id: "peg_2",
+  category: ABILITY_CATEGORIES.PEG,
   level: 2,
   cost: diamondCost(2),   // 2
-  unlocks: ["perm_extra_ball_2", "session_extra_black_ball_one"],
+  unlocks: [
+    "perm_fire_duration_1",
+    "perm_fire_duration_2",
+    "perm_fire_duration_3",
+  ],
 }
 ```
 
@@ -100,9 +157,10 @@ if (diamondManager.spend(def.cost)) abilityManager.unlock(def.id);
 1. **Add to `ABILITY_DEFS`** with the right category and level. Costs
    come from `diamondCost(level)`.
 2. **Wire the unlocks**: if it gates a new bonus, list its id in
-   `unlocks`. If it just enables a feature (e.g. a reveal flag), the
-   matching `perm_reveal_*` bonus must exist in `PERMANENT_BONUSES`.
+   `unlocks`. The bonus must exist in `PERMANENT_BONUSES` (or session
+   bonuses) before the ability references it.
 3. **Localize**: add `ability.<id>` and `ability.<id>.desc` to both
    `en.js` and `fr.js`. Category headers live under
    `ability.category.<cat>`.
-4. **Test** in `tests/managers/ability-manager.test.js`.
+4. **Test** in `tests/managers/ability-manager.test.js` and
+   `tests/configs/ability-defs.test.js` (structural invariants).

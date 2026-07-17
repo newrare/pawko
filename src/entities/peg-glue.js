@@ -5,15 +5,25 @@ import { Peg } from "./peg-classic.js";
  * a gate. If the glue peg is destroyed, the trapped ball is freed.
  *
  * Only one ball can be trapped at a time.
+ *
+ * Permanent bonus `GLUE_PEG_HP_BONUS` is added to the base HP. The factory
+ * resolves the bonus from `bonusManager` and passes it via `opts.hpBonus`.
  */
 export class GluePeg extends Peg {
   /** @type {import('./ball-classic.js').Ball | null} */
   trappedBall = null;
+  /** @type {number} */
+  #hpBonus;
 
   constructor(opts = {}) {
     super(opts);
     this.type = "glue";
+    this.#hpBonus = opts.hpBonus ?? 0;
     this._resolveHp();
+    if (this.#hpBonus > 0) {
+      this.maxHp += this.#hpBonus;
+      this.hp = this.maxHp;
+    }
   }
 
   /** Whether this peg can still trap a ball. */

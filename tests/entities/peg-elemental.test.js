@@ -3,7 +3,6 @@ import { Ball } from "../../src/entities/ball-classic.js";
 import { FirePeg } from "../../src/entities/peg-fire.js";
 import { IcePeg } from "../../src/entities/peg-ice.js";
 import { ElectricalPeg } from "../../src/entities/peg-electrical.js";
-import { BlackPeg } from "../../src/entities/peg-black.js";
 import { BombPeg } from "../../src/entities/peg-bomb.js";
 import { EFFECT_DEFS, BOMB_RADIUS } from "../../src/configs/constants.js";
 
@@ -49,19 +48,6 @@ describe("ElectricalPeg", () => {
   });
 });
 
-describe("BlackPeg", () => {
-  it("has type 'black'", () => {
-    const peg = new BlackPeg();
-    expect(peg.type).toBe("black");
-  });
-
-  it("consumeReward returns { instantKill: true }", () => {
-    const peg = new BlackPeg();
-    const ball = new Ball();
-    const reward = peg.consumeReward(ball);
-    expect(reward.instantKill).toBe(true);
-  });
-});
 
 describe("BombPeg", () => {
   it("has type 'bomb'", () => {

@@ -25,7 +25,7 @@ describe("ActiveListModal", () => {
   });
 
   it("lists unlocked permanent bonuses", () => {
-    bonusManager.unlockPermanent("perm_extra_ball_1");
+    bonusManager.unlockPermanent("perm_extra_hp_1");
     const modal = new ActiveListModal();
     modal.open();
     const rows = document.querySelectorAll(".pk-al-table tr");
@@ -43,7 +43,7 @@ describe("ActiveListModal", () => {
   });
 
   it("lists unlocked abilities", () => {
-    abilityManager.unlock("ball_1");
+    abilityManager.unlock("gate_1");
     const modal = new ActiveListModal();
     modal.open();
     const sectionTitles = [...document.querySelectorAll(".pk-al-section-title")];
