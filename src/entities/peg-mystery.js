@@ -1,13 +1,17 @@
 import { Peg } from "./peg-classic.js";
-import { SESSION_BONUSES } from "../configs/bonus-defs.js";
+import { PARAM_KEYS } from "../configs/bonus-defs.js";
+import { bonusManager } from "../managers/bonus-manager.js";
+import { rollMysteryReward } from "../utils/reward-roll.js";
 
 /**
- * MysteryPeg — when destroyed, rolls a random session bonus and queues it
- * for the NEXT pinboard via `bonusManager.queueSessionNext`. A multicolor
- * floating label shows the fire icon + bonus name at the peg position.
+ * MysteryPeg — when destroyed, rolls a random reward (70% bonus / 30% malus,
+ * weighted by rarity) and queues it for the NEXT pinboard via
+ * `bonusManager.queueSessionNext`. A multicolor floating label shows the reward
+ * name at the peg position. While the `malus_mystery_common` malus is active,
+ * the draw is restricted to common rewards.
  *
- * Rescue is disabled for this peg type (like chest/coin/diamond) — the
- * reward is unambiguous and the player cannot cancel it.
+ * Rescue is disabled for this peg type (like chest/coin/diamond) — the reward
+ * is unambiguous and the player cannot cancel it.
  */
 export class MysteryPeg extends Peg {
   constructor(opts = {}) {
@@ -18,8 +22,12 @@ export class MysteryPeg extends Peg {
 
   /** @returns {object | null} */
   onDestroyed(_ball) {
-    if (!SESSION_BONUSES.length) return null;
-    const def = SESSION_BONUSES[Math.floor(Math.random() * SESSION_BONUSES.length)];
+    const forceCommon = bonusManager.resolve(
+      PARAM_KEYS.MYSTERY_FORCE_COMMON,
+      false,
+    );
+    const def = rollMysteryReward({ forceCommon });
+    if (!def) return null;
     return {
       queueSession: def.id,
       popHtml: `<span class="pk-float-icon pk-float-icon--fire"></span> <span class="pk-float-mystery-name">${def.name ?? def.id}</span>`,

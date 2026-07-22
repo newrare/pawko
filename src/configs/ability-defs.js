@@ -1,20 +1,34 @@
 /**
  * Ability definitions — pure data.
  *
- * Abilities are persistent unlocks paid in **diamonds**. Each ability
- * belongs to a category and a level (1..N). Buying an ability unlocks
- * one or more bonus IDs in the shop. See `docs/ABILITY.md`.
+ * Abilities are **permanent** unlocks paid in **diamonds**, persistent across
+ * runs. Each ability belongs to a category and a level (1..N), forming a
+ * strict prerequisite chain inside its category (a level is buyable only once
+ * every lower level in the same category is owned).
+ *
+ * Every ability is **direct-effect**: buying it immediately applies its
+ * `modifiers`, resolved through `abilityManager.resolve(paramKey, baseValue)`
+ * exactly like `bonusManager.resolve`. There is no shop indirection anymore.
+ *
+ * Categories:
+ *  - **SHOP** — boutique price discount tiers (`SHOP_DISCOUNT`).
+ *  - **GATE** — collection-gate width / multiplier upgrades.
+ *  - **MAP**  — grid reveal tiers (`REVEAL_*`).
+ *  - **WHEEL**— slot-machine improvements: extra unlocked reels
+ *    (`SLOT_REEL_BONUS`) and cheaper re-spins (`SLOT_REROLL_DISCOUNT`).
+ *
+ * See `docs/ABILITY.md`.
  *
  * Diamond costs scale as 2^(level-1): L1=1, L2=2, L3=4, L4=8, L5=16, L6=32.
  */
 
+import { PARAM_KEYS } from "./bonus-defs.js";
+
 export const ABILITY_CATEGORIES = /** @type {const} */ ({
   SHOP: "shop",
-  ECONOMY: "economy",
-  PEG: "peg",
   GATE: "gate",
-  PLAYER: "player",
   MAP: "map",
+  WHEEL: "wheel",
 });
 
 /**
@@ -23,78 +37,101 @@ export const ABILITY_CATEGORIES = /** @type {const} */ ({
  * @property {string} category   — one of ABILITY_CATEGORIES
  * @property {number} level      — 1-based level inside its category
  * @property {number} cost       — diamonds to unlock
- * @property {string[]} unlocks  — bonus IDs gated by this ability
+ * @property {import('./bonus-defs.js').BonusModifier[]} modifiers — effects
+ *           applied directly once the ability is unlocked
  */
 
 const diamondCost = (level) => Math.pow(2, Math.max(0, level - 1));
 
-const ability = (id, category, level, unlocks) => ({
+/**
+ * @param {string} id
+ * @param {string} category
+ * @param {number} level
+ * @param {import('./bonus-defs.js').BonusModifier[]} modifiers
+ * @returns {AbilityDef}
+ */
+const ability = (id, category, level, modifiers) => ({
   id,
   category,
   level,
   cost: diamondCost(level),
-  unlocks,
+  modifiers,
 });
 
 /** @type {AbilityDef[]} */
 export const ABILITY_DEFS = [
-  /* SHOP — discount tiers on shop prices. */
-  ability("shop_1", ABILITY_CATEGORIES.SHOP, 1, ["perm_shop_discount_1"]),
-  ability("shop_2", ABILITY_CATEGORIES.SHOP, 2, ["perm_shop_discount_2"]),
-  ability("shop_3", ABILITY_CATEGORIES.SHOP, 3, ["perm_shop_discount_3"]),
-  ability("shop_4", ABILITY_CATEGORIES.SHOP, 4, ["perm_shop_discount_4"]),
-  ability("shop_5", ABILITY_CATEGORIES.SHOP, 5, ["perm_shop_discount_5"]),
-  ability("shop_6", ABILITY_CATEGORIES.SHOP, 6, ["perm_shop_discount_6"]),
-
-  /* ECONOMY — discount tiers on peg replacement. */
-  ability("economy_1", ABILITY_CATEGORIES.ECONOMY, 1, ["perm_peg_discount_1"]),
-  ability("economy_2", ABILITY_CATEGORIES.ECONOMY, 2, ["perm_peg_discount_2"]),
-  ability("economy_3", ABILITY_CATEGORIES.ECONOMY, 3, ["perm_peg_discount_3"]),
-  ability("economy_4", ABILITY_CATEGORIES.ECONOMY, 4, ["perm_peg_discount_4"]),
-  ability("economy_5", ABILITY_CATEGORIES.ECONOMY, 5, ["perm_peg_discount_5"]),
-  ability("economy_6", ABILITY_CATEGORIES.ECONOMY, 6, ["perm_peg_discount_6"]),
-
-  /* PEG — special peg permanent boosts. */
-  ability("peg_1", ABILITY_CATEGORIES.PEG, 1, ["perm_bomb_radius_xl"]),
-  ability("peg_2", ABILITY_CATEGORIES.PEG, 2, [
-    "perm_fire_duration_1",
-    "perm_fire_duration_2",
-    "perm_fire_duration_3",
+  /* SHOP — boutique discount tiers. Increments of 5% stacking to 30% at L6. */
+  ability("shop_1", ABILITY_CATEGORIES.SHOP, 1, [
+    { paramKey: PARAM_KEYS.SHOP_DISCOUNT, op: "add", value: 0.05 },
   ]),
-  ability("peg_3", ABILITY_CATEGORIES.PEG, 3, [
-    "perm_ice_duration_1",
-    "perm_ice_duration_2",
-    "perm_ice_duration_3",
+  ability("shop_2", ABILITY_CATEGORIES.SHOP, 2, [
+    { paramKey: PARAM_KEYS.SHOP_DISCOUNT, op: "add", value: 0.05 },
   ]),
-  ability("peg_4", ABILITY_CATEGORIES.PEG, 4, [
-    "perm_electrical_duration_1",
-    "perm_electrical_duration_2",
-    "perm_electrical_duration_3",
+  ability("shop_3", ABILITY_CATEGORIES.SHOP, 3, [
+    { paramKey: PARAM_KEYS.SHOP_DISCOUNT, op: "add", value: 0.05 },
   ]),
-  ability("peg_5", ABILITY_CATEGORIES.PEG, 5, [
-    "perm_glue_hp_1",
-    "perm_glue_hp_2",
-    "perm_glue_hp_3",
+  ability("shop_4", ABILITY_CATEGORIES.SHOP, 4, [
+    { paramKey: PARAM_KEYS.SHOP_DISCOUNT, op: "add", value: 0.05 },
+  ]),
+  ability("shop_5", ABILITY_CATEGORIES.SHOP, 5, [
+    { paramKey: PARAM_KEYS.SHOP_DISCOUNT, op: "add", value: 0.05 },
+  ]),
+  ability("shop_6", ABILITY_CATEGORIES.SHOP, 6, [
+    { paramKey: PARAM_KEYS.SHOP_DISCOUNT, op: "add", value: 0.05 },
   ]),
 
-  /* GATE — coins ×2, then width reductions for back & hp gates. */
-  ability("gate_1", ABILITY_CATEGORIES.GATE, 1, ["perm_destroy_coins_x2"]),
-  ability("gate_2", ABILITY_CATEGORIES.GATE, 2, ["perm_gate_back_width_1"]),
-  ability("gate_3", ABILITY_CATEGORIES.GATE, 3, ["perm_gate_back_width_2"]),
-  ability("gate_4", ABILITY_CATEGORIES.GATE, 4, ["perm_gate_hp_width_1"]),
-  ability("gate_5", ABILITY_CATEGORIES.GATE, 5, ["perm_gate_hp_width_2"]),
+  /* GATE — direct-effect collection-gate upgrades. Each width tier's `value`
+     is the *increment* over the previous level so the cumulative reduction
+     hits the designed total (levels are a strict prerequisite chain):
+       L1: -50% return gate            → total 50%
+       L2: -30% more return gate       → total 80%   (hpReduction)
+       L3: -25% edge x1 gates          → total 25%
+       L4: -25% more edge x1 gates     → total 50%   (backReduction)
+       L5: doubles every multiplier gate's contribution. */
+  ability("gate_1", ABILITY_CATEGORIES.GATE, 1, [
+    { paramKey: PARAM_KEYS.GATE_HP_WIDTH_REDUCTION, op: "add", value: 0.5 },
+  ]),
+  ability("gate_2", ABILITY_CATEGORIES.GATE, 2, [
+    { paramKey: PARAM_KEYS.GATE_HP_WIDTH_REDUCTION, op: "add", value: 0.3 },
+  ]),
+  ability("gate_3", ABILITY_CATEGORIES.GATE, 3, [
+    { paramKey: PARAM_KEYS.GATE_BACK_WIDTH_REDUCTION, op: "add", value: 0.25 },
+  ]),
+  ability("gate_4", ABILITY_CATEGORIES.GATE, 4, [
+    { paramKey: PARAM_KEYS.GATE_BACK_WIDTH_REDUCTION, op: "add", value: 0.25 },
+  ]),
+  ability("gate_5", ABILITY_CATEGORIES.GATE, 5, [
+    { paramKey: PARAM_KEYS.GATE_MULT_FACTOR, op: "multiply", value: 2 },
+  ]),
 
-  /* PLAYER — tower-defense HP tiers. */
-  ability("player_1", ABILITY_CATEGORIES.PLAYER, 1, ["perm_extra_hp_1"]),
-  ability("player_2", ABILITY_CATEGORIES.PLAYER, 2, ["perm_extra_hp_2"]),
-  ability("player_3", ABILITY_CATEGORIES.PLAYER, 3, ["perm_extra_hp_3"]),
-  ability("player_4", ABILITY_CATEGORIES.PLAYER, 4, ["perm_extra_hp_4"]),
+  /* MAP — grid reveal tiers (direct-effect). */
+  ability("map_1", ABILITY_CATEGORIES.MAP, 1, [
+    { paramKey: PARAM_KEYS.REVEAL_MYSTERY, op: "set", value: true },
+  ]),
+  ability("map_2", ABILITY_CATEGORIES.MAP, 2, [
+    { paramKey: PARAM_KEYS.REVEAL_SHOPS, op: "set", value: true },
+  ]),
+  ability("map_3", ABILITY_CATEGORIES.MAP, 3, [
+    { paramKey: PARAM_KEYS.REVEAL_PATHS, op: "set", value: true },
+  ]),
+  ability("map_4", ABILITY_CATEGORIES.MAP, 4, [
+    { paramKey: PARAM_KEYS.REVEAL_BOSS, op: "set", value: true },
+  ]),
 
-  /* MAP — grid reveal tiers. */
-  ability("map_1", ABILITY_CATEGORIES.MAP, 1, ["perm_reveal_mystery"]),
-  ability("map_2", ABILITY_CATEGORIES.MAP, 2, ["perm_reveal_shops"]),
-  ability("map_3", ABILITY_CATEGORIES.MAP, 3, ["perm_reveal_paths"]),
-  ability("map_4", ABILITY_CATEGORIES.MAP, 4, ["perm_reveal_boss"]),
+  /* WHEEL — slot-machine improvements. L1..L3 each unlock one extra reel
+     (4 default + 3 = 7 = REEL_COUNT_MAX). L4 halves the re-spin cost. */
+  ability("wheel_1", ABILITY_CATEGORIES.WHEEL, 1, [
+    { paramKey: PARAM_KEYS.SLOT_REEL_BONUS, op: "add", value: 1 },
+  ]),
+  ability("wheel_2", ABILITY_CATEGORIES.WHEEL, 2, [
+    { paramKey: PARAM_KEYS.SLOT_REEL_BONUS, op: "add", value: 1 },
+  ]),
+  ability("wheel_3", ABILITY_CATEGORIES.WHEEL, 3, [
+    { paramKey: PARAM_KEYS.SLOT_REEL_BONUS, op: "add", value: 1 },
+  ]),
+  ability("wheel_4", ABILITY_CATEGORIES.WHEEL, 4, [
+    { paramKey: PARAM_KEYS.SLOT_REROLL_DISCOUNT, op: "multiply", value: 0.5 },
+  ]),
 ];
 
 /**
@@ -103,14 +140,4 @@ export const ABILITY_DEFS = [
  */
 export function findAbility(id) {
   return ABILITY_DEFS.find((a) => a.id === id) ?? null;
-}
-
-/**
- * Returns the ability that gates the given bonus ID, or null when the
- * bonus is ungated.
- * @param {string} bonusId
- * @returns {AbilityDef | null}
- */
-export function abilityForBonus(bonusId) {
-  return ABILITY_DEFS.find((a) => a.unlocks.includes(bonusId)) ?? null;
 }

@@ -21,10 +21,6 @@
   --gt-color-bg: var(--pk-bg);
   --gt-color-surface: var(--pk-bg-card);
   --gt-color-surface-2: var(--pk-bg-surface);
-  /* Aliases used by radial-menu.css (shorter form). */
-  --gt-surface-1: var(--pk-bg-card);
-  --gt-surface-2: var(--pk-bg-surface);
-  --gt-text-2: var(--pk-rose-dim);
   --gt-color-text: var(--pk-gold-light);
   --gt-color-text-dim: var(--pk-rose-dim);
   --gt-color-text-sec: var(--pk-rose);
@@ -57,11 +53,8 @@
   --gt-font-display: var(--gt-font-body);
 
   /* --- Plinko-specific tokens, consumed by game.css. --- */
-  --pk-arena-bg: repeating-linear-gradient(
-      0deg,
-      #1e0810 0 6px,
-      #150608 6px 7px
-    ),
+  --pk-arena-bg:
+    repeating-linear-gradient(0deg, #1e0810 0 6px, #150608 6px 7px),
     linear-gradient(180deg, transparent, rgba(60, 0, 20, 0.08));
   --pk-arena-border: 2px dashed rgba(212, 175, 55, 0.22);
   --pk-launch-bg: rgba(212, 175, 55, 0.06);
@@ -80,6 +73,7 @@
   /* --- Per-type peg accent colors. Used both for the peg's own visual
          identity (--pk-peg-color on .pk-peg--<type>) and for downstream
          tinted UI (HP label, rescue banner, radial-menu accent). --- */
+  --pk-peg-peg: var(--pk-gold);
   --pk-peg-coin: #facc15;
   --pk-peg-diamond: #a78bfa;
   --pk-peg-glue: #4ade80;
@@ -89,6 +83,8 @@
   --pk-peg-fire: #ef4444;
   --pk-peg-ice: #38bdf8;
   --pk-peg-electrical: #a78bfa;
+  --pk-peg-teleport: #818cf8;
+  --pk-peg-bumper: #ffd66b;
   --pk-peg-bomb: #c8cdd4;
   /* --- Fire-effect colors (trail particles, damage labels). --- */
   --pk-fire-trail: #ff6a00;
@@ -97,14 +93,73 @@
   --pk-ball-bg: radial-gradient(circle at 30% 30%, #c4a0b0, #9a7080);
   --pk-ball-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 
-  --pk-gate-recycle-bg: linear-gradient(180deg, rgba(59, 130, 246, 0.14) 0%, rgba(59, 130, 246, 0.05) 100%);
+  --pk-gate-recycle-bg: linear-gradient(
+    180deg,
+    rgba(59, 130, 246, 0.14) 0%,
+    rgba(59, 130, 246, 0.05) 100%
+  );
   --pk-gate-recycle-fg: #60a5fa;
-  --pk-gate-x2-bg: linear-gradient(180deg, rgba(34, 197, 94, 0.14) 0%, rgba(34, 197, 94, 0.05) 100%);
+  --pk-gate-x2-bg: linear-gradient(
+    180deg,
+    rgba(34, 197, 94, 0.14) 0%,
+    rgba(34, 197, 94, 0.05) 100%
+  );
   --pk-gate-x2-fg: #22c55e;
-  --pk-gate-x10-bg: linear-gradient(180deg, rgba(234, 179, 8, 0.14) 0%, rgba(234, 179, 8, 0.05) 100%);
+  --pk-gate-x10-bg: linear-gradient(
+    180deg,
+    rgba(234, 179, 8, 0.14) 0%,
+    rgba(234, 179, 8, 0.05) 100%
+  );
   --pk-gate-x10-fg: var(--pk-gold);
-  --pk-gate-x5-bg: linear-gradient(180deg, rgba(168, 85, 247, 0.14) 0%, rgba(168, 85, 247, 0.05) 100%);
+  --pk-gate-x5-bg: linear-gradient(
+    180deg,
+    rgba(168, 85, 247, 0.14) 0%,
+    rgba(168, 85, 247, 0.05) 100%
+  );
   --pk-gate-x5-fg: #a855f7;
-  --pk-gate-malus-bg: linear-gradient(180deg, rgba(239, 68, 68, 0.14) 0%, rgba(239, 68, 68, 0.05) 100%);
+  --pk-gate-malus-bg: linear-gradient(
+    180deg,
+    rgba(239, 68, 68, 0.14) 0%,
+    rgba(239, 68, 68, 0.05) 100%
+  );
   --pk-gate-malus-fg: #ef4444;
+
+  /* Score-mode multiplier (blue) and hit score (gold). */
+  --pk-mult-blue: #3b82f6;
+  --pk-mult-blue-light: #60a5fa;
+  --pk-gate-mult1-bg: linear-gradient(
+    180deg,
+    rgba(96, 165, 250, 0.12) 0%,
+    rgba(96, 165, 250, 0.04) 100%
+  );
+  --pk-gate-mult1-fg: var(--pk-mult-blue-light);
+  --pk-gate-mult2-bg: linear-gradient(
+    180deg,
+    rgba(59, 130, 246, 0.2) 0%,
+    rgba(59, 130, 246, 0.06) 100%
+  );
+  --pk-gate-mult2-fg: var(--pk-mult-blue);
+  --pk-gate-return-bg: linear-gradient(
+    180deg,
+    rgba(212, 175, 55, 0.14) 0%,
+    rgba(212, 175, 55, 0.05) 100%
+  );
+  --pk-gate-return-fg: var(--pk-gold-light);
+
+  /* --- Pinboard objective progress (background fill + horizon line).
+         Kept deliberately faint so it reads as a backdrop behind the pegs. --- */
+  --pk-progress-fill: linear-gradient(
+    180deg,
+    rgba(212, 175, 55, 0.09) 0%,
+    rgba(212, 175, 55, 0.025) 100%
+  );
+  --pk-progress-fill-reached: linear-gradient(
+    180deg,
+    rgba(74, 222, 128, 0.12) 0%,
+    rgba(74, 222, 128, 0.035) 100%
+  );
+  --pk-progress-line: rgba(212, 175, 55, 0.28);
+  --pk-progress-line-reached: rgba(74, 222, 128, 0.38);
+  --pk-progress-label-fg: rgba(212, 175, 55, 0.45);
+  --pk-progress-label-reached-fg: rgba(74, 222, 128, 0.55);
 }

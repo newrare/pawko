@@ -2,19 +2,25 @@ import { i18n } from "../managers/i18n-manager.js";
 import { currencyManager } from "../managers/currency-manager.js";
 import { abilityManager } from "../managers/ability-manager.js";
 import { bonusManager } from "../managers/bonus-manager.js";
+import { pegShopManager } from "../managers/peg-shop-manager.js";
 import { ListenerBag } from "../utils/listener-bag.js";
 import { SlowFloatBackground } from "../utils/slow-float-background.js";
-import { BONUS_TYPES, PARAM_KEYS } from "../configs/bonus-defs.js";
+import { iconSvg } from "../utils/icon.js";
+import { PARAM_KEYS } from "../configs/bonus-defs.js";
+import {
+  PEG_SHOP_DEFS,
+  findPegShopItem,
+  rarityForCost,
+} from "../configs/peg-shop-defs.js";
 import { SHOP_SLOT_COUNT, SWIPE_THRESHOLD } from "../configs/constants.js";
 import { LevelSelectorScene } from "./level-selector-scene.js";
 
 /** Display metadata keyed by rarity value. */
 const RARITY_META = /** @type {const} */ ({
-  permanent: { letter: "P", suit: "★", label: "Permanent" },
-  legendary: { letter: "L", suit: "♦", label: "Legendary" },
-  epic:      { letter: "E", suit: "♠", label: "Epic" },
-  rare:      { letter: "R", suit: "♣", label: "Rare" },
-  common:    { letter: "C", suit: "♥", label: "Common" },
+  legendary: { letter: "L", suit: "diamond", label: "Legendary" },
+  epic: { letter: "E", suit: "spade", label: "Epic" },
+  rare: { letter: "R", suit: "club", label: "Rare" },
+  common: { letter: "C", suit: "heart", label: "Common" },
 });
 
 /**
@@ -25,19 +31,18 @@ const RARITY_META = /** @type {const} */ ({
 const SLOT_HEIGHTS = { full: 240, mini: 56, micro: 44, tiny: 38, dot: 26 };
 
 /**
- * Shop scene — vertical drum of slots.
+ * Boutique scene — vertical drum of slots.
  *
- * `SHOP_SLOT_COUNT` slots are rendered in a column. The focused slot always
- * shows as a full playing card centred in the drum. Adjacent slots progressively
- * collapse: mini (±1), micro (±2), tiny (±3), dot (±4+).
- *
- * Empty slots are visible as dashed placeholders but are never focused or
- * clickable. Navigation skips them automatically.
+ * Sells **peg types** (coins) that are added to the slot-machine pool for the
+ * current run. Buying a peg removes it from the offer (acquired this run,
+ * tracked by `pegShopManager`). `SHOP_SLOT_COUNT` slots are rendered in a
+ * column; the focused slot shows as a full playing card centred in the drum.
+ * Adjacent slots progressively collapse: mini (±1), micro (±2), tiny (±3),
+ * dot (±4+). Empty slots are dashed placeholders, never focused or clickable.
  *
  * The full card exposes two CTAs — "Add/Remove" (multi-select) and "Buy now"
- * (immediate single purchase) — rather than toggling on card tap.
- * A bottom bar always shows the selection count, total cost, remaining balance
- * after purchase, and a grouped buy button.
+ * (immediate single purchase). A bottom bar shows the selection count, total
+ * cost, remaining balance after purchase, and a grouped buy button.
  */
 export class ShopScene {
   /** @type {import('./scene-router.js').SceneRouter} */
@@ -58,10 +63,10 @@ export class ShopScene {
   /** @type {ListenerBag} */
   #bag = new ListenerBag();
 
-  /** @type {Set<string>} */
+  /** @type {Set<string>} selected peg types */
   #selectedIds = new Set();
 
-  /** @type {Array<import('../configs/bonus-defs.js').BonusDef | null>} */
+  /** @type {Array<import('../configs/peg-shop-defs.js').PegShopDef | null>} */
   #slots = [];
 
   /** @type {number} */
@@ -80,6 +85,10 @@ export class ShopScene {
 
   /** @param {HTMLElement} root */
   mount(root) {
+    /* Entering the boutique counts as a shop visit — tick any shop-scoped
+       rewards down. */
+    bonusManager.onShopVisited();
+
     this.#bg = new SlowFloatBackground(root);
     this.#bag.add(() => this.#bg?.destroy());
 
@@ -116,12 +125,12 @@ export class ShopScene {
   // ─── Build / render ──────────────────────────────────────────────────
 
   #fillSlots() {
-    const available = bonusManager
-      .getAll()
-      .filter((b) => abilityManager.canBuyBonus(b.id));
+    const available = PEG_SHOP_DEFS.filter(
+      (d) => !pegShopManager.isAcquired(d.type),
+    );
     this.#slots = new Array(SHOP_SLOT_COUNT).fill(null);
-    available.slice(0, SHOP_SLOT_COUNT).forEach((b, i) => {
-      this.#slots[i] = b;
+    available.slice(0, SHOP_SLOT_COUNT).forEach((d, i) => {
+      this.#slots[i] = d;
     });
   }
 
@@ -196,7 +205,8 @@ export class ShopScene {
     for (let i = 0; i < this.#focusIdx; i++) {
       cumH += SLOT_HEIGHTS[this.#levelFor(i)] ?? 26;
     }
-    const focusH = SLOT_HEIGHTS[this.#levelFor(this.#focusIdx)] ?? SLOT_HEIGHTS.full;
+    const focusH =
+      SLOT_HEIGHTS[this.#levelFor(this.#focusIdx)] ?? SLOT_HEIGHTS.full;
     const translateY = drumH / 2 - cumH - focusH / 2;
     this.#track.style.transform = `translateY(${translateY}px)`;
   }
@@ -206,32 +216,33 @@ export class ShopScene {
 
     // Empty slot — visible dashed placeholder, never interactive.
     if (!b) {
-      if (lvl === "dot")   return `<div class="pk-shop-card-empty pk-shop-card-empty-dot">·</div>`;
-      if (lvl === "full")  return `<div class="pk-shop-card-empty pk-shop-card-empty-full">·</div>`;
-      if (lvl === "mini")  return `<div class="pk-shop-card-empty pk-shop-card-empty-mini">·</div>`;
-      if (lvl === "micro") return `<div class="pk-shop-card-empty pk-shop-card-empty-micro">·</div>`;
+      if (lvl === "dot")
+        return `<div class="pk-shop-card-empty pk-shop-card-empty-dot">·</div>`;
+      if (lvl === "full")
+        return `<div class="pk-shop-card-empty pk-shop-card-empty-full">·</div>`;
+      if (lvl === "mini")
+        return `<div class="pk-shop-card-empty pk-shop-card-empty-mini">·</div>`;
+      if (lvl === "micro")
+        return `<div class="pk-shop-card-empty pk-shop-card-empty-micro">·</div>`;
       return `<div class="pk-shop-card-empty pk-shop-card-empty-tiny">·</div>`;
     }
 
-    const rarity = b.rarity ?? "common";
+    const rarity = rarityForCost(b.cost);
     const meta = RARITY_META[rarity] ?? RARITY_META.common;
-    const isPermanent = b.type === BONUS_TYPES.PERMANENT;
-    const nameKey = isPermanent
-      ? `bonus.permanent.${b.id}`
-      : `bonus.session.${b.id}`;
+    const nameKey = `peg_shop.${b.type}`;
     const displayCost = this.#priceFor(b.cost);
     const priceLbl = `<img src="images/coin.png" class="pk-coin-icon" alt="" /> ${displayCost}`;
     const rarityClass = `pk-shop-rarity-${rarity}`;
-    const isSelected = this.#selectedIds.has(b.id);
+    const isSelected = this.#selectedIds.has(b.type);
 
     if (lvl === "dot") {
-      return `<span class="pk-shop-dot">${b.icon ?? "·"}</span>`;
+      return `<span class="pk-shop-dot">${iconSvg(b.icon ?? "dices")}</span>`;
     }
 
     if (lvl === "tiny") {
       return `
         <div class="pk-shop-card-tiny ${rarityClass}${isSelected ? " is-selected" : ""}">
-          <span class="pk-shop-mini-icon">${b.icon ?? "🎰"}</span>
+          <span class="pk-shop-mini-icon">${iconSvg(b.icon ?? "dices")}</span>
         </div>
       `;
     }
@@ -239,7 +250,7 @@ export class ShopScene {
     if (lvl === "micro") {
       return `
         <div class="pk-shop-card-micro ${rarityClass}${isSelected ? " is-selected" : ""}">
-          <span class="pk-shop-mini-icon">${b.icon ?? "🎰"}</span>
+          <span class="pk-shop-mini-icon">${iconSvg(b.icon ?? "dices")}</span>
           <span class="pk-shop-mini-price">${priceLbl}</span>
         </div>
       `;
@@ -248,8 +259,8 @@ export class ShopScene {
     if (lvl === "mini") {
       return `
         <div class="pk-shop-card-mini ${rarityClass}${isSelected ? " is-selected" : ""}">
-          <span class="pk-shop-mini-pip"><b>${meta.letter}</b>${meta.suit}</span>
-          <span class="pk-shop-mini-icon">${b.icon ?? "🎰"}</span>
+          <span class="pk-shop-mini-pip"><b>${meta.letter}</b>${iconSvg(meta.suit)}</span>
+          <span class="pk-shop-mini-icon">${iconSvg(b.icon ?? "dices")}</span>
           <span class="pk-shop-mini-name">${i18n.t(nameKey)}</span>
           <span class="pk-shop-mini-price">${priceLbl}</span>
         </div>
@@ -258,52 +269,43 @@ export class ShopScene {
 
     // Full card
     const descKey = `${nameKey}.desc`;
-    const owned = isPermanent && bonusManager.isPermanentUnlocked(b.id);
     const canAfford = currencyManager.get() >= displayCost;
-    const durText = isPermanent
-      ? i18n.t("shop.duration_permanent")
-      : b.durationLevels == null
-        ? i18n.t("shop.duration_run")
-        : i18n.t("shop.duration_levels", { n: b.durationLevels });
+    const durText = i18n.t("shop.duration_run");
 
     const cls = [
       "pk-shop-card-full",
       rarityClass,
       isSelected ? "is-selected" : "",
-      owned ? "is-owned" : "",
-      !owned && !canAfford ? "is-locked" : "",
-    ].filter(Boolean).join(" ");
+      !canAfford ? "is-locked" : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
 
-    const ownedBadge = owned
-      ? `<span class="pk-shop-owned-badge">${i18n.t("shop.owned")}</span>`
-      : "";
-
-    const ctaBtns = !owned ? `
+    const ctaBtns = `
       <div class="pk-shop-card-actions">
         <button class="pk-shop-btn-select${isSelected ? " is-selected" : ""}"
-                data-action="select" data-id="${b.id}">
+                data-action="select" data-id="${b.type}">
           ${isSelected ? i18n.t("shop.deselect") : i18n.t("shop.select")}
         </button>
         <button class="pk-shop-btn-buy-now"
-                data-action="buy-now" data-id="${b.id}"${!canAfford ? " disabled" : ""}>
+                data-action="buy-now" data-id="${b.type}"${!canAfford ? " disabled" : ""}>
           ${i18n.t("shop.buy_now")}
         </button>
       </div>
-    ` : "";
+    `;
 
     return `
       <div class="${cls}">
         <div class="pk-shop-card-pip pip-tl">
           <span class="pip-v">${meta.letter}</span>
-          <span class="pip-s">${meta.suit}</span>
+          <span class="pip-s">${iconSvg(meta.suit)}</span>
         </div>
         <div class="pk-shop-card-pip pip-br">
           <span class="pip-v">${meta.letter}</span>
-          <span class="pip-s">${meta.suit}</span>
+          <span class="pip-s">${iconSvg(meta.suit)}</span>
         </div>
-        ${ownedBadge}
         <div class="pk-shop-card-body">
-          <span class="pk-shop-card-icon">${b.icon ?? "🎰"}</span>
+          <span class="pk-shop-card-icon">${iconSvg(b.icon ?? "dices")}</span>
           <span class="pk-shop-card-name">${i18n.t(nameKey)}</span>
           <p class="pk-shop-card-desc">${i18n.t(descKey)}</p>
           <div class="pk-shop-card-meta">
@@ -329,14 +331,16 @@ export class ShopScene {
     const canPay = balance >= totalCost;
     const coinImg = `<img src="images/coin.png" class="pk-coin-icon" alt="" />`;
 
-    const totalDisplay = count > 0
-      ? `${coinImg} <strong>${totalCost}</strong>`
-      : `<strong>—</strong>`;
+    const totalDisplay =
+      count > 0
+        ? `${coinImg} <strong>${totalCost}</strong>`
+        : `<strong>—</strong>`;
 
     const balanceClass = count > 0 ? (canPay ? " is-ok" : " is-bad") : "";
-    const balanceDisplay = count > 0
-      ? `${i18n.t("shop.after_purchase")} <strong>${coinImg} ${remaining}</strong>`
-      : `${coinImg} <strong>${balance}</strong>`;
+    const balanceDisplay =
+      count > 0
+        ? `${i18n.t("shop.after_purchase")} <strong>${coinImg} ${remaining}</strong>`
+        : `${coinImg} <strong>${balance}</strong>`;
 
     let btnLabel, btnDisabled;
     if (count === 0) {
@@ -373,23 +377,29 @@ export class ShopScene {
   }
 
   /**
-   * Resolve the shop discount (clamped to 0–0.9) and apply it to a cost.
+   * Resolve the boutique discount (permanent SHOP ability, clamped to 0–0.9)
+   * and apply it to a cost.
    * @param {number} baseCost
    * @returns {number}
    */
   #priceFor(baseCost) {
     const discount = Math.min(
       0.9,
-      Math.max(0, bonusManager.resolve(PARAM_KEYS.SHOP_DISCOUNT, 0)),
+      Math.max(0, abilityManager.resolve(PARAM_KEYS.SHOP_DISCOUNT, 0)),
     );
-    return Math.ceil(baseCost * (1 - discount));
+    /* A malus can inflate every price (SHOP_PRICE_MULT); applied after the
+       permanent discount. */
+    const mult = Math.max(
+      1,
+      bonusManager.resolve(PARAM_KEYS.SHOP_PRICE_MULT, 1),
+    );
+    return Math.ceil(baseCost * (1 - discount) * mult);
   }
 
   #selectedCost() {
     let total = 0;
-    const all = bonusManager.getAll();
-    for (const id of this.#selectedIds) {
-      const def = all.find((b) => b.id === id);
+    for (const type of this.#selectedIds) {
+      const def = findPegShopItem(type);
       if (def) total += this.#priceFor(def.cost);
     }
     return total;
@@ -418,50 +428,35 @@ export class ShopScene {
 
   // ─── Interaction ─────────────────────────────────────────────────────
 
-  #toggleSelection(id) {
-    if (this.#selectedIds.has(id)) this.#selectedIds.delete(id);
-    else this.#selectedIds.add(id);
+  #toggleSelection(type) {
+    if (this.#selectedIds.has(type)) this.#selectedIds.delete(type);
+    else this.#selectedIds.add(type);
     this.#renderAll();
     this.#renderBottom();
   }
 
-  #tryBuyNow(id) {
-    const all = bonusManager.getAll();
-    const def = all.find((b) => b.id === id);
-    if (!def) return;
-    const owned = def.type === BONUS_TYPES.PERMANENT && bonusManager.isPermanentUnlocked(def.id);
-    if (owned) return;
+  #tryBuyNow(type) {
+    const def = findPegShopItem(type);
+    if (!def || pegShopManager.isAcquired(type)) return;
     const cost = this.#priceFor(def.cost);
     if (currencyManager.get() < cost) return;
-    if (!abilityManager.canBuyBonus(def.id)) return;
     if (!currencyManager.spend(cost)) return;
-    if (def.type === BONUS_TYPES.PERMANENT) {
-      bonusManager.unlockPermanent(def.id);
-    } else {
-      bonusManager.activateSession(def.id);
-    }
-    this.#selectedIds.delete(id);
-    // currency/bonus change events cascade into #refresh automatically.
+    pegShopManager.acquire(type);
+    this.#selectedIds.delete(type);
+    // currency/peg-shop change events cascade into #refresh automatically.
   }
 
   #tryValidate() {
-    const all = bonusManager.getAll();
     const defs = Array.from(this.#selectedIds)
-      .map((id) => all.find((b) => b.id === id))
-      .filter(Boolean);
-    const totalCost = defs.reduce((sum, def) => sum + this.#priceFor(def.cost), 0);
+      .map((type) => findPegShopItem(type))
+      .filter((d) => d && !pegShopManager.isAcquired(d.type));
+    const totalCost = defs.reduce(
+      (sum, def) => sum + this.#priceFor(def.cost),
+      0,
+    );
     if (currencyManager.get() < totalCost) return;
-    for (const def of defs) {
-      if (!abilityManager.canBuyBonus(def.id)) return;
-    }
     if (!currencyManager.spend(totalCost)) return;
-    for (const def of defs) {
-      if (def.type === BONUS_TYPES.PERMANENT) {
-        bonusManager.unlockPermanent(def.id);
-      } else {
-        bonusManager.activateSession(def.id);
-      }
-    }
+    for (const def of defs) pegShopManager.acquire(def.type);
     this.#selectedIds.clear();
   }
 
@@ -471,7 +466,7 @@ export class ShopScene {
     if (this.#focusIdx >= SHOP_SLOT_COUNT || !this.#slots[this.#focusIdx]) {
       this.#focusIdx = this.#firstFilled();
     }
-    const validIds = new Set(this.#slots.filter(Boolean).map((b) => b.id));
+    const validIds = new Set(this.#slots.filter(Boolean).map((b) => b.type));
     for (const id of [...this.#selectedIds]) {
       if (!validIds.has(id)) this.#selectedIds.delete(id);
     }
@@ -521,14 +516,28 @@ export class ShopScene {
       },
       { passive: true },
     );
-    this.#bag.on(this.#drum, "touchend",   () => { armed = false; }, { passive: true });
-    this.#bag.on(this.#drum, "touchcancel",() => { armed = false; }, { passive: true });
+    this.#bag.on(
+      this.#drum,
+      "touchend",
+      () => {
+        armed = false;
+      },
+      { passive: true },
+    );
+    this.#bag.on(
+      this.#drum,
+      "touchcancel",
+      () => {
+        armed = false;
+      },
+      { passive: true },
+    );
 
     this.#bag.on(window, "resize", () => this.#updateDrumPosition());
 
     this.#bag.add(i18n.onChange(() => this.#refresh()));
     this.#bag.add(currencyManager.on("change", () => this.#refresh()));
-    this.#bag.add(bonusManager.on("change", () => this.#refresh()));
+    this.#bag.add(pegShopManager.on("change", () => this.#refresh()));
     this.#bag.add(abilityManager.on("change", () => this.#refresh()));
   }
 
@@ -559,7 +568,10 @@ export class ShopScene {
 
     const slotEl = target.closest(".pk-shop-slot");
     if (!slotEl || !this.#drum?.contains(slotEl)) return;
-    const idx = parseInt(/** @type {HTMLElement} */ (slotEl).dataset.idx ?? "-1", 10);
+    const idx = parseInt(
+      /** @type {HTMLElement} */ (slotEl).dataset.idx ?? "-1",
+      10,
+    );
     if (idx < 0 || !this.#slots[idx]) return;
     if (idx !== this.#focusIdx) {
       this.#focusTo(idx);

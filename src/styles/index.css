@@ -8,11 +8,14 @@
 @import "./dev.css";
 
 @import "./components/background.css";
+@import "./components/icon.css";
 @import "./components/button.css";
 @import "./components/modal.css";
+@import "./components/mystery-choice.css";
 @import "./components/toggle.css";
 @import "./components/title.css";
 @import "./components/game.css";
+@import "./components/cannon.css";
 @import "./components/peg.css";
 @import "./components/level-selector.css";
 @import "./components/shop.css";
@@ -20,8 +23,11 @@
 @import "./components/vfx.css";
 @import "./components/hud.css";
 @import "./components/info-bar.css";
+@import "./components/currency-hud.css";
+@import "./components/score-hud.css";
+@import "./components/pinboard-progress.css";
+@import "./components/slot-machine.css";
 @import "./components/ball.css";
-@import "./components/radial-menu.css";
 @import "./components/spark-web.css";
 @import "./components/notification.css";
 @import "./components/styleguide.css";

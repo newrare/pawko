@@ -84,8 +84,12 @@
   --pk-cell-size: 36px;
   --pk-gap-size: 8px;
   display: grid;
-  grid-template-columns: repeat(6, var(--pk-cell-size) var(--pk-gap-size)) var(--pk-cell-size);
-  grid-template-rows: repeat(11, var(--pk-cell-size) var(--pk-gap-size)) var(--pk-cell-size);
+  grid-template-columns: repeat(6, var(--pk-cell-size) var(--pk-gap-size)) var(
+      --pk-cell-size
+    );
+  grid-template-rows: repeat(11, var(--pk-cell-size) var(--pk-gap-size)) var(
+      --pk-cell-size
+    );
   place-content: center;
   padding: var(--gt-space-3) var(--gt-space-2);
 }
@@ -102,7 +106,9 @@
   background: var(--pk-crimson-muted);
   border-radius: 1px;
   opacity: 0;
-  transition: background 400ms, opacity 400ms;
+  transition:
+    background 400ms,
+    opacity 400ms;
 }
 
 .pk-map-connector--h .pk-map-connector-line {
@@ -136,13 +142,15 @@
   border-radius: var(--gt-radius-md);
   border: 2px solid transparent;
   font-family: var(--gt-font-body);
-  transition: transform 150ms, box-shadow 300ms;
+  transition:
+    transform 150ms,
+    box-shadow 300ms;
   user-select: none;
 }
 
 /* Velvet texture overlay — above cell background, below icon (z-index: 2) */
 .pk-map-cell::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
@@ -159,7 +167,7 @@
     radial-gradient(
       ellipse 150% 140% at 50% 45%,
       transparent 20%,
-      rgba(4, 1, 2, 0.30) 100%
+      rgba(4, 1, 2, 0.3) 100%
     ),
     linear-gradient(
       135deg,
@@ -177,7 +185,7 @@
 .pk-map-cell--hidden {
   background: rgba(60, 18, 28, 0.75);
   border-color: rgba(120, 40, 60, 0.5);
-  opacity: 0.40;
+  opacity: 0.4;
 }
 
 /* Faint icon hint inside hidden shop/ability cells.
@@ -208,7 +216,9 @@
   background-color: transparent;
   border-color: transparent;
   cursor: pointer;
-  animation: pk-cell-reveal 400ms ease-out both, pk-border-rotate 3s linear infinite;
+  animation:
+    pk-cell-reveal 400ms ease-out both,
+    pk-border-rotate 3s linear infinite;
 }
 
 .pk-map-cell--revealed:hover {
@@ -230,7 +240,8 @@
 .pk-map-cell--current {
   background: rgba(212, 175, 55, 0.1);
   border-color: var(--pk-gold);
-  box-shadow: 0 0 14px rgba(212, 175, 55, 0.25),
+  box-shadow:
+    0 0 14px rgba(212, 175, 55, 0.25),
     inset 0 0 8px rgba(212, 175, 55, 0.06);
   animation: pk-cell-pulse 2s ease-in-out infinite;
 }
@@ -239,7 +250,8 @@
 .pk-map-cell--current.pk-map-cell--completed {
   background: rgba(34, 197, 94, 0.07);
   border-color: var(--gt-color-success);
-  box-shadow: 0 0 14px rgba(34, 197, 94, 0.25),
+  box-shadow:
+    0 0 14px rgba(34, 197, 94, 0.25),
     inset 0 0 8px rgba(34, 197, 94, 0.05);
   animation: pk-cell-pulse-green 2s ease-in-out infinite;
 }
@@ -320,7 +332,8 @@
 
 .pk-map-cell--used.pk-map-cell--type-level .pk-map-cell-icon,
 .pk-map-cell--used.pk-map-cell--type-empty .pk-map-cell-icon,
-.pk-map-cell--current.pk-map-cell--completed.pk-map-cell--type-level .pk-map-cell-icon {
+.pk-map-cell--current.pk-map-cell--completed.pk-map-cell--type-level
+  .pk-map-cell-icon {
   color: var(--gt-color-success);
   opacity: 0.85;
 }
@@ -329,16 +342,21 @@
 .pk-map-cell--used.pk-map-cell--type-ability .pk-map-cell-icon,
 .pk-map-cell--used.pk-map-cell--type-mystery .pk-map-cell-icon,
 .pk-map-cell--used.pk-map-cell--type-boss .pk-map-cell-icon,
-.pk-map-cell--current.pk-map-cell--completed.pk-map-cell--type-shop .pk-map-cell-icon,
-.pk-map-cell--current.pk-map-cell--completed.pk-map-cell--type-ability .pk-map-cell-icon {
+.pk-map-cell--current.pk-map-cell--completed.pk-map-cell--type-shop
+  .pk-map-cell-icon,
+.pk-map-cell--current.pk-map-cell--completed.pk-map-cell--type-ability
+  .pk-map-cell-icon {
   /* brightness(0) → black silhouette, invert(1) → white, then sepia+hue-rotate → green */
-  filter: brightness(0) invert(1) sepia(1) saturate(4) hue-rotate(85deg) brightness(0.85);
+  filter: brightness(0) invert(1) sepia(1) saturate(4) hue-rotate(85deg)
+    brightness(0.85);
   opacity: 0.85;
 }
 
 /* Newly revealed cells — pop-in */
 .pk-map-cell--newly-revealed {
-  animation: pk-cell-reveal 500ms ease-out both, pk-border-rotate 3s linear 500ms infinite;
+  animation:
+    pk-cell-reveal 500ms ease-out both,
+    pk-border-rotate 3s linear 500ms infinite;
 }
 
 /* --- No-moves block --- */

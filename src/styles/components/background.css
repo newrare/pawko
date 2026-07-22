@@ -7,7 +7,12 @@
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
-  background: radial-gradient(ellipse at 50% 40%, #38122a 0%, #1e0814 55%, #0c0408 100%);
+  background: radial-gradient(
+    ellipse at 50% 40%,
+    #38122a 0%,
+    #1e0814 55%,
+    #0c0408 100%
+  );
 }
 
 /* --- Floating card suits --- */
@@ -36,13 +41,29 @@
 }
 
 @keyframes pk-bg-float-up {
-  0%   { transform: translateY(0) translateX(0) rotate(0deg); }
-  33%  { transform: translateY(-33vh) translateX(25px) rotate(120deg); }
-  66%  { transform: translateY(-66vh) translateX(-15px) rotate(240deg); }
-  100% { transform: translateY(-115vh) translateX(0) rotate(360deg); }
+  0% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-33vh) translateX(25px) rotate(120deg);
+  }
+  66% {
+    transform: translateY(-66vh) translateX(-15px) rotate(240deg);
+  }
+  100% {
+    transform: translateY(-115vh) translateX(0) rotate(360deg);
+  }
 }
 
 @keyframes pk-bg-twinkle {
-  0%, 100% { opacity: 0.08; transform: scale(0.8) rotate(0deg); }
-  50%      { opacity: 0.85; transform: scale(1.3) rotate(45deg); filter: drop-shadow(0 0 6px currentColor); }
+  0%,
+  100% {
+    opacity: 0.08;
+    transform: scale(0.8) rotate(0deg);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.3) rotate(45deg);
+    filter: drop-shadow(0 0 6px currentColor);
+  }
 }

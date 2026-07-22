@@ -4,15 +4,14 @@ import { abilityManager } from "../managers/ability-manager.js";
 import { ListenerBag } from "../utils/listener-bag.js";
 import { SlowFloatBackground } from "../utils/slow-float-background.js";
 import { ABILITY_CATEGORIES } from "../configs/ability-defs.js";
+import { iconSvg } from "../utils/icon.js";
 
-/* Visual mapping per category — display order, chip color, and icon. */
+/* Visual mapping per category — display order, chip color, and Lucide icon. */
 const CATEGORY_VIEW = [
-  { id: ABILITY_CATEGORIES.SHOP, color: "crimson", icon: "🛒" },
-  { id: ABILITY_CATEGORIES.ECONOMY, color: "green", icon: "💸" },
-  { id: ABILITY_CATEGORIES.PEG, color: "epic", icon: "🎯" },
-  { id: ABILITY_CATEGORIES.GATE, color: "blue", icon: "🚪" },
-  { id: ABILITY_CATEGORIES.PLAYER, color: "ice", icon: "❤️" },
-  { id: ABILITY_CATEGORIES.MAP, color: "crimson", icon: "🗺️" },
+  { id: ABILITY_CATEGORIES.SHOP, color: "crimson", icon: "shopping-cart" },
+  { id: ABILITY_CATEGORIES.GATE, color: "blue", icon: "door-open" },
+  { id: ABILITY_CATEGORIES.MAP, color: "crimson", icon: "map" },
+  { id: ABILITY_CATEGORIES.WHEEL, color: "blue", icon: "dices" },
 ];
 
 /**
@@ -117,7 +116,7 @@ export class AbilityScene {
       <div class="pk-ability-wallet">
         <span class="pk-ability-wallet-label">${i18n.t("ability.wallet")}</span>
         <div class="pk-ability-wallet-values">
-          <span class="pk-ability-wallet-value" data-role="wallet">💎 ${diamondManager.get()}</span>
+          <span class="pk-ability-wallet-value" data-role="wallet">${iconSvg("gem")} ${diamondManager.get()}</span>
           <span class="pk-ability-wallet-delta" data-role="delta" hidden></span>
         </div>
       </div>
@@ -131,7 +130,7 @@ export class AbilityScene {
   #refresh() {
     if (!this.#el) return;
     const wallet = this.#el.querySelector('[data-role="wallet"]');
-    if (wallet) wallet.textContent = `💎 ${diamondManager.get()}`;
+    if (wallet) wallet.innerHTML = `${iconSvg("gem")} ${diamondManager.get()}`;
 
     const delta = /** @type {HTMLElement | null} */ (
       this.#el.querySelector('[data-role="delta"]')
@@ -187,7 +186,7 @@ export class AbilityScene {
            data-action="select:${def.id}">
         <div class="pk-chip pk-chip--${view.color}">
           <div class="pk-chip-inner">
-            <span class="pk-chip-icon">${view.icon}</span>
+            <span class="pk-chip-icon">${iconSvg(view.icon)}</span>
             <span class="pk-chip-level">L${def.level}</span>
           </div>
         </div>
@@ -199,7 +198,7 @@ export class AbilityScene {
     if (!this.#selectedId) {
       return `
         <div class="pk-ability-detail-empty">
-          <div class="pk-ability-detail-empty-icon">🎰</div>
+          <div class="pk-ability-detail-empty-icon">${iconSvg("dices")}</div>
           <div class="pk-ability-detail-empty-text">${i18n.t("ability.detail.empty")}</div>
         </div>
       `;
@@ -219,12 +218,12 @@ export class AbilityScene {
     const costHTML =
       state === "owned"
         ? `<span class="pk-ability-detail-cost-value pk-ability-detail-cost-value--free">${i18n.t("ability.detail.unlocked")}</span>`
-        : `<span class="pk-ability-detail-cost-value">💎 ${def.cost}</span>`;
+        : `<span class="pk-ability-detail-cost-value">${iconSvg("gem")} ${def.cost}</span>`;
 
     let btnHTML = "";
     if (state === "owned") {
       btnHTML = `<button class="gt-btn gt-btn--ghost pk-ability-detail-btn pk-ability-detail-btn--owned" disabled>
-        <span class="gt-btn-label">${i18n.t("ability.detail.owned_btn")}</span>
+        <span class="gt-btn-label">${iconSvg("check")} ${i18n.t("ability.detail.owned_btn")}</span>
       </button>`;
     } else if (state === "locked") {
       const chips = this.#chipsFor(def.category);
@@ -234,7 +233,7 @@ export class AbilityScene {
         ? i18n.t("ability.detail.locked_btn", {
             prereq: i18n.t(`ability.${prereq.id}`),
           })
-        : i18n.t("ability.detail.locked_btn_generic");
+        : `${iconSvg("lock")} ${i18n.t("ability.detail.locked_btn_generic")}`;
       btnHTML = `<button class="gt-btn gt-btn--ghost pk-ability-detail-btn pk-ability-detail-btn--locked" disabled>
         <span class="gt-btn-label">${label}</span>
       </button>`;
@@ -249,14 +248,14 @@ export class AbilityScene {
     }
 
     const color = view?.color ?? "crimson";
-    const icon = view?.icon ?? "❓";
+    const icon = view?.icon ?? "circle-help";
 
     return `
       <div class="pk-ability-detail-content">
         <div class="pk-ability-detail-top">
           <div class="pk-chip pk-chip--${color} pk-chip--preview">
             <div class="pk-chip-inner">
-              <span class="pk-chip-icon">${icon}</span>
+              <span class="pk-chip-icon">${iconSvg(icon)}</span>
               <span class="pk-chip-level">L${def.level}</span>
             </div>
           </div>

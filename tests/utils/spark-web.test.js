@@ -1,5 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { mountSparkWeb, mountSparkArc, __test } from "../../src/utils/spark-web.js";
+import {
+  mountSparkWeb,
+  mountSparkArc,
+  __test,
+} from "../../src/utils/spark-web.js";
 
 describe("spark-web", () => {
   let host;
@@ -111,7 +115,11 @@ describe("spark-web", () => {
     });
 
     it("draws a path starting near A and ending near B in local coordinates", () => {
-      mountSparkArc(host, 50, 80, 200, 90, { padding: 10, detail: 0, branchChance: 0 });
+      mountSparkArc(host, 50, 80, 200, 90, {
+        padding: 10,
+        detail: 0,
+        branchChance: 0,
+      });
       const path = host.querySelector("path.pk-spark-arc__bolt");
       const d = path.getAttribute("d");
       /* detail:0 yields a straight M (A_local) L (B_local). A_local = (10,10),
@@ -142,7 +150,10 @@ describe("spark-web", () => {
 
   describe("generateBolt", () => {
     it("returns at least one polyline starting at A and ending at B", () => {
-      const segments = __test.generateBolt(0, 0, 10, 0, { detail: 3, branchChance: 0 });
+      const segments = __test.generateBolt(0, 0, 10, 0, {
+        detail: 3,
+        branchChance: 0,
+      });
       expect(segments.length).toBeGreaterThanOrEqual(1);
       const main = segments[0];
       expect(main[0]).toEqual({ x: 0, y: 0 });

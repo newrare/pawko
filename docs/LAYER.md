@@ -1,8 +1,11 @@
 # Layer
 
-A **layer** is a single horizontal plank inside the pinboard. Every round
-starts with one layer (level 0); each `Saved ↑` action drops one more from
-the top of the screen and bumps the level by one.
+A **layer** is a single horizontal plank inside the pinboard. Each level loads
+`PLINKO.INITIAL_LAYERS` (8) layers at once through `loadPinboard`
+([src/utils/pinboard-state.js](../src/utils/pinboard-state.js)); there is no
+per-shot layer drop. **Every peg spawns as a classic peg** — special pegs come
+only from dragging a slot-machine upgrade onto a classic one
+(see [SLOT-MACHINE.md](./SLOT-MACHINE.md)).
 
 ## Composition
 
@@ -11,48 +14,30 @@ the top of the screen and bumps the level by one.
   filled slot — the *start slot* — is randomly picked from
   `PLINKO.START_SLOT_CHOICES = [0, 1, 2]`. This shifts the staggered grid
   from one layer to the next, which is what makes Plinko unpredictable.
-- Each filled slot becomes a [`Peg`](../src/entities/peg-classic.js) or, with
-  probability `bumperChanceForLevel(level)`, a [`Bumper`](../src/entities/peg-bumper.js).
-
-The probability ramps with level:
-
-```
-chance = clamp(BUMPER_CHANCE_BASE + level * BUMPER_CHANCE_PER_LEVEL, 0, BUMPER_CHANCE_MAX)
-```
-
-So early layers are mostly pegs; high-level layers reward riskier drops
-with extra bumpers.
+- **Edge clearing**: a candidate peg whose center falls within
+  `PLINKO.PEG_EDGE_MARGIN_RATIO` of either wall is dropped (`Slot.isClear`),
+  so no peg hugs the board border. Rows may therefore end up with fewer pegs,
+  which is intended.
+- Every filled slot becomes a classic [`Peg`](../src/entities/peg-classic.js)
+  via [`createPeg`](../src/entities/peg-factory.js).
 
 ## Geometry
 
-- All pegs of a layer share the same `y` coordinate — the layer's vertical
-  position inside the pinboard, computed at insertion time as:
+Layers are stacked from the **bottom up** — layer 0 sits at the floor, later
+layers climb toward the objective line. The controller assigns each layer's
+`y` from the pinboard height at render time:
 
-  ```
-  y = LAYER_TOP_PADDING + index * LAYER_HEIGHT
-  ```
+```
+y = pinboardHeight - (index + 1) * LAYER_HEIGHT
+```
 
-- Each peg's `x` comes from [`Slot.xFor(slot, pinboardWidth)`](./SLOT.md).
-
-## Animation & camera
-
-- A new layer mounts above the visible area (`translateY: -120%`) and falls
-  in over `LAYER_FALL_MS`.
-- Once more than `VISIBLE_LAYERS` (10) layers exist, the `.pk-stack`
-  wrapper translates upward by one `LAYER_HEIGHT` per extra layer after a
-  `CAMERA_RISE_DELAY_MS` pause.
-- Layers that scroll fully off the bottom of the pinboard are pruned from
-  the DOM — invisible cleanup, the player never notices.
-
-## Visual cue
-
-Every level whose number is a multiple of 10 gets a "milestone" badge on
-the left side of the layer (larger font, cream background) so the player
-can read their progress at a glance.
+Each peg's `x` comes from [`Slot.xFor(slot, pinboardWidth)`](./SLOT.md); all
+pegs of a layer share the layer's `y`. The board is fixed-size for the level —
+all layers are placed statically, with no scrolling camera.
 
 ## Pure logic
 
 Layer generation is **DOM-free** and fully unit-testable. See
-[`tests/entities/layer.test.js`](../tests/entities/layer.test.js) — the
-test injects a deterministic RNG to assert the alternating pattern, the
-start-slot offset, and the bumper-chance ramp.
+[`tests/entities/layer.test.js`](../tests/entities/layer.test.js) — the test
+injects a deterministic RNG to assert the alternating pattern, the start-slot
+offset, and the edge-clearing rule.

@@ -37,9 +37,13 @@ export class HudBar {
     const el = document.createElement("div");
     el.className = "pk-hud-bar";
     el.innerHTML = `
-      ${showHome ? `<button class="pk-hud-btn pk-hud-btn--top-right gt-btn gt-clickable" data-action="level-home" aria-label="Level selector">
+      ${
+        showHome
+          ? `<button class="pk-hud-btn pk-hud-btn--top-right gt-btn gt-clickable" data-action="level-home" aria-label="Level selector">
         <img src="images/menu-level.svg" alt="" class="pk-hud-icon" />
-      </button>` : ""}
+      </button>`
+          : ""
+      }
       <button class="pk-hud-btn pk-hud-btn--bottom-left gt-btn gt-clickable" data-action="ranking" aria-label="Rankings">
         <img src="images/menu-ranking.svg" alt="" class="pk-hud-icon" />
       </button>

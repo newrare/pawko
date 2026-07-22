@@ -1,5 +1,6 @@
 import { Peg } from "./peg-classic.js";
 import { BOMB_RADIUS } from "../configs/constants.js";
+import { iconSvg } from "../utils/icon.js";
 
 /**
  * BombPeg — tappable during play. When tapped (or hit), detonates and
@@ -39,9 +40,13 @@ export class BombPeg extends Peg {
   /**
    * Signal to the controller that this peg explodes on contact.
    * @param {import('./ball-classic.js').Ball} _ball
-   * @returns {{ bomb: true, popText: string, popClass: string }}
+   * @returns {{ bomb: true, popHtml: string, popClass: string }}
    */
   consumeReward(_ball) {
-    return { bomb: true, popText: "💣", popClass: "pk-popup pk-popup--bomb" };
+    return {
+      bomb: true,
+      popHtml: iconSvg("bomb"),
+      popClass: "pk-popup pk-popup--bomb",
+    };
   }
 }

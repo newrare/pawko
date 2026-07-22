@@ -50,7 +50,10 @@ export class ShieldPeg extends Peg {
    */
   tickShield() {
     if (this.shieldActive) return false;
-    if (this.shieldDownAt > 0 && Date.now() - this.shieldDownAt >= PLINKO.SHIELD_COOLDOWN_MS) {
+    if (
+      this.shieldDownAt > 0 &&
+      Date.now() - this.shieldDownAt >= PLINKO.SHIELD_COOLDOWN_MS
+    ) {
       this.shieldActive = true;
       this.shieldHits = PLINKO.SHIELD_MAX_HITS;
       this.shieldDownAt = 0;

@@ -20,9 +20,7 @@ export class SaveLoadModal extends BaseModal {
 
     /* --- Auto-save --- */
     const auto = saveManager.loadAuto();
-    const autoDate = auto?.date
-      ? new Date(auto.date).toLocaleString()
-      : null;
+    const autoDate = auto?.date ? new Date(auto.date).toLocaleString() : null;
 
     sections.push(`
       <h3 class="pk-save-section-title">${i18n.t("hud.save.auto_title")}</h3>
@@ -38,12 +36,12 @@ export class SaveLoadModal extends BaseModal {
 
     /* --- Manual slots --- */
     const slots = saveManager.getSlots();
-    sections.push(`<h3 class="pk-save-section-title">${i18n.t("hud.save.slots_title")}</h3>`);
+    sections.push(
+      `<h3 class="pk-save-section-title">${i18n.t("hud.save.slots_title")}</h3>`,
+    );
     for (let i = 0; i < MAX_SAVE_SLOTS; i++) {
       const slot = slots[i];
-      const slotDate = slot?.date
-        ? new Date(slot.date).toLocaleString()
-        : null;
+      const slotDate = slot?.date ? new Date(slot.date).toLocaleString() : null;
       sections.push(`
         <div class="pk-save-slot" data-slot="${i}">
           <span class="pk-save-slot-label">${i18n.t("hud.save.slot_label", { n: i + 1 })}</span>
@@ -59,7 +57,11 @@ export class SaveLoadModal extends BaseModal {
     }
 
     sections.push(
-      buttonHtml({ action: "close", label: i18n.t("menu.close"), variant: "ghost" }),
+      buttonHtml({
+        action: "close",
+        label: i18n.t("menu.close"),
+        variant: "ghost",
+      }),
     );
 
     return `<div class="gt-stack">${sections.join("")}</div>`;

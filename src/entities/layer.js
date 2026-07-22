@@ -10,7 +10,7 @@ import { createPeg, PEG_TYPES } from "./peg-factory.js";
  *   - one slot out of two is filled (alternating pattern);
  *   - the first filled slot (`startSlot`) is randomly picked from
  *     `START_SLOT_CHOICES` so consecutive layers shift the staggered grid;
- *   - all pegs spawn as classic; the player replaces them via the radial peg menu.
+ *   - all pegs spawn as classic.
  */
 export class Layer extends Entity {
   /** @type {number} */
@@ -30,12 +30,7 @@ export class Layer extends Entity {
    *   rng?: () => number,
    * }} args
    */
-  constructor({
-    level,
-    width,
-    y,
-    rng = Math.random,
-  }) {
+  constructor({ level, width, y, rng = Math.random }) {
     super({ type: "layer" });
     this.level = level;
     this.y = y;
@@ -44,10 +39,12 @@ export class Layer extends Entity {
         Math.floor(rng() * PLINKO.START_SLOT_CHOICES.length)
       ];
 
+    /* Drop edge pegs that would hug the board walls (see Slot.isClear).
+       Rows may end up with fewer pegs, which is intended. */
     for (let i = this.startSlot; i < Slot.count; i += 2) {
+      if (!Slot.isClear(i, width)) continue;
       const x = Slot.xFor(i, width);
       this.pegs.push(createPeg(PEG_TYPES.CLASSIC, { x, y, slot: i }));
     }
   }
 }
-

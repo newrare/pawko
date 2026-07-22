@@ -109,11 +109,7 @@ describe("VFX Overlay System", () => {
     });
 
     it("has all negative effects registered", () => {
-      const negative = [
-        "blood-vignette",
-        "frost",
-        "cracked-screen",
-      ];
+      const negative = ["blood-vignette", "frost", "cracked-screen"];
       for (const id of negative) {
         expect(() => vfx.play(id, target)).not.toThrow();
       }

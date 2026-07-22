@@ -3,12 +3,10 @@ import { currencyManager } from "../managers/currency-manager.js";
 import { diamondManager } from "../managers/diamond-manager.js";
 import { abilityManager } from "../managers/ability-manager.js";
 import { bonusManager } from "../managers/bonus-manager.js";
+import { pegShopManager } from "../managers/peg-shop-manager.js";
 import { notify } from "../managers/notification-manager.js";
-import {
-  PERMANENT_BONUSES,
-  SESSION_BONUSES,
-  SESSION_MALUSES,
-} from "../configs/bonus-defs.js";
+import { REWARD_BONUSES, REWARD_MALUSES } from "../configs/bonus-defs.js";
+import { PEG_SHOP_DEFS } from "../configs/peg-shop-defs.js";
 import { ABILITY_DEFS } from "../configs/ability-defs.js";
 import { BALL_KINDS } from "../entities/ball-factory.js";
 import { PEG_TYPES } from "../entities/peg-factory.js";
@@ -65,13 +63,13 @@ export function installDevAdminPanel({
     <div class="pk-dev-admin-section">
       <h4>Rogue-lite</h4>
       <button class="pk-dev-admin-btn" data-dev="unlock-abilities">Unlock all abilities</button>
-      <button class="pk-dev-admin-btn" data-dev="unlock-permanent">Unlock all permanent</button>
-      <button class="pk-dev-admin-btn" data-dev="activate-session">Activate all session</button>
+      <button class="pk-dev-admin-btn" data-dev="acquire-pegs">Acquire all boutique pegs</button>
+      <button class="pk-dev-admin-btn" data-dev="activate-session">Activate all rewards</button>
       <button class="pk-dev-admin-btn pk-dev-admin-btn--malus" data-dev="activate-malus">Activate all maluses</button>
       <button class="pk-dev-admin-btn pk-dev-admin-btn--malus" data-dev="clear-abilities">Remove active abilities</button>
-      <button class="pk-dev-admin-btn pk-dev-admin-btn--malus" data-dev="clear-permanent">Remove all permanent bonuses</button>
-      <button class="pk-dev-admin-btn pk-dev-admin-btn--malus" data-dev="clear-session-bonuses">Remove all session bonuses</button>
-      <button class="pk-dev-admin-btn pk-dev-admin-btn--malus" data-dev="clear-session-maluses">Remove all session maluses</button>
+      <button class="pk-dev-admin-btn pk-dev-admin-btn--malus" data-dev="clear-pegs">Clear boutique pegs</button>
+      <button class="pk-dev-admin-btn pk-dev-admin-btn--malus" data-dev="clear-session-bonuses">Remove all rewards</button>
+      <button class="pk-dev-admin-btn pk-dev-admin-btn--malus" data-dev="clear-session-maluses">Remove all maluses</button>
     </div>
     <div class="pk-dev-admin-section">
       <h4>Test Level</h4>
@@ -79,7 +77,9 @@ export function installDevAdminPanel({
         <select class="pk-dev-admin-select" id="pk-dev-test-peg-select" data-no-sfx>
           <option value="">— choose —</option>
           <option value="all">All pegs</option>
-          ${Object.values(PEG_TYPES).map((t) => `<option value="${t}">Only ${t}</option>`).join("")}
+          ${Object.values(PEG_TYPES)
+            .map((t) => `<option value="${t}">Only ${t}</option>`)
+            .join("")}
         </select>
         <button class="pk-dev-admin-btn pk-dev-admin-btn--test" data-dev="test-pegs" data-no-sfx disabled>Run</button>
       </div>
@@ -89,7 +89,9 @@ export function installDevAdminPanel({
   panel.addEventListener(
     "pointerdown",
     (e) => {
-      const btn = /** @type {HTMLElement | null} */ (e.target).closest("[data-dev]");
+      const btn = /** @type {HTMLElement | null} */ (e.target).closest(
+        "[data-dev]",
+      );
       if (!btn) return;
       e.stopPropagation();
       e.preventDefault();
@@ -123,7 +125,8 @@ export function installDevAdminPanel({
         }
       } else if (action === "unlock-abilities") {
         let unlocked = 0;
-        for (const a of ABILITY_DEFS) if (abilityManager.unlock(a.id)) unlocked += 1;
+        for (const a of ABILITY_DEFS)
+          if (abilityManager.unlock(a.id)) unlocked += 1;
         if (unlocked === 0) notify.error("Abilities already unlocked");
         else notify.success("All abilities unlocked");
       } else if (action === "clear-abilities") {
@@ -133,37 +136,43 @@ export function installDevAdminPanel({
           abilityManager.reset();
           notify.success("Abilities removed");
         }
-      } else if (action === "unlock-permanent") {
-        let unlocked = 0;
-        for (const b of PERMANENT_BONUSES)
-          if (bonusManager.unlockPermanent(b.id)) unlocked += 1;
-        if (unlocked === 0) notify.error("Permanent bonuses already unlocked");
-        else notify.success("All permanent bonuses unlocked");
-      } else if (action === "clear-permanent") {
-        if (bonusManager.clearPermanent()) notify.success("Permanent bonuses removed");
-        else notify.error("No permanent bonuses to remove");
+      } else if (action === "acquire-pegs") {
+        let acquired = 0;
+        for (const d of PEG_SHOP_DEFS)
+          if (pegShopManager.acquire(d.type)) acquired += 1;
+        if (acquired === 0) notify.error("All boutique pegs already acquired");
+        else notify.success("All boutique pegs acquired");
+      } else if (action === "clear-pegs") {
+        if (pegShopManager.getAcquired().length === 0)
+          notify.error("No boutique pegs to clear");
+        else {
+          pegShopManager.reset();
+          notify.success("Boutique pegs cleared");
+        }
       } else if (action === "activate-session") {
         let activated = 0;
-        for (const b of SESSION_BONUSES)
+        for (const b of REWARD_BONUSES)
           if (bonusManager.activateSession(b.id)) activated += 1;
-        if (activated === 0) notify.error("No session bonuses activated");
-        else notify.success("All session bonuses activated");
+        if (activated === 0) notify.error("No rewards activated");
+        else notify.success("All rewards activated");
       } else if (action === "activate-malus") {
         let activated = 0;
-        for (const m of SESSION_MALUSES)
+        for (const m of REWARD_MALUSES)
           if (bonusManager.activateMalus(m.id)) activated += 1;
         if (activated === 0) notify.error("No maluses activated");
         else notify.warning("All maluses activated");
       } else if (action === "clear-session-bonuses") {
         if (bonusManager.clearSessionBonuses())
-          notify.success("Session bonuses removed");
-        else notify.error("No active session bonuses");
+          notify.success("Rewards removed");
+        else notify.error("No active rewards");
       } else if (action === "clear-session-maluses") {
         if (bonusManager.clearSessionMaluses())
-          notify.success("Session maluses removed");
-        else notify.error("No active session maluses");
+          notify.success("Maluses removed");
+        else notify.error("No active maluses");
       } else if (action === "test-pegs") {
-        const select = /** @type {HTMLSelectElement | null} */ (panel.querySelector("#pk-dev-test-peg-select"));
+        const select = /** @type {HTMLSelectElement | null} */ (
+          panel.querySelector("#pk-dev-test-peg-select")
+        );
         const type = select?.value || "all";
         onTestPegs?.(type);
         notify.success(`Test level: ${type}`);
@@ -174,8 +183,12 @@ export function installDevAdminPanel({
 
   document.body.appendChild(panel);
 
-  const testSelect = /** @type {HTMLSelectElement} */ (panel.querySelector("#pk-dev-test-peg-select"));
-  const testBtn = /** @type {HTMLButtonElement} */ (panel.querySelector("[data-dev='test-pegs']"));
+  const testSelect = /** @type {HTMLSelectElement} */ (
+    panel.querySelector("#pk-dev-test-peg-select")
+  );
+  const testBtn = /** @type {HTMLButtonElement} */ (
+    panel.querySelector("[data-dev='test-pegs']")
+  );
   testSelect.addEventListener("change", () => {
     testBtn.disabled = !testSelect.value;
   });

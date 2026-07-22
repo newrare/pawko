@@ -21,6 +21,7 @@ export function buildDefaultPinboard({ levelId, width }) {
     layer.startSlot = i % 2;
     layer.pegs = [];
     for (let s = layer.startSlot; s < Slot.count; s += 2) {
+      if (!Slot.isClear(s, w)) continue;
       const x = Slot.xFor(s, w);
       layer.pegs.push(createPeg(PEG_TYPES.CLASSIC, { x, y: 0, slot: s }));
     }
@@ -44,6 +45,8 @@ export function hydratePinboard(saved, { levelId, width }) {
     layer.startSlot = data.startSlot ?? i % 2;
     layer.pegs = [];
     for (const entry of data.pegs ?? []) {
+      /* Drop edge pegs — cleans up saves made before the clearance rule. */
+      if (!Slot.isClear(entry.slot, w)) continue;
       const x = Slot.xFor(entry.slot, w);
       layer.pegs.push(createPeg(entry.type, { x, y: 0, slot: entry.slot }));
     }

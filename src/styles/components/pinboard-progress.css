@@ -1,0 +1,73 @@
+/* --- Pinboard objective progress — background fill + dashed horizon line.
+       Sits at the lowest layer of the pinboard, behind pegs and balls, and
+       never intercepts pointer events. --- */
+
+.pk-pinboard-progress {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* --- Bottom-anchored fill that rises with the live score --- */
+
+.pk-pinboard-progress-fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0;
+  background: var(--pk-progress-fill);
+  border-top: 1px solid var(--pk-progress-line);
+  box-shadow: 0 -1px 8px rgba(212, 175, 55, 0.08);
+  transition: height 0.35s cubic-bezier(0.33, 1, 0.68, 1);
+  will-change: height;
+}
+
+.pk-pinboard-progress-fill--reached {
+  background: var(--pk-progress-fill-reached);
+  border-top-color: var(--pk-progress-line-reached);
+  box-shadow: 0 -1px 10px rgba(74, 222, 128, 0.1);
+}
+
+/* --- Dashed horizon line marking the objective, centered label between two
+       dashed rules: ------ objective: N pts ------ --- */
+
+.pk-pinboard-progress-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--gt-space-2);
+  padding: 0 var(--gt-space-3);
+  transform: translateY(-50%);
+}
+
+.pk-pinboard-progress-line::before,
+.pk-pinboard-progress-line::after {
+  content: "";
+  flex: 1 1 auto;
+  border-top: 2px dashed var(--pk-progress-line);
+}
+
+.pk-pinboard-progress-label {
+  flex: 0 0 auto;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--pk-progress-label-fg);
+  white-space: nowrap;
+}
+
+.pk-pinboard-progress--reached .pk-pinboard-progress-line::before,
+.pk-pinboard-progress--reached .pk-pinboard-progress-line::after {
+  border-top-color: var(--pk-progress-line-reached);
+}
+
+.pk-pinboard-progress--reached .pk-pinboard-progress-label {
+  color: var(--pk-progress-label-reached-fg);
+}

@@ -1,16 +1,19 @@
 import { i18n } from "../managers/i18n-manager.js";
 import { saveManager } from "../managers/save-manager.js";
 import { currencyManager } from "../managers/currency-manager.js";
+import { diamondManager } from "../managers/diamond-manager.js";
 import { bonusManager } from "../managers/bonus-manager.js";
+import { abilityManager } from "../managers/ability-manager.js";
+import { pegShopManager } from "../managers/peg-shop-manager.js";
 import { layout } from "../managers/layout-manager.js";
-import {
-  PARAM_KEYS,
-  SESSION_BONUSES,
-  SESSION_MALUSES,
-  BONUS_CATEGORIES,
-} from "../configs/bonus-defs.js";
+import { PARAM_KEYS, BONUS_CATEGORIES } from "../configs/bonus-defs.js";
 import { ListenerBag } from "../utils/listener-bag.js";
 import { notify } from "../managers/notification-manager.js";
+import { MysteryChoiceModal } from "../components/mystery-choice-modal.js";
+import {
+  buildMysteryChoices,
+  MYSTERY_CHOICE_TYPES,
+} from "../utils/mystery-choice.js";
 import { SlowFloatBackground } from "../utils/slow-float-background.js";
 import { InfoBar, INFO_BAR_MODES } from "../components/info-bar.js";
 import {
@@ -54,6 +57,9 @@ export class LevelSelectorScene {
   /** @type {InfoBar | null} */
   #infoBar = null;
 
+  /** @type {MysteryChoiceModal | null} */
+  #mysteryModal = null;
+
   /** @param {import('./scene-router.js').SceneRouter} router */
   constructor(router) {
     this.#router = router;
@@ -72,14 +78,15 @@ export class LevelSelectorScene {
     if (saved && this.#isValidGridState(saved)) {
       this.#grid = LevelGrid.deserialize(saved);
       const revealed = this.#grid.revealCurrentAdjacents();
-      this.#newlyRevealed = new Set(
-        revealed.map((c) => `${c.row},${c.col}`),
-      );
+      this.#newlyRevealed = new Set(revealed.map((c) => `${c.row},${c.col}`));
       saveManager.saveGridState(this.#grid.serialize());
     } else {
-      /* New grid: persist it so the upcoming AbilityScene visit, then a
-         click on Home, can re-enter this scene and load the saved grid
-         instead of generating another one. */
+      /* New grid = new run: wipe run-scoped state (rewards + boutique pegs)
+         so nothing leaks from the previous run. Persist the grid so the
+         upcoming AbilityScene visit, then a click on Home, can re-enter this
+         scene and load the saved grid instead of generating another one. */
+      bonusManager.clearSession();
+      pegShopManager.reset();
       this.#grid.init();
       saveManager.saveGridState(this.#grid.serialize());
       this.#router.start(AbilityScene);
@@ -125,8 +132,8 @@ export class LevelSelectorScene {
     if (!scrollEl || !gridEl) return;
 
     const GAP = 8;
-    const GRID_PAD_H = 16;  // --gt-space-2 (8px) × 2
-    const GRID_PAD_V = 40;  // grid top(12) + bottom(12) + scroll bottom-pad(16)
+    const GRID_PAD_H = 16; // --gt-space-2 (8px) × 2
+    const GRID_PAD_V = 40; // grid top(12) + bottom(12) + scroll bottom-pad(16)
     // HUD buttons at bottom: 40px height + 8px offset + 8px extra clearance
     const HUD_BOTTOM = 56;
 
@@ -163,7 +170,7 @@ export class LevelSelectorScene {
         this.#router.start(ShopScene);
         break;
       case CELL_TYPES.MYSTERY:
-        this.#rollMystery();
+        this.#openMysteryChoice();
         break;
       case CELL_TYPES.EMPTY:
         this.#onEmptyCell();
@@ -174,33 +181,61 @@ export class LevelSelectorScene {
   }
 
   /**
-   * 70% bonus, 30% malus. The picked entry is activated immediately and a
-   * transient banner shows the outcome. Cell is already marked USED by
-   * `selectCell`.
+   * Open the forced-choice reward modal. Offers two distinct reward cards
+   * drawn from the bonus catalogue (excluding rewards already active this run);
+   * when too few remain, empty slots become a common coins/diamonds card. The
+   * cell is already marked USED by `selectCell`.
    */
-  #rollMystery() {
-    const rollMalus = Math.random() < 0.3;
-    const pool = rollMalus ? SESSION_MALUSES : SESSION_BONUSES;
-    if (!pool.length) {
-      this.#refresh();
-      return;
-    }
-    const def = pool[Math.floor(Math.random() * pool.length)];
-    bonusManager.activateSession(def.id);
-    const nameKey =
-      def.category === BONUS_CATEGORIES.MALUS
-        ? `bonus.malus.${def.id}`
-        : `bonus.session.${def.id}`;
-    const titleKey =
-      def.category === BONUS_CATEGORIES.MALUS
-        ? "level_selector.mystery_malus"
-        : "level_selector.mystery_bonus";
-    const isMalus = def.category === BONUS_CATEGORIES.MALUS;
-    const message = i18n.t(titleKey, { name: `${def.icon} ${i18n.t(nameKey)}` });
-    notify.show(message, { type: isMalus ? "warning" : "success" });
+  #openMysteryChoice() {
+    const activeIds = bonusManager.getActiveSession().map((e) => e.id);
+    const forceCommon = bonusManager.resolve(
+      PARAM_KEYS.MYSTERY_FORCE_COMMON,
+      false,
+    );
+    const choices = buildMysteryChoices({ activeIds, forceCommon });
 
-    /* Mystery is non-blocking: reveal adjacents so the player can keep
-       exploring paths leading away from this cell. */
+    this.#mysteryModal = new MysteryChoiceModal({
+      choices,
+      onChoose: (choice) => this.#applyMysteryChoice(choice),
+    });
+    this.#mysteryModal.open();
+  }
+
+  /**
+   * Grant the picked reward, notify, then reveal adjacents so the player can
+   * keep exploring paths leading away from this cell.
+   * @param {import('../utils/mystery-choice.js').MysteryChoice} choice
+   */
+  #applyMysteryChoice(choice) {
+    this.#mysteryModal = null;
+
+    /* This mystery draw ticks any mystery-scoped rewards down first, so a
+       reward granted here starts with its full mystery duration. */
+    bonusManager.onMysteryDraw();
+
+    if (choice.type === MYSTERY_CHOICE_TYPES.BONUS) {
+      const isMalus = choice.def.category === BONUS_CATEGORIES.MALUS;
+      bonusManager.activateSession(choice.def.id);
+      const name = i18n.t(
+        `${isMalus ? "bonus.malus" : "bonus.reward"}.${choice.def.id}`,
+      );
+      if (isMalus) {
+        notify.warning(i18n.t("level_selector.mystery_malus", { name }));
+      } else {
+        notify.success(i18n.t("mystery_choice.reward", { name }));
+      }
+    } else {
+      let name;
+      if (choice.currency === "coins") {
+        currencyManager.add(choice.amount);
+        name = i18n.t("mystery_choice.currency.coins", { n: choice.amount });
+      } else {
+        diamondManager.add(choice.amount);
+        name = i18n.t("mystery_choice.currency.diamonds", { n: choice.amount });
+      }
+      notify.success(i18n.t("mystery_choice.reward", { name }));
+    }
+
     const revealed = this.#grid.revealCurrentAdjacents();
     this.#newlyRevealed = new Set(revealed.map((c) => `${c.row},${c.col}`));
     saveManager.saveGridState(this.#grid.serialize());
@@ -293,11 +328,11 @@ export class LevelSelectorScene {
          is active. Levels and empty tiles stay blank until discovered. */
       const reveal =
         (cell.type === CELL_TYPES.SHOP &&
-          bonusManager.resolve(PARAM_KEYS.REVEAL_SHOPS, false)) ||
+          abilityManager.resolve(PARAM_KEYS.REVEAL_SHOPS, false)) ||
         (cell.type === CELL_TYPES.MYSTERY &&
-          bonusManager.resolve(PARAM_KEYS.REVEAL_MYSTERY, false)) ||
+          abilityManager.resolve(PARAM_KEYS.REVEAL_MYSTERY, false)) ||
         (cell.type === CELL_TYPES.BOSS &&
-          bonusManager.resolve(PARAM_KEYS.REVEAL_BOSS, false));
+          abilityManager.resolve(PARAM_KEYS.REVEAL_BOSS, false));
       if (reveal) {
         content = this.#renderCellContent(cell);
       }
@@ -306,9 +341,7 @@ export class LevelSelectorScene {
     }
 
     const interactive =
-      cell.state === CELL_STATES.REVEALED
-        ? 'role="button" tabindex="0"'
-        : "";
+      cell.state === CELL_STATES.REVEALED ? 'role="button" tabindex="0"' : "";
 
     return `<div class="pk-map-cell ${stateClass} ${typeClass} ${newlyClass} ${completedClass}"
                 style="grid-row:${gr};grid-column:${gc}"
@@ -358,7 +391,7 @@ export class LevelSelectorScene {
     const cellB = this.#grid.getCell(r2, c2);
     const aVis = cellA.state !== CELL_STATES.HIDDEN;
     const bVis = cellB.state !== CELL_STATES.HIDDEN;
-    const revealPaths = bonusManager.resolve(PARAM_KEYS.REVEAL_PATHS, false);
+    const revealPaths = abilityManager.resolve(PARAM_KEYS.REVEAL_PATHS, false);
 
     let vis = "";
     if (aVis && bVis) {
@@ -411,6 +444,8 @@ export class LevelSelectorScene {
   }
 
   destroy() {
+    this.#mysteryModal?.destroy();
+    this.#mysteryModal = null;
     this.#infoBar?.destroy();
     this.#infoBar = null;
     this.#bag.dispose();

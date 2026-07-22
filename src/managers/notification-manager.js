@@ -102,11 +102,9 @@ class NotificationManager extends EventEmitter {
     window.clearTimeout(entry.timer);
     entry.el.classList.remove("pk-notif--visible");
     entry.el.classList.add("pk-notif--exit");
-    entry.el.addEventListener(
-      "animationend",
-      () => entry.el.remove(),
-      { once: true },
-    );
+    entry.el.addEventListener("animationend", () => entry.el.remove(), {
+      once: true,
+    });
     this.#active.splice(idx, 1);
     this.emit("dismiss", { id });
   }

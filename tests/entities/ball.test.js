@@ -76,7 +76,9 @@ describe("Ball (classic)", () => {
 
   describe("Peg-driven effects", () => {
     let now;
-    beforeEach(() => { now = 1000; });
+    beforeEach(() => {
+      now = 1000;
+    });
 
     it("applyEffect adds a named effect with correct expiry", () => {
       const b = new Ball();

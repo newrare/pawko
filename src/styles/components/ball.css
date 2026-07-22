@@ -9,8 +9,12 @@
   animation: pk-ball-burn 0.4s ease-in-out infinite alternate;
 }
 @keyframes pk-ball-burn {
-  from { box-shadow: 0 0 8px 2px rgba(249, 115, 22, 0.5); }
-  to   { box-shadow: 0 0 14px 5px rgba(249, 115, 22, 0.9); }
+  from {
+    box-shadow: 0 0 8px 2px rgba(249, 115, 22, 0.5);
+  }
+  to {
+    box-shadow: 0 0 14px 5px rgba(249, 115, 22, 0.9);
+  }
 }
 
 /* Frozen — blue glow pulse (no transform to avoid conflicting with JS translate) */
@@ -19,8 +23,14 @@
   animation: pk-ball-freeze 0.6s ease-in-out infinite alternate;
 }
 @keyframes pk-ball-freeze {
-  from { box-shadow: 0 0 6px 2px rgba(56, 189, 248, 0.5); filter: brightness(1.0) saturate(0.6) hue-rotate(-20deg); }
-  to   { box-shadow: 0 0 16px 6px rgba(147, 220, 255, 0.95); filter: brightness(1.35) saturate(0.4) hue-rotate(-40deg); }
+  from {
+    box-shadow: 0 0 6px 2px rgba(56, 189, 248, 0.5);
+    filter: brightness(1) saturate(0.6) hue-rotate(-20deg);
+  }
+  to {
+    box-shadow: 0 0 16px 6px rgba(147, 220, 255, 0.95);
+    filter: brightness(1.35) saturate(0.4) hue-rotate(-40deg);
+  }
 }
 
 /* Electrified — purple glow matching the electrical peg identity (box-shadow only;
@@ -52,42 +62,93 @@
 .pk-fire-trail-dot {
   position: absolute;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 185, 40, 0.95) 0%, rgba(249, 115, 22, 0.6) 100%);
-  box-shadow: 0 0 8px 3px rgba(249, 115, 22, 0.55), 0 0 18px 6px rgba(249, 115, 22, 0.3);
+  background: radial-gradient(
+    circle,
+    rgba(255, 185, 40, 0.95) 0%,
+    rgba(249, 115, 22, 0.6) 100%
+  );
+  box-shadow:
+    0 0 8px 3px rgba(249, 115, 22, 0.55),
+    0 0 18px 6px rgba(249, 115, 22, 0.3);
   filter: blur(1.8px);
   pointer-events: none;
   animation: pk-fire-trail-fade 0.38s ease-out forwards;
 }
 
 @keyframes pk-fire-trail-fade {
-  0%   { opacity: 0.9; transform: scale(1); }
-  100% { opacity: 0;   transform: scale(0.15); }
+  0% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.15);
+  }
 }
 
 /* --- Shared keyframes used by elemental peg visuals (game.css) ----- */
 
 @keyframes pk-peg-burned-flicker {
-  0%   { filter: brightness(1) hue-rotate(0deg) drop-shadow(0 0 5px rgba(239, 68, 68, 0.75)) drop-shadow(0 0 10px rgba(249, 115, 22, 0.45)); }
-  100% { filter: brightness(1.25) hue-rotate(-10deg) drop-shadow(0 0 8px rgba(239, 68, 68, 0.95)) drop-shadow(0 0 14px rgba(249, 115, 22, 0.6)); }
+  0% {
+    filter: brightness(1) hue-rotate(0deg)
+      drop-shadow(0 0 5px rgba(239, 68, 68, 0.75))
+      drop-shadow(0 0 10px rgba(249, 115, 22, 0.45));
+  }
+  100% {
+    filter: brightness(1.25) hue-rotate(-10deg)
+      drop-shadow(0 0 8px rgba(239, 68, 68, 0.95))
+      drop-shadow(0 0 14px rgba(249, 115, 22, 0.6));
+  }
 }
 
 @keyframes pk-peg-frozen-flicker-3 {
-  0%   { filter: brightness(1) drop-shadow(0 0 6px rgba(56, 189, 248, 0.8)) drop-shadow(0 0 12px rgba(14, 165, 233, 0.5)); }
-  100% { filter: brightness(1.2) drop-shadow(0 0 10px rgba(56, 189, 248, 1)) drop-shadow(0 0 16px rgba(14, 165, 233, 0.7)); }
+  0% {
+    filter: brightness(1) drop-shadow(0 0 6px rgba(56, 189, 248, 0.8))
+      drop-shadow(0 0 12px rgba(14, 165, 233, 0.5));
+  }
+  100% {
+    filter: brightness(1.2) drop-shadow(0 0 10px rgba(56, 189, 248, 1))
+      drop-shadow(0 0 16px rgba(14, 165, 233, 0.7));
+  }
 }
 
 @keyframes pk-electric-flicker {
-  0%   { filter: brightness(1); box-shadow: 0 0 6px rgba(167, 139, 250, 0.85), 0 0 14px rgba(124, 58, 237, 0.6), inset 0 0 4px rgba(196, 181, 253, 0.35); }
-  100% { filter: brightness(1.4); box-shadow: 0 0 10px rgba(196, 181, 253, 1), 0 0 20px rgba(124, 58, 237, 0.85), inset 0 0 6px rgba(221, 214, 254, 0.55); }
+  0% {
+    filter: brightness(1);
+    box-shadow:
+      0 0 6px rgba(167, 139, 250, 0.85),
+      0 0 14px rgba(124, 58, 237, 0.6),
+      inset 0 0 4px rgba(196, 181, 253, 0.35);
+  }
+  100% {
+    filter: brightness(1.4);
+    box-shadow:
+      0 0 10px rgba(196, 181, 253, 1),
+      0 0 20px rgba(124, 58, 237, 0.85),
+      inset 0 0 6px rgba(221, 214, 254, 0.55);
+  }
 }
 
 @keyframes pk-electric-spark {
-  0%   { opacity: 1; transform: scale(1); }
-  50%  { opacity: 0.3; transform: scale(1.15); }
-  100% { opacity: 0.8; transform: scale(0.95); }
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(1.15);
+  }
+  100% {
+    opacity: 0.8;
+    transform: scale(0.95);
+  }
 }
 
 @keyframes pk-electric-rotate {
-  0%   { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }

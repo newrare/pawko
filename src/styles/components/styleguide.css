@@ -155,11 +155,24 @@
 }
 
 /* --- Plinko primitives gallery --- */
-.gt-sg-plinko { display: flex; flex-direction: column; gap: var(--gt-space-3); }
-.gt-sg-plinko-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gt-space-2); }
-.gt-sg-plinko-row--4 { grid-template-columns: repeat(4, 1fr); }
+.gt-sg-plinko {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gt-space-3);
+}
+.gt-sg-plinko-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--gt-space-2);
+}
+.gt-sg-plinko-row--4 {
+  grid-template-columns: repeat(4, 1fr);
+}
 .gt-sg-plinko-cell {
-  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
   padding: 1rem 0.5rem;
   background: var(--pk-bg-surface);
   border: 1px solid var(--pk-crimson-muted);
@@ -173,31 +186,55 @@
   color: var(--gt-color-text-dim);
 }
 .gt-sg-plinko-stage {
-  position: relative; width: 56px; height: 40px;
-  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  width: 56px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
 }
-.gt-sg-plinko-stage--tall { height: 64px; }
+.gt-sg-plinko-stage--tall {
+  height: 64px;
+}
 /* Allow lightning effects (spark web glow, arc bolts) to extend beyond
    the stage box without being clipped. Any cell that hosts a spark gets
    the same treatment so the mesh isn't cropped at the peg's bounding box. */
 .gt-sg-plinko-stage--overflow,
-.gt-sg-plinko-stage:has([data-sg-spark]) { overflow: visible; }
+.gt-sg-plinko-stage:has([data-sg-spark]) {
+  overflow: visible;
+}
 /* Reset game-controller positioning in the static gallery.
    pk-tremble is excluded: its keyframes use transform and must be free to run. */
 .gt-sg-plinko-stage .pk-peg,
-.gt-sg-plinko-stage .pk-ball { position: relative; margin: 0; left: auto; top: auto; }
+.gt-sg-plinko-stage .pk-ball {
+  position: relative;
+  margin: 0;
+  left: auto;
+  top: auto;
+}
 .gt-sg-plinko-stage .pk-peg:not(.pk-tremble),
-.gt-sg-plinko-stage .pk-ball { transform: none !important; }
-.gt-sg-plinko-stage .pk-sublaunch { width: 100%; height: 100%; }
+.gt-sg-plinko-stage .pk-ball {
+  transform: none !important;
+}
+.gt-sg-plinko-stage .pk-sublaunch {
+  width: 100%;
+  height: 100%;
+}
 .gt-sg-plinko-gates {
-  display: flex; height: 70px; gap: 0;
-  overflow: hidden; border-radius: 4px;
+  display: flex;
+  height: 70px;
+  gap: 0;
+  overflow: hidden;
+  border-radius: 4px;
   border: 1px solid var(--pk-crimson-muted);
 }
 .gt-sg-sub-label {
-  font-size: 0.5rem; font-weight: 600; color: var(--gt-color-text-dim);
-  text-transform: uppercase; letter-spacing: 3px;
+  font-size: 0.5rem;
+  font-weight: 600;
+  color: var(--gt-color-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 3px;
   margin: 4px 0 0;
 }
 
@@ -321,7 +358,9 @@
   color: var(--pk-gold-dim);
   border: 1px solid var(--pk-gold-dim);
 }
-.gt-sg-card--danger .gt-sg-card-title { color: var(--gt-color-danger); }
+.gt-sg-card--danger .gt-sg-card-title {
+  color: var(--gt-color-danger);
+}
 
 /* --- VFX gallery --- */
 .gt-sg-vfx-grid {
@@ -346,7 +385,9 @@
   overflow: hidden;
   transition: border-color 0.15s ease;
 }
-.gt-sg-vfx-stage:hover { border-color: var(--pk-crimson-deep); }
+.gt-sg-vfx-stage:hover {
+  border-color: var(--pk-crimson-deep);
+}
 .gt-sg-vfx-label {
   font-size: 0.48rem;
   letter-spacing: 1.5px;
@@ -366,21 +407,51 @@
 .gt-sg-fire-dot {
   position: absolute;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 185, 40, 0.95) 0%, rgba(249, 115, 22, 0.6) 100%);
-  box-shadow: 0 0 8px 3px rgba(249, 115, 22, 0.55), 0 0 18px 6px rgba(249, 115, 22, 0.3);
+  background: radial-gradient(
+    circle,
+    rgba(255, 185, 40, 0.95) 0%,
+    rgba(249, 115, 22, 0.6) 100%
+  );
+  box-shadow:
+    0 0 8px 3px rgba(249, 115, 22, 0.55),
+    0 0 18px 6px rgba(249, 115, 22, 0.3);
   filter: blur(1.8px);
   pointer-events: none;
   animation: gt-sg-fire-trail-pulse 0.5s ease-in-out infinite alternate;
 }
-.gt-sg-fire-dot--a { width: 12px; height: 12px; left: 11px; top: 5px; animation-delay: 0ms; }
-.gt-sg-fire-dot--b { width: 9px;  height: 9px;  left: 27px; top: 2px; animation-delay: 140ms; opacity: 0.75; }
-.gt-sg-fire-dot--c { width: 7px;  height: 7px;  left: 20px; top: 0px; animation-delay: 270ms; opacity: 0.5; }
-@keyframes gt-sg-fire-trail-pulse {
-  from { opacity: 0.85; transform: scale(1); }
-  to   { opacity: 0.1;  transform: scale(0.5); }
+.gt-sg-fire-dot--a {
+  width: 12px;
+  height: 12px;
+  left: 11px;
+  top: 5px;
+  animation-delay: 0ms;
 }
-
-
+.gt-sg-fire-dot--b {
+  width: 9px;
+  height: 9px;
+  left: 27px;
+  top: 2px;
+  animation-delay: 140ms;
+  opacity: 0.75;
+}
+.gt-sg-fire-dot--c {
+  width: 7px;
+  height: 7px;
+  left: 20px;
+  top: 0px;
+  animation-delay: 270ms;
+  opacity: 0.5;
+}
+@keyframes gt-sg-fire-trail-pulse {
+  from {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0.1;
+    transform: scale(0.5);
+  }
+}
 
 .gt-sg-rarity {
   font-size: 0.5rem;
@@ -390,10 +461,54 @@
   border-radius: 2px;
   display: inline-block;
 }
-.gt-sg-rarity--perm { color: var(--pk-gold); border: 1px solid var(--pk-gold-dim); }
-.gt-sg-rarity--leg  { color: #fbbf24; border: 1px solid #d97706; }
-.gt-sg-rarity--epic { color: #c084fc; border: 1px solid #9333ea; }
-.gt-sg-rarity--rare { color: #93c5fd; border: 1px solid #2563eb; }
-.gt-sg-rarity--com  { color: #86efac; border: 1px solid #16a34a; }
+.gt-sg-rarity--perm {
+  color: var(--pk-gold);
+  border: 1px solid var(--pk-gold-dim);
+}
+.gt-sg-rarity--leg {
+  color: #fbbf24;
+  border: 1px solid #d97706;
+}
+.gt-sg-rarity--epic {
+  color: #c084fc;
+  border: 1px solid #9333ea;
+}
+.gt-sg-rarity--rare {
+  color: #93c5fd;
+  border: 1px solid #2563eb;
+}
+.gt-sg-rarity--com {
+  color: #86efac;
+  border: 1px solid #16a34a;
+}
 
-
+/* --- Icon gallery (Lucide) --- */
+.gt-sg-icon-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gt-space-3);
+  margin-top: var(--gt-space-2);
+}
+.gt-sg-icon-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 64px;
+}
+.gt-sg-icon {
+  color: var(--gt-color-gold-light);
+  line-height: 0;
+}
+.gt-sg-icon-label {
+  font-size: 0.5rem;
+  color: var(--gt-color-text-dim);
+  letter-spacing: 0.5px;
+  text-align: center;
+}
+.gt-sg-featured-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gt-space-6);
+  margin-top: var(--gt-space-4);
+}

@@ -1,0 +1,69 @@
+/* --- Currency HUD — coins + diamonds read-out anchored bottom-left of the
+       safe zone, just right of the ranking HUD button. Mirrors the .pk-hud-btn
+       height / surface so it reads as part of the button row. --- */
+
+.pk-currency-hud {
+  position: absolute;
+  bottom: var(--gt-space-2);
+  left: calc(var(--gt-space-2) + 40px + var(--gt-space-2));
+  height: 40px;
+  display: flex;
+  align-items: center;
+  gap: var(--gt-space-2);
+  padding: 0 var(--gt-space-3);
+  border-radius: var(--gt-radius-md);
+  background: var(--gt-color-surface);
+  border: 1px solid var(--pk-crimson-muted);
+  box-shadow: var(--gt-shadow-sm);
+  pointer-events: none;
+  z-index: 46;
+}
+
+.pk-currency-hud-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gt-space-1);
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: var(--pk-gold-light);
+  font-variant-numeric: tabular-nums;
+}
+
+.pk-currency-hud-item .pk-svg-icon {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.pk-currency-hud-item--diamond {
+  color: #60a5fa;
+}
+
+/* --- Permanent-bonus slots (fixed row after the wallets) --- */
+
+.pk-currency-hud-slots {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gt-space-1);
+  margin-left: var(--gt-space-1);
+  padding-left: var(--gt-space-2);
+  border-left: 1px solid var(--pk-crimson-muted);
+}
+
+.pk-currency-hud-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--gt-radius-sm);
+  border: 1px solid var(--pk-crimson-muted);
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.pk-currency-hud-slot--filled {
+  border-color: rgba(212, 175, 55, 0.4);
+  background: rgba(212, 175, 55, 0.1);
+}

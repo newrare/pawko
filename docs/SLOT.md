@@ -3,17 +3,20 @@
 A **slot** is a horizontal index inside a layer (0..19). It is a *position*,
 not an entity — there is no `Slot` instance, just helpers.
 
-A **peg** (and its boosted variant the **bumper**) is the actual obstacle
-mounted on a slot. Both are pure-data entities that the controller pairs
-with a `.pk-peg` DOM node.
+A **peg** is the actual obstacle mounted on a slot. Layers spawn **classic
+pegs only**; every special variant (bumper, coin, fire, …) is produced by
+dragging a slot-machine upgrade onto a classic peg
+(see [SLOT-MACHINE.md](./SLOT-MACHINE.md)). All peg types are pure-data
+entities that the controller pairs with a `.pk-peg` DOM node.
 
 ## Slot
 
 Implementation: [`src/entities/slot.js`](../src/entities/slot.js).
 
 ```js
-Slot.count               // PLINKO.SLOTS_PER_LAYER (= 20)
-Slot.xFor(index, width)  // CSS-px x coordinate for slot `index`
+Slot.count                 // PLINKO.SLOTS_PER_LAYER (= 20)
+Slot.xFor(index, width)    // CSS-px x coordinate for slot `index`
+Slot.isClear(index, width) // false when the peg would hug a side wall
 ```
 
 `Slot.xFor` evenly partitions `width` into `count` cells and returns the
@@ -24,62 +27,74 @@ step = width / SLOTS_PER_LAYER
 x    = step / 2 + index * step
 ```
 
-The half-step inset on slot 0 keeps the row symmetrically padded inside
-the pinboard, matching the reference Plinko look.
+`Slot.isClear` drops candidate pegs closer than
+`PLINKO.PEG_EDGE_MARGIN_RATIO × width` to either wall, keeping the row off the
+board border.
 
 ## Peg
 
 Implementation: [`src/entities/peg-classic.js`](../src/entities/peg-classic.js).
 
-| Field         | Value                           |
-| ------------- | ------------------------------- |
-| `type`        | `"peg"`                         |
-| `radius`      | `PLINKO.PEG_RADIUS` (7 px)      |
-| `score`       | `PLINKO.SCORE_PEG` (1)          |
-| `restitution` | `PLINKO.RESTITUTION_PEG` (0.55) |
+| Field / getter | Value                           |
+| -------------- | ------------------------------- |
+| `type`         | `"peg"`                         |
+| `radius`       | `PLINKO.PEG_RADIUS` (10 px)     |
+| `hp` / `maxHp` | `PEG_DEFS.peg.hp` (10)          |
+| `points`       | `PEG_POINTS.peg` (10)           |
+| `restitution`  | `PLINKO.RESTITUTION_PEG` (0.40) |
 
 Visual: small dark cocoa disc with a soft drop shadow.
 
 ## Bumper
 
 Implementation: [`src/entities/peg-bumper.js`](../src/entities/peg-bumper.js).
-Subclasses `Peg` so collision code never branches on type.
+Subclasses `Peg` so collision code never branches on type. It is one of the
+three default slot-machine upgrades (`fire`, `coin`, `bumper`).
 
-| Field         | Value                              |
-| ------------- | ---------------------------------- |
-| `type`        | `"bumper"`                         |
-| `radius`      | `PLINKO.BUMPER_RADIUS` (11 px)     |
-| `score`       | `PLINKO.SCORE_BUMPER` (10)         |
-| `restitution` | `PLINKO.RESTITUTION_BUMPER` (1.05) |
+| Field / getter | Value                              |
+| -------------- | ---------------------------------- |
+| `type`         | `"bumper"`                         |
+| `radius`       | `PLINKO.BUMPER_RADIUS` (10 px)     |
+| `hp` / `maxHp` | `PEG_DEFS.bumper.hp` (10)          |
+| `points`       | `PEG_POINTS.bumper` (30)           |
+| `restitution`  | `PLINKO.RESTITUTION_BUMPER` (1.00) |
 
-Visual: golden radial gradient with a brown ring, gently pulsing while
-idle and flashing on contact. A floating `+10` label spawns on hit.
+Visual: golden radial gradient with a brown ring, gently pulsing while idle
+and flashing on contact.
 
 ## Family hierarchy
 
+Every peg type is built through
+[`createPeg(type, opts)`](../src/entities/peg-factory.js) and subclasses `Peg`:
+
 ```
-Peg (basic)
-├── Bumper  (golden, boosted, opts out of PEG_SCORE_MULTIPLIER)
-└── CoinPeg (one-shot, awards coins via `consumeReward()`)
-        └── … (future variants — sticky peg, multiplier, magnet, …)
+Peg (classic)
+├── Bumper       CoinPeg      DiamondPeg   MysteryPeg   ChestPeg
+├── ShieldPeg    GluePeg      TeleportPeg
+└── FirePeg      IcePeg       ElectricalPeg   BombPeg
 ```
 
-Each peg participates in the contact pipeline through a small contract,
-mirroring the [Ball variants](BALL.md):
+Each peg participates in the contact pipeline through a small contract, so the
+controller never branches on a peg-specific field:
 
-| Hook                     | Default                  | Overridden by                                |
-| ------------------------ | ------------------------ | -------------------------------------------- |
-| `score`                  | `PLINKO.SCORE_PEG`       | `Bumper` (SCORE_BUMPER), `CoinPeg` (0)       |
-| `restitution`            | `PLINKO.RESTITUTION_PEG` | `Bumper` (RESTITUTION_BUMPER)                |
-| `appliesPegMultiplier`   | `true`                   | `Bumper` (`false`)                           |
-| `scoreForContact()`      | base score               | elemental pegs (`FirePeg`, `IcePeg`…) → 0    |
-| `consumeReward(ball)`    | `null`                   | elemental pegs (apply effect), `CoinPeg`     |
+| Hook                  | Default                  | Overridden by                                                    |
+| --------------------- | ------------------------ | ---------------------------------------------------------------- |
+| `points`              | `PEG_POINTS[type]`       | keyed by type; reward pegs return 0                              |
+| `restitution`         | `PLINKO.RESTITUTION_PEG` | `Bumper` (`RESTITUTION_BUMPER`)                                  |
+| `radius`              | `PLINKO.PEG_RADIUS`      | `Bumper` (`BUMPER_RADIUS`)                                       |
+| `cssModifier`         | the peg `type`           | subclasses may remap                                             |
+| `takeDamage(n)`       | −n HP, true when dead    | —                                                                |
+| `consumeReward(ball)` | `null`                   | coin/diamond (currency), elemental pegs (effect), bomb (explode) |
+| `onDestroyed(ball)`   | `null`                   | `ChestPeg` (release balls), `MysteryPeg` (roll reward)           |
 
-Adding a new family member is as simple as subclassing `Peg`, overriding
-the relevant hooks, and giving it a `type` tag. The `Layer` factory will
-pick it up via the existing rendering path (`.pk-peg.pk-peg--<type>`).
+Adding a family member = subclass `Peg`, set `this.type`, call `_resolveHp()`,
+override the relevant hooks, and register it in
+[peg-factory.js](../src/entities/peg-factory.js). The rendering path picks it up
+via `.pk-peg.pk-peg--<type>`.
 
 ## Tests
 
-[`tests/entities/peg-classic.test.js`](../tests/entities/peg-classic.test.js) verifies
-score values and that bumpers inherit cleanly from pegs.
+[`tests/entities/peg-classic.test.js`](../tests/entities/peg-classic.test.js)
+verifies HP/points values and that bumpers inherit cleanly from pegs;
+[`peg-points.test.js`](../tests/entities/peg-points.test.js) covers the
+per-type point table.

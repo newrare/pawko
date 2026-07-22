@@ -84,7 +84,6 @@ export const ANIM = {
  */
 export const SWIPE_THRESHOLD = 30;
 
-
 // ─── Persistence ───────────────────────────────────────────────────────────
 
 const NS = APP_ID;
@@ -155,39 +154,42 @@ export const PLINKO = {
   START_SLOT_CHOICES: [0, 1, 2],
 
   /** Number of layers loaded at once at the start of a level. */
-  INITIAL_LAYERS: 9,
+  INITIAL_LAYERS: 8,
 
   /* Launch zone */
-  /** Tower-defense ball-count scaling per level: base + step * levelId.
-     Level 1 → 20, level 2 → 30, level 3 → 40, etc. */
-  BALLS_LEVEL_BASE: 10,
-  BALLS_LEVEL_STEP: 10,
   /** Delay between consecutive ball drops from the same sublaunch. */
   LAUNCH_DELAY_MS: 80,
   /** Anti-loop cap on how many times a ball may go through the recycle gate. */
   MAX_RECYCLES: 8,
-
-  /* Player HP — tower-defense mode. Player loses 1 HP per ball reaching
-     the central gate; round ends when HP reaches 0. */
-  PLAYER_MAX_HP: 20,
+  /** Hard cap on how many balls may exist on the pinboard at once. Balls still
+     loaded in the cannon count toward this too, since the player will launch
+     them and we can only refuse to CREATE new balls (e.g. chest release), not
+     block firing. */
+  MAX_PINBOARD_BALLS: 50,
 
   /* Pinboard sizing (CSS px). Pegs/bumpers/balls share the pinboard
      coordinate space (origin = pinboard top-left). */
   PEG_RADIUS: 10,
   BUMPER_RADIUS: 10,
   BALL_RADIUS: 9,
+  /** Minimum clearance (fraction of pinboard width) a peg center must keep
+     from either side wall. Edge pegs closer than this are dropped at layer
+     generation so no peg hugs the board border. */
+  PEG_EDGE_MARGIN_RATIO: 0.1,
   /** Vertical distance between two layers. */
   LAYER_HEIGHT: 56,
   /** Top padding inside the pinboard before the first layer. */
   LAYER_TOP_PADDING: 30,
+  /** Gap (px) between the objective horizon line and the top peg row. */
+  PROGRESS_LINE_MARGIN: 50,
   /** Distance (px) from the pinboard top to the target dashed line.
      Defines the empty zone reserved for the objective label and caps the
      gauge fill so its top edge meets the target line at 100%. */
   TARGET_LINE_OFFSET: 20,
   /* Physics */
   GRAVITY: 600,
-  RESTITUTION_PEG: 0.40,
-  RESTITUTION_BUMPER: 1.00,
+  RESTITUTION_PEG: 0.4,
+  RESTITUTION_BUMPER: 1.0,
   WALL_RESTITUTION: 0.7,
   /** Horizontal velocity multiplier when a ball contacts a floor surface. */
   FLOOR_FRICTION: 0,
@@ -211,26 +213,131 @@ export const PLINKO = {
   /** Acceleration (px/s²) applied to balls being pulled toward an electrified ball. */
   ELEC_ATTRACT_FORCE: 250,
 
-  /* Collection gates — 5 equal-width zones (sum = 1). Tower-defense mode:
-     teleport_left | destroy_left | hp | destroy_right | teleport_right */
+  /* Collection gates — 5 equal-width zones (sum = 1). Score mode:
+     x1 | x2 | return | x2 | x1. The x1/x2 gates each raise the blue
+     multiplier counter (x1 → +1, x2 → +2); the central return gate
+     recycles the ball back to the top of the pinboard. */
   GATE_WIDTHS: {
-    teleport_left: 0.20,
-    destroy_left: 0.20,
-    hp: 0.20,
-    destroy_right: 0.20,
-    teleport_right: 0.20,
+    x1_left: 0.2,
+    x2_left: 0.2,
+    return: 0.2,
+    x2_right: 0.2,
+    x1_right: 0.2,
   },
-  GATE_ORDER: ["teleport_left", "destroy_left", "hp", "destroy_right", "teleport_right"],
+  GATE_ORDER: ["x1_left", "x2_left", "return", "x2_right", "x1_right"],
 
-  /** Coins gained per HP point of a ball that lands in a destroy gate. */
-  DESTROY_COIN_PER_HP: 1,
-  /** Damage dealt to the player when a ball reaches the central HP gate. */
-  HP_GATE_DAMAGE: 1,
+  /** Multiplier increment added when a ball is captured by each gate.
+      The central `return` gate recycles the ball and adds nothing. */
+  GATE_MULT: {
+    x1_left: 1,
+    x2_left: 2,
+    return: 0,
+    x2_right: 2,
+    x1_right: 1,
+  },
 
   /* Shield peg */
   SHIELD_MAX_HITS: 5,
   SHIELD_COOLDOWN_MS: 5000,
   SHIELD_RADIUS_MULTIPLIER: 3,
+};
+
+// ─── Cannon ──────────────────────────────────────────────────────────────
+
+/**
+ * Cannon tuning. A single cannon sits at the top-center of the pinboard.
+ * The player aims it (bubble-shooter style) and fires one ball per shot,
+ * re-aiming between shots. The number of balls loaded scales with the level:
+ * level 1 → 1 ball, level 2 → 2, … capped at `BALLS_MAX`.
+ * See `docs/CANNON.md`.
+ */
+export const CANNON = {
+  /** Balls loaded for level N = min(N, BALLS_MAX). */
+  BALLS_MAX: 20,
+  /** Initial speed (px/s) imparted to a launched ball. Gravity then applies. */
+  LAUNCH_SPEED: 640,
+  /** Half-angle of the aim cone measured from straight-down (radians).
+     The barrel can never point flat/upward — the ball always heads down. */
+  MAX_ANGLE: (75 * Math.PI) / 180,
+  /** Distance (px) from the pivot to the muzzle tip where a ball spawns. */
+  MUZZLE_LENGTH: 30,
+  /** Vertical offset (px) of the cannon pivot below the pinboard top. */
+  PIVOT_OFFSET_TOP: 24,
+  /* Trajectory preview */
+  /** Number of bounces (wall or peg) shown in the dashed preview. */
+  TRAJ_BOUNCES: 2,
+  /** Fixed integration step (s) for the preview simulation. */
+  TRAJ_DT: 1 / 120,
+  /** Hard cap on preview simulation steps (anti-runaway). */
+  TRAJ_MAX_STEPS: 420,
+  /** Minimum spacing (px) between two dashed-preview dots. */
+  TRAJ_DOT_SPACING: 15,
+  /** Maximum dots rendered for the preview line. */
+  TRAJ_MAX_DOTS: 60,
+};
+
+// ─── Scoring ────────────────────────────────────────────────────────────────
+
+/**
+ * Score-mode tuning. Each level sets a target score; the player wins when the
+ * final score (hit score × multiplier) reaches it.
+ *
+ * - Hit score accumulates the points of every peg a ball touches (gold).
+ * - The multiplier starts at `MULTIPLIER_BASE` and grows as balls fall into
+ *   the x1 / x2 gates (blue). See `PLINKO.GATE_MULT`.
+ * - The objective grows linearly with the level: `OBJECTIVE_BASE × levelId`.
+ */
+export const SCORE = {
+  /** Target score for level 1; multiplied by the level id. */
+  OBJECTIVE_BASE: 500,
+  /** Multiplier value at the start of every round. */
+  MULTIPLIER_BASE: 1,
+};
+
+/** Total number of levels in a run — shown as "Level x/TOTAL_LEVELS". */
+export const TOTAL_LEVELS = 20;
+
+/**
+ * Mystery cell (map) reward-choice tuning. Landing on a mystery cell now opens
+ * a modal offering `COUNT` distinct reward cards; the player must pick one.
+ * Bonuses already active this run are excluded from the pool. When fewer than
+ * `COUNT` bonuses remain, the empty slots become a **common** currency card
+ * granting coins or diamonds (amounts rolled in the ranges below, inclusive).
+ * See `docs/BONUS.md`.
+ */
+export const MYSTERY_CHOICE = {
+  COUNT: 2,
+  FALLBACK_COINS_MIN: 40,
+  FALLBACK_COINS_MAX: 80,
+  FALLBACK_DIAMONDS_MIN: 1,
+  FALLBACK_DIAMONDS_MAX: 3,
+};
+
+/**
+ * Rarity vocabulary — shared by mystery rewards (`bonus-defs.js`) and the
+ * slot-machine peg pool (peg rarity derived from the boutique price, see
+ * `slot-machine-defs.js#rarityForUpgrade`). `malus` is a reward category, not a
+ * quality tier, so it is intentionally absent here.
+ */
+export const RARITY = /** @type {const} */ ({
+  LEGENDARY: "legendary",
+  EPIC: "epic",
+  RARE: "rare",
+  COMMON: "common",
+});
+
+/**
+ * Relative draw weights per rarity, used by any **weighted** rarity roll
+ * (mystery reward pool, slot-machine reel). Higher = more frequent. Tuning
+ * these is the single knob for how often rare/epic/legendary outcomes appear;
+ * the previous behaviour (uniform draw) is recovered by setting them equal.
+ * @type {Record<string, number>}
+ */
+export const RARITY_WEIGHTS = {
+  [RARITY.COMMON]: 60,
+  [RARITY.RARE]: 25,
+  [RARITY.EPIC]: 12,
+  [RARITY.LEGENDARY]: 3,
 };
 
 // ─── Peg Save System ──────────────────────────────────────────────────────
@@ -256,7 +363,7 @@ export const PEG_SAVE = {
 /**
  * Configuration for each peg type.
  * Each peg type has a base HP (hits before destruction).
- * Layers spawn classic pegs only; the player replaces them via the radial peg menu.
+ * Layers spawn classic pegs only.
  * @type {Record<string, { hp: number }>}
  */
 export const PEG_DEFS = {
@@ -264,15 +371,71 @@ export const PEG_DEFS = {
   bumper: { hp: 10 },
   coin: { hp: 10 },
   diamond: { hp: 10 },
-  glue: { hp: 10 },
+  glue: { hp: 2 },
   teleport: { hp: 10 },
-  chest: { hp: 10 },
+  chest: { hp: 3 },
   shield: { hp: 10 },
-  mystery: { hp: 10 },
+  mystery: { hp: 5 },
   fire: { hp: 10 },
   ice: { hp: 10 },
   electrical: { hp: 10 },
   bomb: { hp: 10 },
+};
+
+/**
+ * Points awarded to the hit-score counter each time a ball touches a peg.
+ * Reward pegs (coin, diamond, mystery, chest) grant 0 points but still hand
+ * out their coins / diamonds / powers. The bomb still explodes after a single
+ * hit — it just credits its points first.
+ * @type {Record<string, number>}
+ */
+export const PEG_POINTS = {
+  peg: 10,
+  coin: 0,
+  diamond: 0,
+  mystery: 0,
+  chest: 0,
+  fire: 20,
+  ice: 20,
+  glue: 200,
+  electrical: 20,
+  teleport: 20,
+  shield: 20,
+  bumper: 30,
+  bomb: 1000,
+};
+
+/**
+ * How a ball's active effect modifies the points credited on each peg hit.
+ * `add` is a flat bonus applied to the peg's base points; `mult` scales the
+ * total. When several effects are active, all `add` bonuses are summed first,
+ * then all `mult` factors are applied — `Math.round((base + Σadd) × Πmult)`.
+ * Effects absent from this map (or with no entry) leave the score unchanged.
+ * @type {Record<string, { add?: number, mult?: number }>}
+ */
+export const EFFECT_HIT_SCORE = {
+  /** Fire ball: +5 points per peg hit. */
+  burning: { add: 5 },
+  /** Ice ball: +10 points per peg hit. */
+  frozen: { add: 10 },
+  /** Electrical ball: ×2 points per peg hit. */
+  electrified: { mult: 2 },
+};
+
+/** Number of classic balls a chest releases onto the pinboard when destroyed. */
+export const CHEST_BALL_RELEASE = 3;
+
+/**
+ * Timing (ms) for the `+N` hit-score chip that pops at a hit peg and then
+ * flies into the gold total. The chip lingers `HOLD_MS` in place so the
+ * player can read the points, then travels to the counter in `FLY_MS`.
+ * The gold total only increments when the chip merges in (i.e. after
+ * `HOLD_MS + FLY_MS`).
+ * @type {{ HOLD_MS: number, FLY_MS: number }}
+ */
+export const SCORE_FLY = {
+  HOLD_MS: 2000,
+  FLY_MS: 360,
 };
 
 // ─── Ball kinds & peg-to-ball effects ─────────────────────────────────────
@@ -305,18 +468,35 @@ export const EFFECT_DEFS = {
 /** Radius (px) of the bomb peg explosion area. */
 export const BOMB_RADIUS = 80;
 
-/**
- * Cost (in coins) to replace a classic peg with a special peg type via
- * the radial peg menu. Pegs not listed here are not replaceable.
- * @type {Record<string, number>}
- */
-export const PEG_REPLACE_COSTS = {
-  fire: 50,
-  ice: 50,
-  electrical: 75,
-  bomb: 80,
-  glue: 30,
-  teleport: 60,
-  shield: 40,
-};
+// ─── Slot machine (peg-upgrade drum) ────────────────────────────────────────
 
+/**
+ * The pinboard slot machine ("bandit manchot"). On level open its reels spin
+ * and settle on random peg upgrades; the player drags an upgrade onto a
+ * classic peg to evolve it (free). A reel emptied by a drop can be re-filled
+ * with a re-spin whose coin cost grows exponentially and resets each level.
+ * See `docs/SLOT-MACHINE.md`.
+ */
+export const SLOT_MACHINE = {
+  /** Active (unlocked) reels by default. */
+  REEL_COUNT_DEFAULT: 4,
+  /** Total reel slots always shown; slots beyond the unlocked count render
+      a padlock. The unlocked count can grow toward this cap. */
+  REEL_COUNT_MAX: 7,
+  /** Re-spin cost = REROLL_BASE_COST × REROLL_GROWTH^(re-spins done this level). */
+  REROLL_BASE_COST: 25,
+  REROLL_GROWTH: 2,
+  /** Reel spin: long, heavy deceleration before it settles (ms). */
+  SPIN_DURATION_MS: 2000,
+  /** Extra delay per reel so they settle one after another (ms). */
+  SPIN_STAGGER_MS: 220,
+  /** Number of filler cells rolled through before the target lands. */
+  SPIN_ROLL_CELLS: 20,
+  /** Heavy ease-out used for the deceleration curve. */
+  SPIN_EASING: "cubic-bezier(.12,.7,.08,1)",
+  /** Reel tremble as it comes to rest (ms). */
+  TREMBLE_MS: 180,
+  /** Grace window (ms) after the last score change during which the machine
+      stays faded in the background (score still "increasing"). */
+  DIM_SCORE_IDLE_MS: 600,
+};

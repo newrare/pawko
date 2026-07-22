@@ -48,7 +48,6 @@ describe("ElectricalPeg", () => {
   });
 });
 
-
 describe("BombPeg", () => {
   it("has type 'bomb'", () => {
     const peg = new BombPeg();
@@ -79,7 +78,9 @@ describe("BombPeg", () => {
 
 describe("Ball effect system", () => {
   let now;
-  beforeEach(() => { now = 1000; });
+  beforeEach(() => {
+    now = 1000;
+  });
 
   it("applyEffect adds a named effect with correct expiry", () => {
     const b = new Ball();

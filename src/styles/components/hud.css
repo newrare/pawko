@@ -27,7 +27,9 @@
   border: 1px solid var(--pk-crimson-muted);
   box-shadow: var(--gt-shadow-sm);
   cursor: pointer;
-  transition: background 0.15s, transform 0.1s;
+  transition:
+    background 0.15s,
+    transform 0.1s;
 }
 
 .pk-hud-btn:active {

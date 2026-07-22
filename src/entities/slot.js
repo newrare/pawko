@@ -20,4 +20,22 @@ export const Slot = {
     const step = width / PLINKO.SLOTS_PER_LAYER;
     return step / 2 + index * step;
   },
+
+  /**
+   * Whether a slot's peg keeps the required clearance from the board side
+   * walls. Slots too close to an edge are dropped at generation so no peg
+   * hugs the border. Margin is width-proportional, floored by the peg
+   * radius for very narrow boards.
+   * @param {number} index
+   * @param {number} width
+   * @returns {boolean}
+   */
+  isClear(index, width) {
+    const x = this.xFor(index, width);
+    const margin = Math.max(
+      PLINKO.PEG_RADIUS,
+      width * PLINKO.PEG_EDGE_MARGIN_RATIO,
+    );
+    return x >= margin && x <= width - margin;
+  },
 };

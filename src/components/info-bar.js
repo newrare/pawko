@@ -5,18 +5,19 @@ import { diamondManager } from "../managers/diamond-manager.js";
 import { saveManager } from "../managers/save-manager.js";
 import { bonusManager } from "../managers/bonus-manager.js";
 import { abilityManager } from "../managers/ability-manager.js";
-import { BALL_KINDS } from "../entities/ball-factory.js";
+import { pegShopManager } from "../managers/peg-shop-manager.js";
 import { PEG_TYPES } from "../entities/peg-factory.js";
-import { BONUS_CATEGORIES, findBonus } from "../configs/bonus-defs.js";
+import { BONUS_CATEGORIES } from "../configs/bonus-defs.js";
+import { findPegShopItem } from "../configs/peg-shop-defs.js";
 import { findAbility } from "../configs/ability-defs.js";
+import { iconSvg } from "../utils/icon.js";
 
 export const INFO_BAR_MODES = /** @type {const} */ ({
   EXPLORATION: "exploration",
-  PINBOARD: "pinboard",
 });
 
 /**
- * @typedef {'exploration' | 'pinboard'} InfoBarMode
+ * @typedef {'exploration'} InfoBarMode
  */
 
 /**
@@ -38,19 +39,11 @@ export class InfoBar {
   /** @type {ListenerBag} */
   #bag = new ListenerBag();
 
-  /** @type {InfoBarMode} */
-  #mode;
-
   /** @type {string | null} */
   #openPillId = null;
 
   /** @type {Record<string, any>} */
   #data = {};
-
-  /** @param {{ mode?: InfoBarMode }} options */
-  constructor({ mode = INFO_BAR_MODES.EXPLORATION } = {}) {
-    this.#mode = mode;
-  }
 
   /** @param {HTMLElement} root */
   mount(root) {
@@ -93,7 +86,8 @@ export class InfoBar {
       .map((p) => {
         const count = this.#getPillCount(p);
         const isActive = this.#openPillId === p.id;
-        const zeroClass = count === 0 || count === "0" ? " pk-info-pill-count--zero" : "";
+        const zeroClass =
+          count === 0 || count === "0" ? " pk-info-pill-count--zero" : "";
         return `
           <button class="pk-info-pill${isActive ? " pk-info-pill--active" : ""}"
                   data-pill="${p.id}"
@@ -105,7 +99,9 @@ export class InfoBar {
       })
       .join("");
 
-    const drawerHtml = this.#openPillId ? this.#renderDrawerForPill(this.#openPillId) : "";
+    const drawerHtml = this.#openPillId
+      ? this.#renderDrawerForPill(this.#openPillId)
+      : "";
 
     return `
       <div class="pk-info-pills">${pillsHtml}</div>
@@ -142,10 +138,7 @@ export class InfoBar {
 
   /** @returns {PillConfig[]} */
   #getPillConfigs() {
-    if (this.#mode === INFO_BAR_MODES.EXPLORATION) {
-      return this.#getExplorationPills();
-    }
-    return this.#getPinboardPills();
+    return this.#getExplorationPills();
   }
 
   /** @returns {PillConfig[]} */
@@ -210,49 +203,10 @@ export class InfoBar {
         icon: '<img src="/images/icon-lightning.svg" class="pk-svg-icon" alt="">',
         getCount: () => {
           const abilities = abilityManager.getUnlocked().length;
-          const bonuses = bonusManager.getUnlockedPermanent().length;
-          return `${abilities} | ${bonuses}`;
+          const pegs = pegShopManager.getAcquired().length;
+          return `${abilities} | ${pegs}`;
         },
         renderDrawer: () => this.#renderPermanentDrawer(),
-      },
-    ];
-  }
-
-  /** @returns {PillConfig[]} */
-  #getPinboardPills() {
-    return [
-      {
-        id: "hp",
-        icon: "❤️",
-        getCount: () => {
-          const hp = this.#data.hp ?? {};
-          const cur = hp.current ?? 0;
-          const max = hp.max ?? 0;
-          return `${cur}/${max}`;
-        },
-        renderDrawer: () => this.#renderHpDrawer(),
-      },
-      {
-        id: "balls",
-        icon: '<img src="/images/icon-ball.svg" class="pk-svg-icon" alt="">',
-        getCount: () => {
-          const balls = this.#data.balls ?? {};
-          if (typeof balls === "number") return balls;
-          return Object.values(balls).reduce((a, b) => a + b, 0);
-        },
-        renderDrawer: () => this.#renderBallsDrawer(),
-      },
-      {
-        id: "launchers",
-        icon: "🚀",
-        getCount: () => this.#data.launchers?.total ?? 0,
-        renderDrawer: () => this.#renderLaunchersDrawer(),
-      },
-      {
-        id: "coins",
-        icon: '<img src="/images/icon-coin.svg" class="pk-svg-icon" alt="">',
-        getCount: () => currencyManager.get(),
-        renderDrawer: () => this.#renderCoinsDrawer(),
       },
     ];
   }
@@ -356,8 +310,9 @@ export class InfoBar {
       )
       .join("");
 
-    const pegsContent = pegRows
-      || `<div class="pk-info-drawer-empty">${i18n.t("info_bar.no_pegs")}</div>`;
+    const pegsContent =
+      pegRows ||
+      `<div class="pk-info-drawer-empty">${i18n.t("info_bar.no_pegs")}</div>`;
 
     return `
       <div class="pk-info-drawer-grid">
@@ -397,21 +352,37 @@ export class InfoBar {
       return `<div class="pk-info-drawer-empty">${i18n.t("info_bar.no_session")}</div>`;
     }
 
-    const bonuses = active.filter((e) => e.def.category !== BONUS_CATEGORIES.MALUS);
-    const maluses = active.filter((e) => e.def.category === BONUS_CATEGORIES.MALUS);
+    const bonuses = active.filter(
+      (e) => e.def.category !== BONUS_CATEGORIES.MALUS,
+    );
+    const maluses = active.filter(
+      (e) => e.def.category === BONUS_CATEGORIES.MALUS,
+    );
 
     const renderEntry = (entry) => {
       const isMalus = entry.def.category === BONUS_CATEGORIES.MALUS;
       const nameKey = isMalus
         ? `bonus.malus.${entry.id}`
-        : `bonus.session.${entry.id}`;
+        : `bonus.reward.${entry.id}`;
+      const remainingKeyByUnit = {
+        level: "info_bar.remaining_levels",
+        shop: "info_bar.remaining_shops",
+        mystery: "info_bar.remaining_mysteries",
+      };
       const remainingLabel = Number.isFinite(entry.remaining)
-        ? i18n.t("info_bar.remaining_levels", { n: entry.remaining })
+        ? i18n.t(
+            remainingKeyByUnit[entry.unit] ?? "info_bar.remaining_levels",
+            {
+              n: entry.remaining,
+            },
+          )
         : i18n.t("info_bar.run_scoped");
-      const modClass = isMalus ? "pk-info-entry--malus" : "pk-info-entry--bonus";
+      const modClass = isMalus
+        ? "pk-info-entry--malus"
+        : "pk-info-entry--bonus";
       return `
         <div class="pk-info-entry ${modClass}">
-          <span class="pk-info-entry-icon">${entry.def.icon}</span>
+          <span class="pk-info-entry-icon">${iconSvg(entry.def.icon)}</span>
           <span class="pk-info-entry-name">${i18n.t(nameKey)}</span>
           <span class="pk-info-entry-meta">${remainingLabel}</span>
         </div>
@@ -428,8 +399,8 @@ export class InfoBar {
 
   #renderPermanentDrawer() {
     const abilityIds = abilityManager.getUnlocked();
-    const bonusIds = bonusManager.getUnlockedPermanent();
-    if (abilityIds.length === 0 && bonusIds.length === 0) {
+    const pegTypes = pegShopManager.getAcquired();
+    if (abilityIds.length === 0 && pegTypes.length === 0) {
       return `<div class="pk-info-drawer-empty">${i18n.t("info_bar.no_permanent")}</div>`;
     }
 
@@ -447,14 +418,14 @@ export class InfoBar {
       })
       .join("");
 
-    const bonusRows = bonusIds
-      .map((id) => {
-        const def = findBonus(id);
+    const pegRows = pegTypes
+      .map((type) => {
+        const def = findPegShopItem(type);
         if (!def) return "";
         return `
           <div class="pk-info-entry">
-            <span class="pk-info-entry-icon">${def.icon}</span>
-            <span class="pk-info-entry-name">${i18n.t(`bonus.permanent.${id}`)}</span>
+            <span class="pk-info-entry-icon">${iconSvg(def.icon)}</span>
+            <span class="pk-info-entry-name">${i18n.t(`peg_shop.${type}`)}</span>
           </div>
         `;
       })
@@ -463,97 +434,14 @@ export class InfoBar {
     const abilitiesSection = abilityIds.length
       ? `<div class="pk-info-drawer-subtitle">${i18n.t("info_bar.abilities")}</div>${abilityRows}`
       : "";
-    const bonusesSection = bonusIds.length
-      ? `<div class="pk-info-drawer-subtitle">${i18n.t("info_bar.permanent_bonuses")}</div>${bonusRows}`
+    const pegsSection = pegTypes.length
+      ? `<div class="pk-info-drawer-subtitle">${i18n.t("info_bar.boutique_pegs")}</div>${pegRows}`
       : "";
 
     return `
       <div class="pk-info-drawer-list">
         ${abilitiesSection}
-        ${bonusesSection}
-      </div>
-    `;
-  }
-
-  #renderHpDrawer() {
-    const hp = this.#data.hp ?? {};
-    const cur = hp.current ?? 0;
-    const max = hp.max ?? 0;
-    const pct = max > 0 ? Math.round((cur / max) * 100) : 0;
-    return `
-      <div class="pk-info-drawer-row">
-        <span class="pk-info-drawer-label">${i18n.t("info_bar.hp_current")}</span>
-        <span class="pk-info-drawer-value">${cur} / ${max}</span>
-      </div>
-      <div class="pk-info-drawer-row">
-        <span class="pk-info-drawer-label">${i18n.t("info_bar.hp_percent")}</span>
-        <span class="pk-info-drawer-value">${pct}%</span>
-      </div>
-    `;
-  }
-
-  #renderBallsDrawer() {
-    const balls = this.#data.balls ?? {};
-    if (typeof balls === "number") {
-      return `
-        <div class="pk-info-drawer-row">
-          <span class="pk-info-drawer-label">${i18n.t("info_bar.total")}</span>
-          <span class="pk-info-drawer-value">${balls}</span>
-        </div>
-      `;
-    }
-
-    const total = Object.values(balls).reduce((a, b) => a + b, 0);
-    if (total === 0) {
-      return `<div class="pk-info-drawer-empty">${i18n.t("info_bar.no_balls")}</div>`;
-    }
-
-    const kinds = Object.values(BALL_KINDS);
-    return `
-      <div class="pk-info-drawer-grid">
-        ${kinds
-          .map(
-            (kind) => `
-          <div class="pk-info-drawer-row">
-            <span class="pk-info-drawer-label pk-info-drawer-label--${kind}">
-              ${i18n.t(`info_bar.ball.${kind}`)}
-            </span>
-            <span class="pk-info-drawer-value">${balls[kind] ?? 0}</span>
-          </div>
-        `,
-          )
-          .join("")}
-      </div>
-    `;
-  }
-
-  #renderLaunchersDrawer() {
-    const data = this.#data.launchers ?? {};
-    const total = data.total ?? 0;
-    const fired = data.fired ?? 0;
-    const remaining = total - fired;
-
-    return `
-      <div class="pk-info-drawer-grid">
-        <div class="pk-info-drawer-row">
-          <span class="pk-info-drawer-label">${i18n.t("info_bar.launchers_total")}</span>
-          <span class="pk-info-drawer-value">${total}</span>
-        </div>
-        <div class="pk-info-drawer-row">
-          <span class="pk-info-drawer-label">${i18n.t("info_bar.launchers_remaining")}</span>
-          <span class="pk-info-drawer-value">${remaining}</span>
-        </div>
-      </div>
-    `;
-  }
-
-  #renderCoinsDrawer() {
-    return `
-      <div class="pk-info-drawer-grid">
-        <div class="pk-info-drawer-row">
-          <span class="pk-info-drawer-label">${i18n.t("info_bar.coins")}</span>
-          <span class="pk-info-drawer-value">${currencyManager.get()}</span>
-        </div>
+        ${pegsSection}
       </div>
     `;
   }
@@ -576,16 +464,23 @@ export class InfoBar {
     const countEl = pillEl.querySelector(".pk-info-pill-count");
     if (countEl) {
       countEl.innerHTML = String(count);
-      countEl.classList.toggle("pk-info-pill-count--zero", count === 0 || count === "0");
+      countEl.classList.toggle(
+        "pk-info-pill-count--zero",
+        count === 0 || count === "0",
+      );
     }
   }
 
   #refreshDrawer() {
     if (!this.#el || !this.#openPillId) return;
-    const drawerEl = this.#el.querySelector(`[data-drawer="${this.#openPillId}"]`);
+    const drawerEl = this.#el.querySelector(
+      `[data-drawer="${this.#openPillId}"]`,
+    );
     if (!drawerEl) return;
 
-    const config = this.#getPillConfigs().find((p) => p.id === this.#openPillId);
+    const config = this.#getPillConfigs().find(
+      (p) => p.id === this.#openPillId,
+    );
     if (!config) return;
 
     const content = config.renderDrawer(this.#data[this.#openPillId] ?? {});

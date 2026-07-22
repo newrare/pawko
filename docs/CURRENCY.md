@@ -2,34 +2,39 @@
 
 Pawko has two currencies, both persistent across runs:
 
-| Currency        | Manager            | Storage key              | Spent at        |
-| --------------- | ------------------ | ------------------------ | --------------- |
-| **Coins** 🪙    | `currencyManager`  | `STORAGE_KEYS.CURRENCY`  | Shop scene      |
-| **Diamonds** 💎 | `diamondManager`   | `STORAGE_KEYS.DIAMONDS`  | Ability scene   |
+| Currency     | Manager            | Storage key              | Spent at            |
+| ------------ | ------------------ | ------------------------ | ------------------- |
+| **Coins**    | `currencyManager`  | `STORAGE_KEYS.CURRENCY`  | Boutique + re-spins |
+| **Diamonds** | `diamondManager`   | `STORAGE_KEYS.DIAMONDS`  | Ability scene       |
 
-Coins fund **session bonuses** (one-shot or N-level buffs sold in the
-shop). Diamonds fund **abilities** — permanent gates that unlock new
-bonuses, ball kinds, and reveal flags.
+Coins fund the **boutique** — peg types added to the slot-machine pool for the
+current run (see [SHOP.md](./SHOP.md)) — and slot-machine re-spins.
+Diamonds fund **abilities** — permanent, direct-effect upgrades (see
+[ABILITY.md](./ABILITY.md)). Run **rewards** (bonuses/maluses) are never bought;
+they come only from mystery sources (see [BONUS.md](./BONUS.md)). There is no
+separate "reward" currency.
 
 ## Earning coins 🪙
 
-Coins drop from the `CoinPeg` entity. A coin peg is rendered with the
-`.pk-peg pk-peg--coin` class and shows the cent glyph (`¢`). The first
-ball that touches a coin peg awards `peg.coinValue` coins (default
-`PLINKO.COIN_VALUE = 5`) and the peg is removed for the rest of the
-round.
+Coins drop from the `CoinPeg` entity, rendered with the
+`.pk-peg pk-peg--coin` class. The first ball that touches a coin peg awards
+`peg.coinValue` coins (default `PLINKO.COIN_VALUE = 1`) and the peg is
+removed for the rest of the round. It flashes a `+N` popup with the coin
+icon, exactly like a scoring peg, so the feedback loop is identical.
 
-A coin peg also flashes a `+N¢` popup, exactly like a scoring peg, so
-the feedback loop is identical.
-
-Coin pegs spawn alongside regular pegs in `Layer.constructor`. Their
-spawn probability uses `PLINKO.COIN_CHANCE_BASE` and follows the same
-"alternating slot" rule as bumpers.
+Coin pegs are **not** spawned in layers — layers hold classic pegs only.
+`coin` is one of the three default slot-machine upgrades
+(`DEFAULT_UPGRADE_TYPES = [fire, coin, bumper]`), so the player creates a
+coin peg by dragging a rolled `coin` upgrade onto a classic peg (see
+[SLOT-MACHINE.md](./SLOT-MACHINE.md)).
 
 ## Earning diamonds 💎
 
-Diamonds drop from rarer pegs: `DiamondPeg`, `ChestPeg`, and as one of
-the random outcomes of `MysteryPeg`. The reward payload contains a
+Diamonds drop from rarer pegs: `DiamondPeg` and as one of the random
+outcomes of `MysteryPeg`. (`ChestPeg` no longer drops currency — when
+destroyed it releases `CHEST_BALL_RELEASE` classic balls onto the
+pinboard instead, subject to the `PLINKO.MAX_PINBOARD_BALLS` cap — see
+[src/utils/ball-budget.js](../src/utils/ball-budget.js).) The reward payload contains a
 `diamonds` field, e.g. `{ diamonds: 1, popText: "+1💎" }`. The
 controller routes any `diamonds` value into `diamondManager.add(n)` via
 the global `gameEvents` channel — peg code never imports the manager

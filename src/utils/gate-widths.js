@@ -3,27 +3,26 @@ import { PLINKO } from "../configs/constants.js";
 /**
  * Compute the relative width (0..1) of each collection gate.
  *
- * The five gates (teleport_left, destroy_left, hp, destroy_right,
- * teleport_right) start at 20% each. Width reductions on the teleport
- * gates (`backReduction`) and the central HP gate (`hpReduction`) shrink
- * those gates; the freed space is redistributed evenly to the two
- * destroy gates. Sum is always 1.0.
+ * The five gates (x1_left, x2_left, return, x2_right, x1_right) start at 20%
+ * each. Width reductions on the edge x1 gates (`backReduction`) and the
+ * central return gate (`hpReduction`) shrink those gates; the freed space is
+ * redistributed evenly to the two x2 gates. Sum is always 1.0.
  *
  * @param {{ backReduction?: number, hpReduction?: number }} [opts]
  * @returns {Record<string, number>}
  */
 export function computeGateWidths({ backReduction = 0, hpReduction = 0 } = {}) {
   const base = 0.2;
-  const backWidth = base * (1 - clamp01(backReduction));
-  const hpWidth = base * (1 - clamp01(hpReduction));
-  const freed = 2 * (base - backWidth) + (base - hpWidth);
-  const destroyWidth = base + freed / 2;
+  const edgeWidth = base * (1 - clamp01(backReduction));
+  const returnWidth = base * (1 - clamp01(hpReduction));
+  const freed = 2 * (base - edgeWidth) + (base - returnWidth);
+  const midWidth = base + freed / 2;
   return {
-    teleport_left: backWidth,
-    destroy_left: destroyWidth,
-    hp: hpWidth,
-    destroy_right: destroyWidth,
-    teleport_right: backWidth,
+    x1_left: edgeWidth,
+    x2_left: midWidth,
+    return: returnWidth,
+    x2_right: midWidth,
+    x1_right: edgeWidth,
   };
 }
 

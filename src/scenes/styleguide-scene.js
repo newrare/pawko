@@ -5,6 +5,7 @@ import { SlowFloatBackground } from "../utils/slow-float-background.js";
 import { buttonHtml } from "../components/ui/button.js";
 import { toggleRowHtml } from "../components/ui/toggle-row.js";
 import { mountSparkWeb } from "../utils/spark-web.js";
+import { iconSvg } from "../utils/icon.js";
 
 import { TitleScene } from "./title-scene.js";
 import { vfx } from "../utils/vfx.js";
@@ -28,8 +29,6 @@ export class StyleguideScene {
 
   /** @type {Array<() => void>} Spark-web/arc unmount fns, cleared on each refresh. */
   #sparkUnmounts = [];
-
-
 
   /** @param {import('./scene-router.js').SceneRouter} router */
   constructor(router) {
@@ -63,7 +62,9 @@ export class StyleguideScene {
     this.#el
       .querySelectorAll('[data-sg-spark="peg"]')
       .forEach((host) =>
-        this.#sparkUnmounts.push(mountSparkWeb(host, { radius: 11, padding: 14 })),
+        this.#sparkUnmounts.push(
+          mountSparkWeb(host, { radius: 11, padding: 14 }),
+        ),
       );
   }
 
@@ -76,8 +77,10 @@ export class StyleguideScene {
     return `
       ${this.#renderHeader()}
       ${this.#renderColors()}
+      ${this.#renderIcons()}
       ${this.#renderTypography()}
       ${this.#renderCards()}
+      ${this.#renderMysteryCards()}
       ${this.#renderButtons()}
       ${this.#renderToggles()}
       ${this.#renderPegs()}
@@ -100,18 +103,18 @@ export class StyleguideScene {
 
   #renderColors() {
     const colors = [
-      { token: "--pk-bg",           label: "Background" },
-      { token: "--pk-bg-surface",   label: "Surface" },
-      { token: "--pk-bg-card",      label: "Card" },
-      { token: "--pk-crimson-muted",label: "Crimson Muted" },
+      { token: "--pk-bg", label: "Background" },
+      { token: "--pk-bg-surface", label: "Surface" },
+      { token: "--pk-bg-card", label: "Card" },
+      { token: "--pk-crimson-muted", label: "Crimson Muted" },
       { token: "--pk-crimson-deep", label: "Crimson Deep" },
-      { token: "--pk-crimson",      label: "Crimson" },
-      { token: "--pk-rose",         label: "Rose" },
-      { token: "--pk-rose-dim",     label: "Rose Dim" },
-      { token: "--pk-rose-muted",   label: "Rose Muted" },
-      { token: "--pk-gold",         label: "Gold" },
-      { token: "--pk-gold-light",   label: "Gold Light" },
-      { token: "--pk-gold-dim",     label: "Gold Dim" },
+      { token: "--pk-crimson", label: "Crimson" },
+      { token: "--pk-rose", label: "Rose" },
+      { token: "--pk-rose-dim", label: "Rose Dim" },
+      { token: "--pk-rose-muted", label: "Rose Muted" },
+      { token: "--pk-gold", label: "Gold" },
+      { token: "--pk-gold-light", label: "Gold Light" },
+      { token: "--pk-gold-dim", label: "Gold Dim" },
     ];
     const swatches = colors
       .map(
@@ -130,6 +133,123 @@ export class StyleguideScene {
       <section class="gt-sg-section">
         <h2 class="gt-sg-h2">${i18n.t("styleguide.colors")}</h2>
         <div class="gt-sg-swatches">${swatches}</div>
+      </section>
+    `;
+  }
+
+  #renderIcons() {
+    // Lucide icons used across the game, grouped by usage. Colour follows
+    // the host element (currentColor) — reach for the tokens below.
+    const groups = [
+      {
+        title: "Navigation & abilities",
+        items: [
+          ["shopping-cart", "shop"],
+          ["door-open", "gate"],
+          ["map", "map"],
+          ["dices", "wheel"],
+          ["lock", "locked"],
+          ["check", "owned"],
+        ],
+      },
+      {
+        title: "Peg upgrades",
+        items: [
+          ["flame", "fire"],
+          ["coins", "coin"],
+          ["circle-dot", "bumper"],
+          ["snowflake", "ice"],
+          ["droplet", "glue"],
+          ["zap", "electric"],
+          ["tornado", "teleport"],
+          ["package", "chest"],
+          ["circle-help", "mystery"],
+          ["shield", "shield"],
+          ["gem", "diamond"],
+          ["bomb", "bomb"],
+        ],
+      },
+      {
+        title: "Rewards & rarity",
+        items: [
+          ["sparkles", "score"],
+          ["save", "save"],
+          ["recycle", "recycle"],
+          ["circle-plus", "extra"],
+          ["trending-down", "penalty"],
+          ["diamond", "legendary"],
+          ["spade", "epic"],
+          ["club", "rare"],
+          ["heart", "common"],
+        ],
+      },
+    ];
+
+    const cell = ([name, label]) => `
+      <div class="gt-sg-icon-cell" title="${name}">
+        <span class="gt-sg-icon" style="font-size:1.6rem">${iconSvg(name)}</span>
+        <span class="gt-sg-icon-label">${label}</span>
+      </div>`;
+
+    const grid = groups
+      .map(
+        (g) => `
+        <div>
+          <span class="gt-sg-sub-label">${g.title}</span>
+          <div class="gt-sg-icon-grid">${g.items.map(cell).join("")}</div>
+        </div>`,
+      )
+      .join("");
+
+    // Colour modifiers — each is a token-driven class from icon.css.
+    const tints = [
+      ["pk-icon--gold", "gold"],
+      ["pk-icon--gold-light", "gold-light"],
+      ["pk-icon--crimson", "crimson"],
+      ["pk-icon--rose", "rose"],
+      ["pk-icon--dim", "dim"],
+      ["pk-icon--success", "success"],
+      ["pk-icon--danger", "danger"],
+      ["pk-icon--warning", "warning"],
+    ];
+    const tintRow = tints
+      .map(
+        ([cls, label]) => `
+        <div class="gt-sg-icon-cell" title=".${cls}">
+          <span class="gt-sg-icon" style="font-size:1.8rem">${iconSvg("gem", { cls })}</span>
+          <span class="gt-sg-icon-label">${label}</span>
+        </div>`,
+      )
+      .join("");
+
+    // Featured highlight card — the icon-last.html treatment on tokens.
+    const rarities = [
+      ["legendary", "gem", "Legendary"],
+      ["epic", "spade", "Epic"],
+      ["rare", "club", "Rare"],
+      ["common", "heart", "Common"],
+      ["malus", "trending-down", "Malus"],
+    ];
+    const featured = rarities
+      .map(
+        ([r, icon, tag]) => `
+        <div class="pk-featured pk-featured--${r}">
+          <div class="pk-featured-surface">${iconSvg(icon)}</div>
+          <span class="pk-featured-tag">${tag}</span>
+        </div>`,
+      )
+      .join("");
+
+    return `
+      <section class="gt-sg-section">
+        <h2 class="gt-sg-h2">Icons — Lucide (self-hosted)</h2>
+        <div style="display:flex;flex-direction:column;gap:1.2rem;">${grid}</div>
+
+        <span class="gt-sg-sub-label" style="margin-top:1.4rem;display:block;">Colour modifiers — token-driven (.pk-icon--*)</span>
+        <div class="gt-sg-icon-grid">${tintRow}</div>
+
+        <span class="gt-sg-sub-label" style="margin-top:1.4rem;display:block;">Item highlight — .pk-featured (shimmer + ping radar)</span>
+        <div class="gt-sg-featured-row">${featured}</div>
       </section>
     `;
   }
@@ -222,6 +342,83 @@ export class StyleguideScene {
     `;
   }
 
+  #renderMysteryCards() {
+    // Mirrors MysteryChoiceModal.#renderCard so cards can be tuned here in
+    // isolation. Per-rarity treatment: legendary = shimmer + ping radar,
+    // epic = shimmer, rare / common = static, malus = inverted (dark surface).
+    const card = ({ rarity, icon, title, desc }) => `
+      <div class="pk-mystery-card pk-mystery-card--${rarity}">
+        <span class="pk-mystery-card-title">${title}</span>
+        <span class="pk-mystery-card-icon pk-featured">
+          <span class="pk-featured-surface">${iconSvg(icon)}</span>
+        </span>
+        <span class="pk-mystery-card-desc">${desc}</span>
+      </div>`;
+
+    // One representative reward per rarity (title + desc pulled from locales).
+    const rewards = [
+      {
+        rarity: "legendary",
+        icon: "coins",
+        key: "bonus.reward.reward_coins_x3",
+      },
+      {
+        rarity: "epic",
+        icon: "sparkles",
+        key: "bonus.reward.reward_score_total_x2",
+      },
+      { rarity: "rare", icon: "bomb", key: "bonus.reward.reward_bomb_radius" },
+      {
+        rarity: "common",
+        icon: "circle-plus",
+        key: "bonus.reward.reward_extra_ball",
+      },
+      { rarity: "malus", icon: "coins", key: "bonus.malus.malus_half_coins" },
+    ]
+      .map((r) =>
+        card({
+          rarity: r.rarity,
+          icon: r.icon,
+          title: i18n.t(r.key),
+          desc: i18n.t(`${r.key}.desc`),
+        }),
+      )
+      .join("");
+
+    // Currency fallback cards (common) shown when too few rewards remain.
+    const fallback = [
+      { icon: "coins", currency: "coins", amount: 60 },
+      { icon: "gem", currency: "diamonds", amount: 2 },
+    ]
+      .map((f) =>
+        card({
+          rarity: "common",
+          icon: f.icon,
+          title: i18n.t(`mystery_choice.currency.${f.currency}`, {
+            n: f.amount,
+          }),
+          desc: i18n.t(`mystery_choice.currency.${f.currency}.desc`, {
+            n: f.amount,
+          }),
+        }),
+      )
+      .join("");
+
+    const grid =
+      "display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;align-items:stretch;";
+
+    return `
+      <section class="gt-sg-section">
+        <h2 class="gt-sg-h2">Mystery choice — reward cards</h2>
+        <span class="gt-sg-sub-label" style="display:block;">Per rarity — legendary (shimmer + ping) · epic (shimmer) · rare · common · malus (inverted)</span>
+        <div style="${grid}">${rewards}</div>
+
+        <span class="gt-sg-sub-label" style="margin-top:1.4rem;display:block;">Currency fallback — common card (offered when too few rewards remain)</span>
+        <div style="${grid}">${fallback}</div>
+      </section>
+    `;
+  }
+
   #renderButtons() {
     const rows = [
       `<div>
@@ -248,8 +445,16 @@ export class StyleguideScene {
   }
 
   #renderToggles() {
-    const toggleOn  = toggleRowHtml({ action: "noop", label: i18n.t("options.sound"), checked: true });
-    const toggleOff = toggleRowHtml({ action: "noop", label: i18n.t("options.sound"), checked: false });
+    const toggleOn = toggleRowHtml({
+      action: "noop",
+      label: i18n.t("options.sound"),
+      checked: true,
+    });
+    const toggleOff = toggleRowHtml({
+      action: "noop",
+      label: i18n.t("options.sound"),
+      checked: false,
+    });
 
     return `
       <section class="gt-sg-section">
@@ -433,7 +638,10 @@ export class StyleguideScene {
         // Stop any existing effect on this stage
         const existing = stage.querySelector("[data-vfx]");
         if (existing) existing.remove();
-        const opts = vfxId === "floating-text" ? { text: "+50", duration: 2000 } : { duration: 3000 };
+        const opts =
+          vfxId === "floating-text"
+            ? { text: "+50", duration: 2000 }
+            : { duration: 3000 };
         vfx.play(vfxId, stage, opts);
         break;
       }

@@ -77,7 +77,11 @@ function generateBolt(x1, y1, x2, y2, opts = {}) {
   const segments = [];
 
   function subdivide(ax, ay, bx, by, depth, scale) {
-    if (depth <= 0) return [{ x: ax, y: ay }, { x: bx, y: by }];
+    if (depth <= 0)
+      return [
+        { x: ax, y: ay },
+        { x: bx, y: by },
+      ];
     const mx = (ax + bx) / 2;
     const my = (ay + by) / 2;
     const dx = bx - ax;
@@ -94,7 +98,8 @@ function generateBolt(x1, y1, x2, y2, opts = {}) {
     const path = left.concat(right.slice(1));
 
     if (Math.random() < branchChance * scale && depth > 1) {
-      const angle = Math.atan2(by - ay, bx - ax) + (Math.random() - 0.5) * branchAngle * 2;
+      const angle =
+        Math.atan2(by - ay, bx - ax) + (Math.random() - 0.5) * branchAngle * 2;
       const branchLen = len * branchScale * (0.3 + Math.random() * 0.4);
       const bex = px + Math.cos(angle) * branchLen;
       const bey = py + Math.sin(angle) * branchLen;
@@ -117,12 +122,23 @@ function generateBolt(x1, y1, x2, y2, opts = {}) {
  * @returns {string} SVG path `d` attribute value
  */
 function generatePathData(opts) {
-  const { cx, cy, radius, nodeCount, connectionDist, connectionChance, detail } = opts;
+  const {
+    cx,
+    cy,
+    radius,
+    nodeCount,
+    connectionDist,
+    connectionChance,
+    detail,
+  } = opts;
   const nodes = [];
   for (let i = 0; i < nodeCount; i++) {
     const angle = Math.random() * Math.PI * 2;
     const dist = radius + (Math.random() - 0.3) * (radius * 0.31);
-    nodes.push({ x: cx + Math.cos(angle) * dist, y: cy + Math.sin(angle) * dist });
+    nodes.push({
+      x: cx + Math.cos(angle) * dist,
+      y: cy + Math.sin(angle) * dist,
+    });
   }
 
   const parts = [];
@@ -132,16 +148,24 @@ function generatePathData(opts) {
       const dy = nodes[j].y - nodes[i].y;
       const d = Math.sqrt(dx * dx + dy * dy);
       if (d >= connectionDist || Math.random() >= connectionChance) continue;
-      const bolt = generateBolt(nodes[i].x, nodes[i].y, nodes[j].x, nodes[j].y, {
-        detail,
-        jitter: 0.35,
-        branchChance: 0.15,
-        branchScale: 0.3,
-      });
+      const bolt = generateBolt(
+        nodes[i].x,
+        nodes[i].y,
+        nodes[j].x,
+        nodes[j].y,
+        {
+          detail,
+          jitter: 0.35,
+          branchChance: 0.15,
+          branchScale: 0.3,
+        },
+      );
       for (const polyline of bolt) {
         for (let k = 0; k < polyline.length; k++) {
           const p = polyline[k];
-          parts.push(`${k === 0 ? "M" : "L"}${p.x.toFixed(2)} ${p.y.toFixed(2)}`);
+          parts.push(
+            `${k === 0 ? "M" : "L"}${p.x.toFixed(2)} ${p.y.toFixed(2)}`,
+          );
         }
       }
     }

@@ -1,0 +1,261 @@
+/* --- Slot machine ("bandit manchot") — peg-upgrade drum on the pinboard.
+       Art Déco frame, vertical wooden-style reels with a heavy roll. Sits
+       centered in the band below the score HUD and above the objective line.
+       The container is click-through; only the reels and the re-spin button
+       take pointer events, so taps elsewhere in the band still aim the
+       cannon. Fades to the background while the player aims (like the score
+       HUD). --- */
+
+.pk-slot-machine {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translate(-50%, -50%);
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gt-space-1);
+  pointer-events: none;
+  touch-action: none;
+  user-select: none;
+  opacity: 1;
+  transition: opacity 0.4s ease;
+}
+
+/* Aiming the cannon pushes the machine into the background. */
+.pk-slot-machine--dimmed {
+  opacity: 0.16;
+}
+.pk-slot-machine--dimmed .pk-slot-reel,
+.pk-slot-machine--dimmed .pk-slot-reroll {
+  pointer-events: none;
+}
+
+/* --- Art Déco frame --- */
+.pk-slot-frame {
+  position: relative;
+  padding: 12px 15px;
+  border-radius: var(--gt-radius-lg);
+  background: linear-gradient(180deg, var(--pk-bg-card), #180509);
+  border: 1px solid var(--pk-gold-dim);
+  box-shadow: 0 8px 22px -10px rgba(0, 0, 0, 0.8);
+  pointer-events: auto;
+}
+.pk-slot-frame::before,
+.pk-slot-frame::after {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--pk-gold);
+  pointer-events: none;
+}
+.pk-slot-frame::before {
+  top: 4px;
+  left: 4px;
+  border-right: none;
+  border-bottom: none;
+}
+.pk-slot-frame::after {
+  bottom: 4px;
+  right: 4px;
+  border-left: none;
+  border-top: none;
+}
+
+/* --- Reels --- */
+.pk-slot-reels {
+  display: flex;
+  gap: 5px;
+}
+.pk-slot-reel {
+  --pk-slot-accent: var(--pk-gold-dim);
+  position: relative;
+  width: 38px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 4px;
+  background: var(--pk-bg);
+  border: 1px solid var(--pk-gold-dim);
+  font-size: 1.5rem;
+  line-height: 1;
+}
+/* Depth vignette + gold payline. */
+.pk-slot-reel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.6),
+    transparent 30%,
+    transparent 70%,
+    rgba(0, 0, 0, 0.6)
+  );
+}
+.pk-slot-reel::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 50%;
+  height: 1px;
+  z-index: 3;
+  transform: translateY(-50%);
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(212, 175, 55, 0.5),
+    transparent
+  );
+}
+.pk-slot-reel-icon {
+  display: block;
+  pointer-events: none;
+  font-size: 1.6rem;
+  color: var(--pk-slot-accent, var(--pk-gold-light));
+}
+
+.pk-slot-reel--filled {
+  cursor: grab;
+  border-color: var(--pk-slot-accent);
+  box-shadow: 0 0 6px -1px var(--pk-slot-accent);
+}
+.pk-slot-reel--filled:active,
+.pk-slot-reel--dragging {
+  cursor: grabbing;
+}
+
+.pk-slot-reel--empty {
+  border-style: dashed;
+  border-color: var(--pk-crimson-muted);
+  opacity: 0.6;
+}
+
+/* Locked slots (beyond the unlocked reel count). */
+.pk-slot-reel--locked {
+  border-style: dashed;
+  border-color: var(--pk-rose-muted);
+  opacity: 0.5;
+}
+.pk-slot-reel--locked::after {
+  display: none;
+}
+.pk-slot-reel--locked .pk-slot-reel-icon {
+  font-size: 1.1rem;
+  color: var(--pk-rose-dim);
+}
+
+/* --- Rolling strip --- */
+.pk-slot-strip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+}
+.pk-slot-cell {
+  width: 38px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  font-size: 1.5rem;
+}
+
+/* --- Per-type accents (reuse the shared peg tokens) --- */
+.pk-slot-reel[data-type="fire"] {
+  --pk-slot-accent: var(--pk-peg-fire);
+}
+.pk-slot-reel[data-type="ice"] {
+  --pk-slot-accent: var(--pk-peg-ice);
+}
+.pk-slot-reel[data-type="electrical"] {
+  --pk-slot-accent: var(--pk-peg-electrical);
+}
+.pk-slot-reel[data-type="coin"] {
+  --pk-slot-accent: var(--pk-peg-coin);
+}
+.pk-slot-reel[data-type="bumper"] {
+  --pk-slot-accent: var(--pk-bumper-ring);
+}
+.pk-slot-reel[data-type="glue"] {
+  --pk-slot-accent: var(--pk-peg-glue);
+}
+.pk-slot-reel[data-type="teleport"] {
+  --pk-slot-accent: var(--pk-teleport-ring);
+}
+.pk-slot-reel[data-type="shield"] {
+  --pk-slot-accent: var(--pk-peg-shield);
+}
+.pk-slot-reel[data-type="bomb"] {
+  --pk-slot-accent: var(--pk-peg-bomb);
+}
+
+/* --- Re-spin button --- */
+.pk-slot-reroll {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--pk-gold);
+  background: var(--pk-bg-card);
+  color: var(--pk-gold-light);
+  font-family: var(--gt-font-display);
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    opacity 0.2s ease;
+}
+.pk-slot-reroll:not([disabled]):active {
+  transform: scale(0.94);
+}
+.pk-slot-reroll[disabled] {
+  opacity: 0.4;
+  cursor: default;
+  border-color: var(--pk-rose-muted);
+  color: var(--pk-rose-dim);
+}
+.pk-slot-reroll-icon {
+  display: inline-flex;
+  font-size: 0.9rem;
+}
+.pk-slot-reroll-cost {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.pk-slot-reroll-cost .pk-icon {
+  color: var(--pk-gold);
+}
+
+/* --- Floating drag token (appended to <body>, follows the pointer) --- */
+.pk-slot-ghost {
+  position: fixed;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -50%);
+  z-index: 60;
+  font-size: 1.6rem;
+  pointer-events: none;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.6));
+  animation: pk-slot-ghost-pop 0.14s ease-out;
+}
+
+@keyframes pk-slot-ghost-pop {
+  from {
+    transform: translate(-50%, -50%) scale(0.6);
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+  }
+}

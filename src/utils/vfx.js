@@ -61,7 +61,18 @@ function randomInt(min, max) {
 }
 
 function randomColor() {
-  const colors = ["#ff4757", "#ffa502", "#2ed573", "#1e90ff", "#ff6b81", "#7bed9f", "#70a1ff", "#eccc68", "#a55eea", "#ff9ff3"];
+  const colors = [
+    "#ff4757",
+    "#ffa502",
+    "#2ed573",
+    "#1e90ff",
+    "#ff6b81",
+    "#7bed9f",
+    "#70a1ff",
+    "#eccc68",
+    "#a55eea",
+    "#ff9ff3",
+  ];
   return colors[randomInt(0, colors.length - 1)];
 }
 
@@ -227,7 +238,9 @@ export const vfx = {
   play(id, target, options = {}) {
     const builder = registry.get(id);
     if (!builder) {
-      throw new Error(`[vfx] Unknown effect: "${id}". Available: ${[...registry.keys()].join(", ")}`);
+      throw new Error(
+        `[vfx] Unknown effect: "${id}". Available: ${[...registry.keys()].join(", ")}`,
+      );
     }
 
     ensurePositioned(target);

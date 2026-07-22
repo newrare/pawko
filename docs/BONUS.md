@@ -1,145 +1,171 @@
-# Bonus System
+# Bonus (Reward) System
 
-Pawko's rogue-lite loop is driven by **bonuses** and **maluses**. Every
-modifier the player ever earns flows through one channel: `bonusManager`.
+Pawko's rogue-lite loop is driven by run-scoped **rewards** — **bonuses** and
+**maluses**. They are never bought: a reward is obtained only from a **mystery**
+source (a mystery cell on the map, or a mystery peg on the pinboard). Everything
+flows through one channel: `bonusManager`, which holds **no persistent state** —
+rewards live and die within a single run.
+
+Permanent progression (boutique discount, gates, map reveal, wheels) lives in
+[`ABILITY.md`](./ABILITY.md); peg purchases in [`SHOP.md`](./SHOP.md).
 
 ## Catalogue split
 
-Definitions live in [`src/configs/bonus-defs.js`](../src/configs/bonus-defs.js).
-There are three top-level lists:
+Definitions live in [`src/configs/bonus-defs.js`](../src/configs/bonus-defs.js):
 
-| List               | Type                       | Category    | Earned by                              | Cleared by                  |
-| ------------------ | -------------------------- | ----------- | -------------------------------------- | --------------------------- |
-| `PERMANENT_BONUSES`| `BONUS_TYPES.PERMANENT`    | `BONUS`     | Shop (coins) — gated by abilities      | `saveManager.resetAll()`    |
-| `SESSION_BONUSES`  | `BONUS_TYPES.SESSION`      | `BONUS`     | Shop, mystery peg, mystery cell        | End of run (`clearSession`) |
-| `SESSION_MALUSES`  | `BONUS_TYPES.SESSION`      | `MALUS`     | Mystery peg, mystery cell — never sold | End of run, or duration     |
+| List             | Category | Earned by                    | Cleared by                   |
+| ---------------- | -------- | ---------------------------- | ---------------------------- |
+| `REWARD_BONUSES` | `BONUS`  | mystery cell (choice) / peg  | duration, or `clearSession`  |
+| `REWARD_MALUSES` | `MALUS`  | mystery cell (choice) / peg  | duration, or `clearSession`  |
 
-The shop catalogue is `bonusManager.getAll()` which **excludes** maluses
-by design. To enumerate every entry use `ALL_BONUSES` directly.
+`ALL_BONUSES = [...REWARD_BONUSES, ...REWARD_MALUSES]`.
 
-## Anatomy of a definition
+### Two mystery sources, two behaviours
+
+Both sources draw **weighted by rarity** (`RARITY_WEIGHTS` in `constants.js`):
+common outcomes are frequent, legendary ones rare. The shared draw helpers live
+in [`src/utils/reward-roll.js`](../src/utils/reward-roll.js). The
+`malus_mystery_common` malus sets `MYSTERY_FORCE_COMMON`, which restricts either
+source to **common** rewards while active.
+
+- **Mystery peg** (on the pinboard) — a blind **roll**: picks a malus with 30%
+  probability, otherwise a rarity-weighted bonus, and queues it for the next
+  round via `bonusManager.queueSessionNext`. Destroying a mystery peg counts as
+  a mystery **draw** (`bonusManager.onMysteryDraw()`). See
+  [`src/entities/peg-mystery.js`](../src/entities/peg-mystery.js).
+- **Mystery cell** (on the map) — a forced **choice**: opens
+  `MysteryChoiceModal` offering `MYSTERY_CHOICE.COUNT` (2) distinct reward
+  cards drawn (rarity-weighted, without replacement) from the **whole
+  catalogue** (`ALL_BONUSES` — bonuses AND maluses), and the player must pick
+  one (backdrop / Escape closes are disabled), so the choice carries risk.
+  Applying a choice counts as a mystery draw. Rewards already active this run
+  are excluded from the draw; when fewer than `COUNT` remain, empty slots become
+  a **common** currency card granting coins or diamonds (amounts from
+  `MYSTERY_CHOICE.FALLBACK_*` in `constants.js`). The pure draw logic lives in
+  [`src/utils/mystery-choice.js`](../src/utils/mystery-choice.js)
+  (`buildMysteryChoices`); cards reuse the `.pk-featured` item-highlight from
+  the style guide, gated per rarity:
+  - legendary — gold, shimmer + ping radar
+  - epic — crimson, shimmer
+  - rare — rose · common — rose-muted (static)
+  - malus — inverted card (dark Background-filled surface, rose accent, static)
+
+## Three kinds of effect
+
+A reward def can carry any combination of:
+
+1. **modifiers** — `{ paramKey, op, value }`, resolved on every
+   `bonusManager.resolve(paramKey, base)` while active (order add → multiply → set).
+2. **directives** — one-shot actions queued on activation, drained once per round
+   by the controller (`consumeDirectives`).
+3. **triggers** — event-driven effects fired by the controller when a matching
+   gameplay event happens.
 
 ```js
 {
-  id: "session_coin_drop_x2",
-  type: BONUS_TYPES.SESSION,
+  id: "reward_coins_x2",
   category: BONUS_CATEGORIES.BONUS,
-  cost: 1500,                   // coins for shop entries, 0 for mystery-only
-  abilityRequired: null,        // ability id or null = no gate
-  rarity: "rare",               // visual tier in shop card
+  rarity: "rare",
   icon: "🪙",
-  durationLevels: 3,            // null = run-scoped (Infinity)
+  durationLevels: 3, // null = run-scoped (Infinity)
   modifiers: [
     { paramKey: PARAM_KEYS.DESTROY_COIN_MULTIPLIER, op: "multiply", value: 2 },
-  ],
-  directives: [
-    // optional — drained once per round by the controller
   ],
 }
 ```
 
-Notes:
+### Duration — three countable units
 
-- **`durationLevels: null`** is stored as **`Infinity`** internally and
-  is **not** decremented by `onLevelUp()`. The bonus is cleared only by
-  `clearSession()` (new run) or by the player choosing to discard it
-  (future work).
-- **`durationLevels: N`** with N ≥ 1 ticks once per level via
-  `bonusManager.onLevelUp()`. When `remaining` reaches 0 the entry is
-  removed and the def's optional `onExpire()` callback fires.
-- Maluses sit in the same activation list as session bonuses but are
-  excluded from `getAll()` so the shop never lists them.
+An active reward carries a `{ unit, remaining }` counter (`unit` ∈
+`DURATION_UNITS`: `level` / `shop` / `mystery` / `run`). Two ways to declare it
+on a def:
 
-## Modifiers
+- **`durationLevels: null`** → run-scoped: stored as `Infinity`; never ticked;
+  cleared only on a new run. **`durationLevels: N`** → ticks once per level
+  (`unit: 'level'`). Used by bonuses.
+- **`durationRandom: true`** → the duration is **rolled at activation** from
+  `RANDOM_DURATIONS` — one of {1, 5} in each unit (`level` / `shop` / `mystery`)
+  or the whole run (7 options, uniform). Used by **every malus**.
 
-```js
-{ paramKey, op, value }
-```
+Each unit is ticked by its own game-controller event:
 
-| `op`       | Effect                                              |
-| ---------- | --------------------------------------------------- |
-| `add`      | sum into the base                                   |
-| `multiply` | multiply the post-add total                         |
-| `set`      | overwrite (last `set` wins; used for boolean flags) |
+| unit      | ticked by                    | fired when                       |
+| --------- | ---------------------------- | -------------------------------- |
+| `level`   | `bonusManager.onLevelUp()`   | a level is completed (victory)   |
+| `shop`    | `bonusManager.onShopVisited()` | the boutique is entered        |
+| `mystery` | `bonusManager.onMysteryDraw()` | a mystery reward is drawn      |
+| `run`     | — (never)                    | cleared only on a new run        |
 
-Resolution order in `bonusManager.resolve(paramKey, base)` is
-**add → multiply → set**, with permanents and session entries
-contributing to the same buckets.
+On reaching 0 the entry is removed and the optional `onExpire()` fires.
 
-Every parameter the engine reads through `resolve()` is enumerated in
-`PARAM_KEYS`. Engines should never branch on a bonus id — always
-resolve a parameter.
+### Variable magnitudes
 
-## Directives
+A modifier may carry `values: [...]` instead of `value`; one magnitude is
+**rolled at activation** and frozen on the session entry (e.g. `malus_shop_price`
+rolls ×2 / ×5 / ×10, `malus_score_penalty` rolls ×0.90…×0.70). `resolve()` reads
+these frozen per-entry modifiers, not the def.
 
-Some bonuses can't be expressed as a number — for example "spawn an
-extra classic ball into one launcher". These use the **directive queue**:
+## Triggers
 
 ```js
-{ action: DIRECTIVE_ACTIONS.ADD_BALL, payload: { kind: "classic", count: 1, target: "one" } }
-{ action: DIRECTIVE_ACTIONS.REMOVE_BALL, payload: { kind: "classic", count: 1 } }
-{ action: DIRECTIVE_ACTIONS.TRANSFORM_BALL, payload: { from: "classic", to: "classic", count: 1, target: "all" } }
+triggers: [
+  { on: TRIGGER_EVENTS.PEG_DESTROYED, action: TRIGGER_ACTIONS.ADD_HIT_SCORE, payload: { points: 50 } },
+  { on: TRIGGER_EVENTS.EFFECT_CANCELLED, action: TRIGGER_ACTIONS.ACTIVATE,
+    match: { cancelled: "burning", by: "frozen" }, payload: { bonusId: "reward_score_total_x2" } },
+]
 ```
 
-Activation enqueues every directive. The `GameController` calls
-`bonusManager.consumeDirectives()` once per round (at `start()`), drains
-the queue, and applies each action. Directives are therefore **single-use**
-even when the bonus is multi-level.
+Events (`TRIGGER_EVENTS`): `PEG_DESTROYED`, `PEG_SAVED`, `EFFECT_CANCELLED`.
+Actions (`TRIGGER_ACTIONS`): `ADD_HIT_SCORE`, `SPAWN_BALL`, `ADD_COINS`, `ACTIVATE`.
+An optional `match` object filters the event by context fields.
 
-`target: "all"` repeats the action per sublauncher; `target: "one"`
-picks a random sublauncher. `REMOVE_BALL` / `TRANSFORM_BALL` actions are
-kept as plumbing for future ball variants; today only `kind: "classic"`
-exists.
+The controller emits events at their choke points (`#destroyPeg`, `#onPegSaved`,
+the fire/ice cancel branch in `#registerHit`) and dispatches through
+`#applyTriggers(event, ctx)`, which reads `bonusManager.getActiveTriggers(event)`.
 
-## Malus catalogue
+## Reward catalogue (current)
 
-| id                                | Effect                                           |
-| --------------------------------- | ------------------------------------------------ |
-| `malus_obfuscate_level_number`    | hides level numbers on the map for one selection |
-| `malus_player_hp_drain`           | -3 max HP for the run                            |
+Bonuses: `reward_score_total_x2` (SCORE ×2), `reward_peg_destroy_50` (+50/peg),
+`reward_save_spawn_ball`, `reward_ice_quench_x2`, `reward_lucky_reel`
+(10% chance a reel rolls an unbought boutique peg), `reward_coins_x2/x3`,
+`reward_extra_recycles`, `reward_extra_ball`, `reward_bomb_radius`.
 
-Maluses are only obtainable via the **mystery peg** (30% chance) or the
-**mystery cell** on the level map (30% chance). They never appear in the
-shop.
+Maluses (all roll a random duration; variable magnitudes rolled at activation):
+`malus_obfuscate_level_number` (Blind — hide level numbers),
+`malus_shop_price` (Racket — boutique price ×2/×5/×10),
+`malus_cannon_misfire` (Misfire — 10/30/50% a ball detonates at the muzzle),
+`malus_mystery_common` (Jinx — mystery draws common-only),
+`malus_objective_double` (Double Trouble — target score ×2),
+`malus_slot_no_reroll` (Jammed — no slot re-spin),
+`malus_slot_common` (Cheap Reels — slot rolls common pegs only),
+`malus_score_penalty` (Handicap — score ×0.90…×0.70).
 
 ## Manager API
 
 ```js
-bonusManager.unlockPermanent(id);     // boolean
-bonusManager.isPermanentUnlocked(id);
-bonusManager.getUnlockedPermanent();  // [defs]
-
-bonusManager.activateSession(id);     // BONUS only
+bonusManager.activateSession(id);     // any reward (bonus or malus)
 bonusManager.activateMalus(id);       // MALUS only
+bonusManager.queueSessionNext(id);    // activate at next round start
+bonusManager.consumeQueuedSessions();
 bonusManager.isSessionActive(id);
-bonusManager.getActiveSession();      // [{ id, remaining, def }]
+bonusManager.getActiveSession();      // [{ id, remaining, unit, def }]
+bonusManager.getActiveTriggers(event);// [{ def, trigger }]
 bonusManager.consumeDirectives();     // [{ action, payload }]
-bonusManager.onLevelUp();             // tick durations
-bonusManager.clearSession();          // new run
-
+bonusManager.onLevelUp();             // tick level-scoped durations
+bonusManager.onShopVisited();         // tick shop-scoped durations
+bonusManager.onMysteryDraw();         // tick mystery-scoped durations
+bonusManager.clearSession();          // new run / game over
 bonusManager.resolve(paramKey, base);
-
-bonusManager.getAll();                // shop catalogue (no maluses)
-bonusManager.getAllPermanent();
-bonusManager.getAllSession();
-bonusManager.getAllMaluses();
-bonusManager.resetAll();              // wipe everything (shared with save)
+bonusManager.getAllBonuses(); bonusManager.getAllMaluses();
+bonusManager.resetAll();
 ```
 
-## Adding a new bonus
+## Adding a new reward
 
-1. **Pick (or add) a `PARAM_KEYS` entry** for the parameter the engine
-   should read. If a directive is needed instead, pick (or add) a
-   `DIRECTIVE_ACTIONS` constant.
-2. **Add the def** to `PERMANENT_BONUSES`, `SESSION_BONUSES`, or
-   `SESSION_MALUSES`. Set `durationLevels: null` for run-scoped session
-   entries.
-3. **Localize** the id: add `bonus.<scope>.<id>` and
-   `bonus.<scope>.<id>.desc` keys to **both** `src/locales/en.js` and
-   `fr.js` (where `<scope>` is `permanent`, `session`, or `malus`).
-4. **Wire the consumer**: have whatever subsystem cares about the new
-   parameter call `bonusManager.resolve(PARAM_KEYS.X, base)`. For
-   directives, the controller already drains them — add a `case` in
-   `#applyRoundDirectives()` if you introduced a new action.
-5. **Test** in `tests/managers/bonus-manager.test.js`: resolve()
-   stacking, persistence (permanents only), and any directive drain.
+1. Pick/add a `PARAM_KEYS` entry (modifier), a `DIRECTIVE_ACTIONS` (directive),
+   or a `TRIGGER_EVENTS`/`TRIGGER_ACTIONS` pair (trigger).
+2. Add the def to `REWARD_BONUSES` or `REWARD_MALUSES`.
+3. Localize `bonus.reward.<id>` / `bonus.malus.<id>` (+ `.desc`) in `en.js` and `fr.js`.
+4. Wire the consumer: `bonusManager.resolve(...)`, a `case` in
+   `#applyRoundDirectives`, or a `case` in `#applyTriggers`.
+5. Test in `tests/managers/bonus-manager.test.js` and `tests/configs/bonus-defs.test.js`.

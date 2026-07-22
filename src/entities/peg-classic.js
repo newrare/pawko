@@ -1,5 +1,5 @@
 import { Entity } from "./entity.js";
-import { PLINKO, PEG_DEFS } from "../configs/constants.js";
+import { PLINKO, PEG_DEFS, PEG_POINTS } from "../configs/constants.js";
 
 /**
  * Peg — basic metallic clou.
@@ -51,6 +51,16 @@ export class Peg extends Entity {
 
   get restitution() {
     return PLINKO.RESTITUTION_PEG;
+  }
+
+  /**
+   * Points credited to the hit-score counter each time a ball touches this
+   * peg. Resolved from `PEG_POINTS` by type; reward pegs return 0. Subclasses
+   * inherit this automatically because it keys off `this.type`.
+   * @returns {number}
+   */
+  get points() {
+    return PEG_POINTS[this.type] ?? 0;
   }
 
   /**

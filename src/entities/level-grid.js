@@ -134,8 +134,7 @@ export class LevelGrid {
    * @returns {Cell | null}
    */
   getCell(row, col) {
-    if (row < 0 || row >= GRID_ROWS || col < 0 || col >= GRID_COLS)
-      return null;
+    if (row < 0 || row >= GRID_ROWS || col < 0 || col >= GRID_COLS) return null;
     return this.#cells[row][col];
   }
 
@@ -190,10 +189,9 @@ export class LevelGrid {
 
   /** Whether any linked neighbor of the current position is REVEALED. */
   hasAvailableMoves() {
-    return this.getNeighbors(
-      this.#currentPos.row,
-      this.#currentPos.col,
-    ).some((c) => c.state === CELL_STATES.REVEALED);
+    return this.getNeighbors(this.#currentPos.row, this.#currentPos.col).some(
+      (c) => c.state === CELL_STATES.REVEALED,
+    );
   }
 
   /**
@@ -206,8 +204,11 @@ export class LevelGrid {
   getStats() {
     let remaining = 0;
     let used = 0;
-    let levelsAvail = 0, levelsCompleted = 0, levelsTotal = 0;
-    let shopsAvail = 0, shopsTotal = 0;
+    let levelsAvail = 0,
+      levelsCompleted = 0,
+      levelsTotal = 0;
+    let shopsAvail = 0,
+      shopsTotal = 0;
 
     for (const cell of this.getCells()) {
       const isLevel = cell.type === CELL_TYPES.LEVEL;
@@ -399,8 +400,7 @@ export class LevelGrid {
         for (const [dr, dc] of DIRECTIONS) {
           const nr = r + dr;
           const nc = c + dc;
-          if (nr < 0 || nr >= GRID_ROWS || nc < 0 || nc >= GRID_COLS)
-            continue;
+          if (nr < 0 || nr >= GRID_ROWS || nc < 0 || nc >= GRID_COLS) continue;
           const ek = edgeKey(r, c, nr, nc);
           if (this.#edges.has(ek)) continue;
           if (linkCount[r][c] >= 4 || linkCount[nr][nc] >= 4) continue;

@@ -2,10 +2,12 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { ActiveListModal } from "../../src/components/active-list-modal.js";
 import { bonusManager } from "../../src/managers/bonus-manager.js";
 import { abilityManager } from "../../src/managers/ability-manager.js";
+import { pegShopManager } from "../../src/managers/peg-shop-manager.js";
 
 beforeEach(() => {
   bonusManager._resetForTests();
   abilityManager._resetForTests();
+  pegShopManager._resetForTests();
 });
 
 describe("ActiveListModal", () => {
@@ -24,8 +26,8 @@ describe("ActiveListModal", () => {
     modal.destroy();
   });
 
-  it("lists unlocked permanent bonuses", () => {
-    bonusManager.unlockPermanent("perm_extra_hp_1");
+  it("lists acquired boutique pegs", () => {
+    pegShopManager.acquire("ice");
     const modal = new ActiveListModal();
     modal.open();
     const rows = document.querySelectorAll(".pk-al-table tr");
@@ -33,8 +35,8 @@ describe("ActiveListModal", () => {
     modal.destroy();
   });
 
-  it("lists active session bonuses", () => {
-    bonusManager.activateSession("session_coin_drop_x2");
+  it("lists active rewards", () => {
+    bonusManager.activateSession("reward_coins_x2");
     const modal = new ActiveListModal();
     modal.open();
     const rows = document.querySelectorAll(".pk-al-table tr");
@@ -46,7 +48,9 @@ describe("ActiveListModal", () => {
     abilityManager.unlock("gate_1");
     const modal = new ActiveListModal();
     modal.open();
-    const sectionTitles = [...document.querySelectorAll(".pk-al-section-title")];
+    const sectionTitles = [
+      ...document.querySelectorAll(".pk-al-section-title"),
+    ];
     const hasAbilities = sectionTitles.some((t) => t.textContent.length > 0);
     expect(hasAbilities).toBe(true);
     modal.destroy();

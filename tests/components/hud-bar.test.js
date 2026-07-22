@@ -91,7 +91,12 @@ describe("HudBar", () => {
 
   it("onHomeClick callback fires when level-home button is clicked", () => {
     let clicked = false;
-    hud.mount(root, { showHome: true, onHomeClick: () => { clicked = true; } });
+    hud.mount(root, {
+      showHome: true,
+      onHomeClick: () => {
+        clicked = true;
+      },
+    });
     const btn = root.querySelector("[data-action='level-home']");
     btn.dispatchEvent(new MouseEvent("pointerdown", { bubbles: true }));
     expect(clicked).toBe(true);

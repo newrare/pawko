@@ -20,5 +20,4 @@ export class Bumper extends Peg {
   get restitution() {
     return PLINKO.RESTITUTION_BUMPER;
   }
-
 }

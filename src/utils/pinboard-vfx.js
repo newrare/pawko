@@ -11,6 +11,8 @@
  * does not have to remember the per-effect lifetimes.
  */
 
+import { SCORE_FLY } from "../configs/constants.js";
+
 /**
  * @typedef {object} PinboardVfxDeps
  * @property {HTMLElement | null} stackEl — pinboard-space layer
@@ -39,6 +41,24 @@ export class PinboardVfx {
     const pop = document.createElement("div");
     pop.className = cls;
     pop.textContent = text;
+    pop.style.left = `${x}px`;
+    pop.style.top = `${y - 12}px`;
+    stackEl.appendChild(pop);
+    bag.timeout(() => pop.remove(), 600);
+  }
+
+  /**
+   * Same short-lived pop as {@link popText}, but the content is trusted HTML
+   * (e.g. an inline `iconSvg(...)` string) rather than plain text.
+   * @param {string} html — safe inner HTML (no user input)
+   * @param {number} x @param {number} y @param {string} [cls]
+   */
+  popHtml(html, x, y, cls = "pk-popup") {
+    const { stackEl, bag } = this.deps;
+    if (!stackEl) return;
+    const pop = document.createElement("div");
+    pop.className = cls;
+    pop.innerHTML = html;
     pop.style.left = `${x}px`;
     pop.style.top = `${y - 12}px`;
     stackEl.appendChild(pop);
@@ -79,6 +99,134 @@ export class PinboardVfx {
     const pop = document.createElement("div");
     pop.className = `pk-popup pk-popup--gate ${value > 0 ? "pk-popup--bonus" : "pk-popup--malus"}`;
     pop.textContent = value > 0 ? `+${value}` : `${value}`;
+    pop.style.left = `${x}px`;
+    pop.style.top = `${y - 8}px`;
+    stackEl.appendChild(pop);
+    bag.timeout(() => pop.remove(), 900);
+  }
+
+  /**
+   * Pop a `+N` points chip at a hit peg, hold it in place so the player can
+   * read it, then fly it into the hit-score counter. Coordinates are
+   * pinboard-space (peg x/y); the target is the DOM element of the gold
+   * counter. The chip is placed in the safe-zone ball layer.
+   *
+   * Two visual phases:
+   *  1. Pop-in + hold for `SCORE_FLY.HOLD_MS` (peg-type coloured & styled).
+   *  2. Fast travel to the counter over `SCORE_FLY.FLY_MS` (CSS transition
+   *     toward --pk-fly-dx/dy), then `onArrive` fires as it merges in.
+   *
+   * The per-type CSS class `pk-score-fly--<type>` gives each peg nature its
+   * own colour and typography so the player reads scores as type-specific.
+   *
+   * @param {number} points
+   * @param {number} x — pinboard-space x
+   * @param {number} y — pinboard-space y
+   * @param {HTMLElement | null} targetEl — the hit-score counter element
+   * @param {string} [type="peg"] — peg type driving colour/typography
+   * @param {() => void} [onArrive] — called when the chip merges into the total
+   */
+  flyPointsToScore(points, x, y, targetEl, type = "peg", onArrive) {
+    const { ballLayerEl, safeEl, bag, getPinboardOffsetTop } = this.deps;
+    if (points <= 0) return;
+    if (!ballLayerEl) {
+      onArrive?.();
+      return;
+    }
+    const oy = getPinboardOffsetTop();
+    const startX = x;
+    const startY = y + oy;
+
+    let dx = 0;
+    let dy = -60;
+    const safeRect = safeEl?.getBoundingClientRect();
+    const targetRect = targetEl?.getBoundingClientRect();
+    if (safeRect && targetRect) {
+      const tx = targetRect.left - safeRect.left + targetRect.width / 2;
+      const ty = targetRect.top - safeRect.top + targetRect.height / 2;
+      dx = tx - startX;
+      dy = ty - startY;
+    }
+
+    const chip = document.createElement("div");
+    chip.className = `pk-score-fly pk-score-fly--${type}`;
+    chip.textContent = `+${points}`;
+    chip.style.left = `${startX}px`;
+    chip.style.top = `${startY}px`;
+    chip.style.setProperty("--pk-fly-dx", `${dx.toFixed(1)}px`);
+    chip.style.setProperty("--pk-fly-dy", `${dy.toFixed(1)}px`);
+    chip.style.setProperty("--pk-fly-dur", `${SCORE_FLY.FLY_MS}ms`);
+    ballLayerEl.appendChild(chip);
+
+    /* Phase 2: after the hold, add --go to trigger the CSS travel transition. */
+    bag.timeout(
+      () => chip.classList.add("pk-score-fly--go"),
+      SCORE_FLY.HOLD_MS,
+    );
+    /* Merge into the total, then dispose the chip. */
+    bag.timeout(() => {
+      onArrive?.();
+      chip.remove();
+    }, SCORE_FLY.HOLD_MS + SCORE_FLY.FLY_MS);
+  }
+
+  /**
+   * Fly a blue multiplier orb from the cannon ball counter toward the score
+   * HUD multiplier, then invoke `onArrive` when it lands (so the caller raises
+   * the multiplier exactly as the orb merges into it). Used when the objective
+   * is already met and the leftover cannon balls are converted to multipliers.
+   * Both coordinates are resolved against the safe-zone box.
+   * @param {HTMLElement | null} fromEl — source element (cannon counter)
+   * @param {HTMLElement | null} toEl — target element (multiplier readout)
+   * @param {() => void} [onArrive]
+   */
+  flyBallToMultiplier(fromEl, toEl, onArrive) {
+    const { ballLayerEl, safeEl, bag } = this.deps;
+    const safeRect = safeEl?.getBoundingClientRect();
+    if (!ballLayerEl || !fromEl || !safeRect) {
+      onArrive?.();
+      return;
+    }
+    const fromRect = fromEl.getBoundingClientRect();
+    const startX = fromRect.left - safeRect.left + fromRect.width / 2;
+    const startY = fromRect.top - safeRect.top + fromRect.height / 2;
+
+    let dx = 0;
+    let dy = -60;
+    const toRect = toEl?.getBoundingClientRect();
+    if (toRect) {
+      const tx = toRect.left - safeRect.left + toRect.width / 2;
+      const ty = toRect.top - safeRect.top + toRect.height / 2;
+      dx = tx - startX;
+      dy = ty - startY;
+    }
+
+    const orb = document.createElement("div");
+    orb.className = "pk-mult-fly";
+    orb.style.left = `${startX}px`;
+    orb.style.top = `${startY}px`;
+    orb.style.setProperty("--pk-fly-dx", `${dx.toFixed(1)}px`);
+    orb.style.setProperty("--pk-fly-dy", `${dy.toFixed(1)}px`);
+    ballLayerEl.appendChild(orb);
+    bag.timeout(() => {
+      onArrive?.();
+      orb.remove();
+    }, 520);
+  }
+
+  /**
+   * Pop a blue `+N` multiplier label at the pinboard bottom when a ball is
+   * captured by an x1 / x2 gate.
+   * @param {number} delta
+   * @param {number} x
+   * @param {number} y
+   */
+  popMultiplier(delta, x, y) {
+    const { stackEl, bag } = this.deps;
+    if (!stackEl || delta <= 0) return;
+    const pop = document.createElement("div");
+    pop.className = "pk-popup pk-popup--gate pk-popup--mult";
+    pop.textContent = `+${delta}×`;
     pop.style.left = `${x}px`;
     pop.style.top = `${y - 8}px`;
     stackEl.appendChild(pop);
@@ -138,7 +286,7 @@ export class PinboardVfx {
     const el = safeEl?.querySelector(`[data-gate="${name}"]`);
     if (!el) return;
     el.classList.remove("pk-flash");
-    void /** @type {HTMLElement} */ (el).offsetWidth;
+    void (/** @type {HTMLElement} */ (el).offsetWidth);
     el.classList.add("pk-flash");
   }
 
@@ -325,7 +473,7 @@ export class PinboardVfx {
   /**
    * Big banner shown at a saved peg's position. Tinted via --pk-peg-color
    * which is copied from the peg's resolved CSS value upstream.
-   * @param {string} text
+   * @param {string} text — trusted HTML (may embed an inline icon; no user input)
    * @param {number} x
    * @param {number} y
    * @param {string} [color]
@@ -335,7 +483,7 @@ export class PinboardVfx {
     if (!stackEl) return;
     const banner = document.createElement("div");
     banner.className = "pk-save-banner";
-    banner.textContent = text;
+    banner.innerHTML = text;
     banner.style.left = `${x}px`;
     banner.style.top = `${y - 16}px`;
     if (color) banner.style.setProperty("--pk-peg-color", color);

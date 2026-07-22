@@ -367,9 +367,7 @@ describe("LevelGrid", () => {
       const restored = LevelGrid.deserialize(data);
 
       const neighbors = restored.getNeighbors(6, 3);
-      const target = neighbors.find(
-        (c) => c.state === CELL_STATES.REVEALED,
-      );
+      const target = neighbors.find((c) => c.state === CELL_STATES.REVEALED);
       if (target) {
         const cell = restored.selectCell(target.row, target.col);
         expect(cell).not.toBeNull();

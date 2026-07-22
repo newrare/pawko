@@ -278,6 +278,7 @@ src/styles/
 ├── dev.css              # dev-only overlays (only mounted in DEV)
 └── components/
     ├── button.css
+    ├── icon.css         # Lucide icon base + item-highlight card
     ├── modal.css
     ├── toggle.css
     ├── title.css
@@ -348,6 +349,7 @@ The agent can execute the following command categories **without requesting user
 | Need                | Where it goes                                                                                               |
 | ------------------- | ----------------------------------------------------------------------------------------------------------- |
 | A constant          | `src/configs/constants.js`                                                                                  |
+| An icon             | Use `iconSvg('name')` from `src/utils/icon.js` (self-hosted Lucide). No emojis, no CDN — see `docs/ICON.md` |
 | A pure helper       | `src/utils/<name>.js` (+ test in `tests/utils/`)                                                            |
 | A cross-cutting svc | `src/managers/<name>-manager.js` (singleton, EventEmitter-based)                                            |
 | A modal             | `src/components/<name>-modal.js` extending `BaseModal`                                                      |

@@ -101,7 +101,9 @@ describe("PegSaveSystem", () => {
       expect(system.comboMultiplier).toBeCloseTo(1 + PEG_SAVE.COMBO_INCREMENT);
 
       system.trySave(2);
-      expect(system.comboMultiplier).toBeCloseTo(1 + 2 * PEG_SAVE.COMBO_INCREMENT);
+      expect(system.comboMultiplier).toBeCloseTo(
+        1 + 2 * PEG_SAVE.COMBO_INCREMENT,
+      );
     });
 
     it("decays to 1.0 after COMBO_DECAY_MS without a save", () => {
@@ -129,11 +131,15 @@ describe("PegSaveSystem", () => {
 
       // Second save resets the decay
       system.trySave(2);
-      expect(system.comboMultiplier).toBeCloseTo(1 + 2 * PEG_SAVE.COMBO_INCREMENT);
+      expect(system.comboMultiplier).toBeCloseTo(
+        1 + 2 * PEG_SAVE.COMBO_INCREMENT,
+      );
 
       // Wait decay from second save
       vi.advanceTimersByTime(PEG_SAVE.COMBO_DECAY_MS - 1);
-      expect(system.comboMultiplier).toBeCloseTo(1 + 2 * PEG_SAVE.COMBO_INCREMENT);
+      expect(system.comboMultiplier).toBeCloseTo(
+        1 + 2 * PEG_SAVE.COMBO_INCREMENT,
+      );
 
       vi.advanceTimersByTime(1);
       expect(system.comboMultiplier).toBe(1);

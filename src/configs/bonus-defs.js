@@ -1,31 +1,40 @@
 /**
- * Bonus & malus definitions — pure data.
+ * Reward (bonus & malus) definitions — pure data.
  *
- * Three kinds of entries:
- *   - **permanent bonus**: unlocked forever, bought in the shop with coins.
- *   - **session bonus**: active for `durationLevels` levels (or for the
- *     whole run when `durationLevels === null`). Bought in the shop with
- *     coins.
- *   - **session malus**: same lifecycle as a session bonus but applies a
- *     negative effect. Maluses are NOT sold in the shop — they are rolled
- *     by the MysteryPeg and by mystery cells on the level grid.
+ * Rewards are **run-scoped**: they are never bought. A reward is obtained
+ * only from a **mystery** source (a mystery cell on the map or a mystery peg
+ * on the pinboard). Bonuses help the player; maluses hinder. Rewards are
+ * cumulable — several may be active at once.
  *
- * An entry can carry two kinds of effects:
- *   - **modifiers**: { paramKey, op, value } resolved on every call to
- *     `bonusManager.resolve(paramKey, baseValue)` while the entry is
- *     active. Resolution order: add → multiply → set.
- *   - **directives**: one-shot actions queued at activation time and
- *     drained by the game controller at the start of the next round
- *     (e.g. add a ball into a launcher). See `BonusManager.consumeDirectives`.
+ * ## Duration
+ * A reward stays active for a bounded duration expressed in one of three
+ * **units** (`DURATION_UNITS`): completed **levels**, **shops** visited, or
+ * **mystery** draws — or for the whole **run**. Two ways to declare it:
+ *   - `durationLevels: N | null` — a fixed count of levels (`null` = whole run).
+ *     Used by bonuses.
+ *   - `durationRandom: true` — the duration is **rolled at activation** from
+ *     `RANDOM_DURATIONS` ({1,5}×{level,shop,mystery} or whole run). Used by
+ *     every malus.
  *
- * See `docs/BONUS.md` for the design and the 5-step "add a new bonus"
- * checklist.
+ * ## Effects
+ * A reward can carry three kinds of effects:
+ *   - **modifiers**: `{ paramKey, op, value }` (or `values: [...]` for a
+ *     magnitude **rolled at activation**) resolved on every call to
+ *     `bonusManager.resolve(paramKey, baseValue)` while active. Order:
+ *     add → multiply → set.
+ *   - **directives**: one-shot actions queued at activation time and drained
+ *     by the game controller at the start of the next round (e.g. add a ball).
+ *     See `BonusManager.consumeDirectives`.
+ *   - **triggers**: event-driven effects fired by the game controller when a
+ *     matching gameplay event happens (peg destroyed, peg saved, effect
+ *     cancelled, …). See `BonusManager.getActiveTriggers`.
+ *
+ * Permanent progression (shop discount, gates, map reveal, slot-machine
+ * wheels) lives in `ability-defs.js`; peg-type purchases live in
+ * `peg-shop-defs.js`. This file is only about run rewards.
+ *
+ * See `docs/BONUS.md`.
  */
-
-export const BONUS_TYPES = /** @type {const} */ ({
-  PERMANENT: "permanent",
-  SESSION: "session",
-});
 
 export const BONUS_CATEGORIES = /** @type {const} */ ({
   BONUS: "bonus",
@@ -33,41 +42,87 @@ export const BONUS_CATEGORIES = /** @type {const} */ ({
 });
 
 /**
- * Every parameter key consumed by `bonusManager.resolve()`. Magic strings
- * outside this map are a bug.
+ * Units a reward's duration can be counted in. `RUN` is decremented by
+ * nothing (whole-run, stored as Infinity); the other three are ticked by the
+ * matching game-controller event through `bonusManager`:
+ *   - `LEVEL`   → `onLevelUp()`      (a level completed on victory)
+ *   - `SHOP`    → `onShopVisited()`  (the boutique was entered)
+ *   - `MYSTERY` → `onMysteryDraw()`  (a mystery reward was drawn)
+ */
+export const DURATION_UNITS = /** @type {const} */ ({
+  LEVEL: "level",
+  SHOP: "shop",
+  MYSTERY: "mystery",
+  RUN: "run",
+});
+
+/**
+ * The pool a `durationRandom` reward draws from at activation: a short (1) or
+ * medium (5) count in each countable unit, or the whole run. One entry is
+ * picked uniformly. `count` is `Infinity` for the run-scoped entry.
+ * @type {Array<{ unit: string, count: number }>}
+ */
+export const RANDOM_DURATIONS = [
+  { unit: DURATION_UNITS.LEVEL, count: 1 },
+  { unit: DURATION_UNITS.LEVEL, count: 5 },
+  { unit: DURATION_UNITS.SHOP, count: 1 },
+  { unit: DURATION_UNITS.SHOP, count: 5 },
+  { unit: DURATION_UNITS.MYSTERY, count: 1 },
+  { unit: DURATION_UNITS.MYSTERY, count: 5 },
+  { unit: DURATION_UNITS.RUN, count: Infinity },
+];
+
+/**
+ * Every parameter key consumed by `bonusManager.resolve()` (run-scoped) or
+ * `abilityManager.resolve()` (permanent). Magic strings outside this map are
+ * a bug. The comment tags which manager owns each key.
  */
 export const PARAM_KEYS = /** @type {const} */ ({
-  /* Economy / shop */
+  /* Economy / shop — PERMANENT (abilityManager) */
   SHOP_DISCOUNT: "shopDiscount",
 
-  /* Gameplay flags */
-  SHOP_MAGNET_ENABLED: "shopMagnetEnabled",
-
-  /* Grid visibility */
+  /* Grid visibility — PERMANENT (abilityManager) */
   REVEAL_MYSTERY: "revealMystery",
   REVEAL_SHOPS: "revealShops",
   REVEAL_PATHS: "revealPaths",
   REVEAL_BOSS: "revealBoss",
+
+  /* Gate width reductions (fraction 0..1) + multiplier factor —
+     PERMANENT (abilityManager). BACK → edge x1 gates, HP → central `return`
+     gate. Additive; the freed width is redistributed to the x2 gates. */
+  GATE_BACK_WIDTH_REDUCTION: "gateBackWidthReduction",
+  GATE_HP_WIDTH_REDUCTION: "gateHpWidthReduction",
+  GATE_MULT_FACTOR: "gateMultFactor",
+
+  /* Slot machine — PERMANENT (abilityManager) */
+  SLOT_REEL_BONUS: "slotReelBonus", // extra unlocked reels (add)
+  SLOT_REROLL_DISCOUNT: "slotRerollDiscount", // re-spin cost factor (multiply)
+
+  /* Grid visibility — RUN malus (bonusManager) */
   REVEAL_LEVEL_NUMBER: "revealLevelNumber",
 
-  /* Tower-defense specific */
-  PLAYER_MAX_HP_BONUS: "playerMaxHpBonus",
+  /* Run-scoped gameplay (bonusManager) */
+  SCORE_TOTAL_MULTIPLIER: "scoreTotalMultiplier",
   DESTROY_COIN_MULTIPLIER: "destroyCoinMultiplier",
-  PEG_REPLACE_DISCOUNT: "pegReplaceDiscount",
   BOMB_RADIUS_BONUS: "bombRadiusBonus",
   TELEPORT_RECYCLE_MAX_BONUS: "teleportRecycleMaxBonus",
+  SLOT_LUCKY_REEL_CHANCE: "slotLuckyReelChance",
 
-  /* Elemental peg effect durations (additive ms) */
+  /* Run malus knobs (bonusManager) */
+  SHOP_PRICE_MULT: "shopPriceMult", // boutique price multiplier (multiply)
+  CANNON_MISFIRE_CHANCE: "cannonMisfireChance", // ball explodes at muzzle (add)
+  OBJECTIVE_MULTIPLIER: "objectiveMultiplier", // level target score (multiply)
+  SLOT_REROLL_DISABLED: "slotRerollDisabled", // re-spin locked (set true)
+  SLOT_FORCE_COMMON: "slotForceCommon", // reels roll common only (set true)
+  MYSTERY_FORCE_COMMON: "mysteryForceCommon", // mystery draws common only (set true)
+
+  /* Elemental peg effect durations (additive ms) — RUN (bonusManager) */
   FIRE_DURATION_BONUS_MS: "fireDurationBonusMs",
   ICE_DURATION_BONUS_MS: "iceDurationBonusMs",
   ELECTRICAL_DURATION_BONUS_MS: "electricalDurationBonusMs",
 
-  /* Glue peg durability (additive hp) */
+  /* Glue peg durability (additive hp) — RUN (bonusManager) */
   GLUE_PEG_HP_BONUS: "gluePegHpBonus",
-
-  /* Gate width reductions (fraction 0..1 subtracted from each gate) */
-  GATE_BACK_WIDTH_REDUCTION: "gateBackWidthReduction",
-  GATE_HP_WIDTH_REDUCTION: "gateHpWidthReduction",
 });
 
 /**
@@ -77,14 +132,37 @@ export const PARAM_KEYS = /** @type {const} */ ({
 export const DIRECTIVE_ACTIONS = /** @type {const} */ ({
   ADD_BALL: "addBall",
   REMOVE_BALL: "removeBall",
-  TRANSFORM_BALL: "transformBall",
 });
 
 /**
+ * Gameplay events a reward trigger can listen to. Emitted by the game
+ * controller as they happen.
+ */
+export const TRIGGER_EVENTS = /** @type {const} */ ({
+  PEG_DESTROYED: "pegDestroyed",
+  PEG_SAVED: "pegSaved",
+  EFFECT_CANCELLED: "effectCancelled",
+});
+
+/**
+ * Actions a reward trigger can perform when its event fires. Applied by the
+ * game controller's `#applyTriggers` dispatcher.
+ */
+export const TRIGGER_ACTIONS = /** @type {const} */ ({
+  ADD_HIT_SCORE: "addHitScore", // payload { points }
+  SPAWN_BALL: "spawnBall", // payload { kind, count }
+  ADD_COINS: "addCoins", // payload { coins }
+  ACTIVATE: "activate", // payload { bonusId } — activate another reward
+});
+
+/**
+ * A modifier carries either a fixed `value` or a `values` set from which one is
+ * **rolled at activation** and then frozen for the reward's lifetime.
  * @typedef {object} BonusModifier
  * @property {string} paramKey
  * @property {'add' | 'multiply' | 'set'} op
- * @property {number | boolean} value
+ * @property {number | boolean} [value]     fixed magnitude
+ * @property {Array<number | boolean>} [values]  candidate magnitudes (rolled once)
  */
 
 /**
@@ -94,184 +172,153 @@ export const DIRECTIVE_ACTIONS = /** @type {const} */ ({
  */
 
 /**
- * @typedef {'permanent' | 'legendary' | 'epic' | 'rare' | 'common' | 'malus'} BonusRarity
+ * @typedef {object} BonusTrigger
+ * @property {string} on       one of TRIGGER_EVENTS
+ * @property {string} action   one of TRIGGER_ACTIONS
+ * @property {object} [payload] action-specific payload
+ * @property {object} [match]  event fields that must match for the trigger to fire
+ */
+
+/**
+ * @typedef {'legendary' | 'epic' | 'rare' | 'common' | 'malus'} BonusRarity
  */
 
 /**
  * @typedef {object} BonusDef
  * @property {string} id
  * @property {string} [name]
- * @property {'permanent' | 'session'} type
  * @property {'bonus' | 'malus'} category
- * @property {number} cost                 — coins (0 for maluses)
- * @property {string | null} abilityRequired
  * @property {BonusRarity} rarity
- * @property {string} icon
- * @property {number | null} [durationLevels]  — session only; null = whole run
+ * @property {string} icon  — Lucide icon name (rendered via utils/icon.js)
+ * @property {number | null} [durationLevels]  — fixed level count; null = whole run
+ * @property {boolean} [durationRandom]  — roll duration from RANDOM_DURATIONS
  * @property {BonusModifier[]} [modifiers]
  * @property {BonusDirective[]} [directives]   — queued on activation
+ * @property {BonusTrigger[]} [triggers]       — event-driven
  * @property {((ctx: object) => void) | null} [onExpire]
  */
 
 // ────────────────────────────────────────────────────────────────────
-// Permanent bonuses (bought in the shop with coins)
-// ────────────────────────────────────────────────────────────────────
-
-const perm = (id, abilityRequired, cost, icon, modifiers) => ({
-  id,
-  type: BONUS_TYPES.PERMANENT,
-  category: BONUS_CATEGORIES.BONUS,
-  cost,
-  abilityRequired,
-  rarity: "permanent",
-  icon,
-  modifiers,
-});
-
-/** @type {BonusDef[]} */
-export const PERMANENT_BONUSES = [
-  /* SHOP — shop price discount tiers (additive, applied in shop pricing). */
-  perm("perm_shop_discount_1", "shop_1", 1500, "🛒", [
-    { paramKey: PARAM_KEYS.SHOP_DISCOUNT, op: "add", value: 0.05 },
-  ]),
-  perm("perm_shop_discount_2", "shop_2", 3000, "🛒", [
-    { paramKey: PARAM_KEYS.SHOP_DISCOUNT, op: "add", value: 0.10 },
-  ]),
-  perm("perm_shop_discount_3", "shop_3", 5000, "🛒", [
-    { paramKey: PARAM_KEYS.SHOP_DISCOUNT, op: "add", value: 0.15 },
-  ]),
-  perm("perm_shop_discount_4", "shop_4", 8000, "🛒", [
-    { paramKey: PARAM_KEYS.SHOP_DISCOUNT, op: "add", value: 0.20 },
-  ]),
-  perm("perm_shop_discount_5", "shop_5", 12000, "🛒", [
-    { paramKey: PARAM_KEYS.SHOP_DISCOUNT, op: "add", value: 0.25 },
-  ]),
-  perm("perm_shop_discount_6", "shop_6", 18000, "🛒", [
-    { paramKey: PARAM_KEYS.SHOP_DISCOUNT, op: "add", value: 0.30 },
-  ]),
-
-  /* ECONOMY — peg replacement discount tiers (multiplicative). */
-  perm("perm_peg_discount_1", "economy_1", 1500, "💸", [
-    { paramKey: PARAM_KEYS.PEG_REPLACE_DISCOUNT, op: "multiply", value: 0.95 },
-  ]),
-  perm("perm_peg_discount_2", "economy_2", 3000, "💸", [
-    { paramKey: PARAM_KEYS.PEG_REPLACE_DISCOUNT, op: "multiply", value: 0.90 },
-  ]),
-  perm("perm_peg_discount_3", "economy_3", 5000, "💸", [
-    { paramKey: PARAM_KEYS.PEG_REPLACE_DISCOUNT, op: "multiply", value: 0.85 },
-  ]),
-  perm("perm_peg_discount_4", "economy_4", 8000, "💸", [
-    { paramKey: PARAM_KEYS.PEG_REPLACE_DISCOUNT, op: "multiply", value: 0.80 },
-  ]),
-  perm("perm_peg_discount_5", "economy_5", 12000, "💸", [
-    { paramKey: PARAM_KEYS.PEG_REPLACE_DISCOUNT, op: "multiply", value: 0.75 },
-  ]),
-  perm("perm_peg_discount_6", "economy_6", 18000, "💸", [
-    { paramKey: PARAM_KEYS.PEG_REPLACE_DISCOUNT, op: "multiply", value: 0.70 },
-  ]),
-
-  /* PEG — special peg permanent boosts. */
-  perm("perm_bomb_radius_xl", "peg_1", 6000, "💣", [
-    { paramKey: PARAM_KEYS.BOMB_RADIUS_BONUS, op: "add", value: 25 },
-  ]),
-  perm("perm_fire_duration_1", "peg_2", 2000, "🔥", [
-    { paramKey: PARAM_KEYS.FIRE_DURATION_BONUS_MS, op: "add", value: 1000 },
-  ]),
-  perm("perm_fire_duration_2", "peg_2", 5000, "🔥", [
-    { paramKey: PARAM_KEYS.FIRE_DURATION_BONUS_MS, op: "add", value: 2000 },
-  ]),
-  perm("perm_fire_duration_3", "peg_2", 10000, "🔥", [
-    { paramKey: PARAM_KEYS.FIRE_DURATION_BONUS_MS, op: "add", value: 3000 },
-  ]),
-  perm("perm_ice_duration_1", "peg_3", 2000, "❄️", [
-    { paramKey: PARAM_KEYS.ICE_DURATION_BONUS_MS, op: "add", value: 1000 },
-  ]),
-  perm("perm_ice_duration_2", "peg_3", 5000, "❄️", [
-    { paramKey: PARAM_KEYS.ICE_DURATION_BONUS_MS, op: "add", value: 2000 },
-  ]),
-  perm("perm_ice_duration_3", "peg_3", 10000, "❄️", [
-    { paramKey: PARAM_KEYS.ICE_DURATION_BONUS_MS, op: "add", value: 3000 },
-  ]),
-  perm("perm_electrical_duration_1", "peg_4", 2000, "⚡", [
-    { paramKey: PARAM_KEYS.ELECTRICAL_DURATION_BONUS_MS, op: "add", value: 1000 },
-  ]),
-  perm("perm_electrical_duration_2", "peg_4", 5000, "⚡", [
-    { paramKey: PARAM_KEYS.ELECTRICAL_DURATION_BONUS_MS, op: "add", value: 2000 },
-  ]),
-  perm("perm_electrical_duration_3", "peg_4", 10000, "⚡", [
-    { paramKey: PARAM_KEYS.ELECTRICAL_DURATION_BONUS_MS, op: "add", value: 3000 },
-  ]),
-  perm("perm_glue_hp_1", "peg_5", 2000, "🩹", [
-    { paramKey: PARAM_KEYS.GLUE_PEG_HP_BONUS, op: "add", value: 5 },
-  ]),
-  perm("perm_glue_hp_2", "peg_5", 5000, "🩹", [
-    { paramKey: PARAM_KEYS.GLUE_PEG_HP_BONUS, op: "add", value: 10 },
-  ]),
-  perm("perm_glue_hp_3", "peg_5", 10000, "🩹", [
-    { paramKey: PARAM_KEYS.GLUE_PEG_HP_BONUS, op: "add", value: 15 },
-  ]),
-
-  /* GATE — destroy coin x2 + width reductions for back & hp gates. */
-  perm("perm_destroy_coins_x2", "gate_1", 4000, "🪙", [
-    { paramKey: PARAM_KEYS.DESTROY_COIN_MULTIPLIER, op: "multiply", value: 2 },
-  ]),
-  perm("perm_gate_back_width_1", "gate_2", 3000, "🚪", [
-    { paramKey: PARAM_KEYS.GATE_BACK_WIDTH_REDUCTION, op: "add", value: 0.05 },
-  ]),
-  perm("perm_gate_back_width_2", "gate_3", 7000, "🚪", [
-    { paramKey: PARAM_KEYS.GATE_BACK_WIDTH_REDUCTION, op: "add", value: 0.05 },
-  ]),
-  perm("perm_gate_hp_width_1", "gate_4", 5000, "🚪", [
-    { paramKey: PARAM_KEYS.GATE_HP_WIDTH_REDUCTION, op: "add", value: 0.05 },
-  ]),
-  perm("perm_gate_hp_width_2", "gate_5", 10000, "🚪", [
-    { paramKey: PARAM_KEYS.GATE_HP_WIDTH_REDUCTION, op: "add", value: 0.05 },
-  ]),
-
-  /* PLAYER — tower-defense HP tiers. */
-  perm("perm_extra_hp_1", "player_1", 2000, "❤️", [
-    { paramKey: PARAM_KEYS.PLAYER_MAX_HP_BONUS, op: "add", value: 5 },
-  ]),
-  perm("perm_extra_hp_2", "player_2", 5000, "❤️", [
-    { paramKey: PARAM_KEYS.PLAYER_MAX_HP_BONUS, op: "add", value: 10 },
-  ]),
-  perm("perm_extra_hp_3", "player_3", 12000, "❤️", [
-    { paramKey: PARAM_KEYS.PLAYER_MAX_HP_BONUS, op: "add", value: 15 },
-  ]),
-  perm("perm_extra_hp_4", "player_4", 25000, "❤️", [
-    { paramKey: PARAM_KEYS.PLAYER_MAX_HP_BONUS, op: "add", value: 20 },
-  ]),
-
-  /* MAP — grid reveal tiers. */
-  perm("perm_reveal_mystery", "map_1", 5000, "👁️", [
-    { paramKey: PARAM_KEYS.REVEAL_MYSTERY, op: "set", value: true },
-  ]),
-  perm("perm_reveal_shops", "map_2", 8000, "👁️", [
-    { paramKey: PARAM_KEYS.REVEAL_SHOPS, op: "set", value: true },
-  ]),
-  perm("perm_reveal_paths", "map_3", 15000, "👁️", [
-    { paramKey: PARAM_KEYS.REVEAL_PATHS, op: "set", value: true },
-  ]),
-  perm("perm_reveal_boss", "map_4", 25000, "👁️", [
-    { paramKey: PARAM_KEYS.REVEAL_BOSS, op: "set", value: true },
-  ]),
-];
-
-// ────────────────────────────────────────────────────────────────────
-// Session bonuses (bought in the shop with coins)
+// Reward bonuses (obtained via mystery)
 // ────────────────────────────────────────────────────────────────────
 
 /** @type {BonusDef[]} */
-export const SESSION_BONUSES = [
+export const REWARD_BONUSES = [
   {
-    id: "session_extra_classic_ball_one",
-    name: "+1 Ball",
-    type: BONUS_TYPES.SESSION,
+    id: "reward_score_total_x2",
+    name: "Score ×2",
     category: BONUS_CATEGORIES.BONUS,
-    cost: 100,
-    abilityRequired: null,
+    rarity: "epic",
+    icon: "sparkles",
+    durationLevels: null,
+    modifiers: [
+      { paramKey: PARAM_KEYS.SCORE_TOTAL_MULTIPLIER, op: "multiply", value: 2 },
+    ],
+  },
+  {
+    id: "reward_peg_destroy_50",
+    name: "+50 / peg",
+    category: BONUS_CATEGORIES.BONUS,
     rarity: "common",
-    icon: "🔵",
+    icon: "zap",
+    durationLevels: null,
+    triggers: [
+      {
+        on: TRIGGER_EVENTS.PEG_DESTROYED,
+        action: TRIGGER_ACTIONS.ADD_HIT_SCORE,
+        payload: { points: 50 },
+      },
+    ],
+  },
+  {
+    id: "reward_save_spawn_ball",
+    name: "Save → Ball",
+    category: BONUS_CATEGORIES.BONUS,
+    rarity: "rare",
+    icon: "save",
+    durationLevels: null,
+    triggers: [
+      {
+        on: TRIGGER_EVENTS.PEG_SAVED,
+        action: TRIGGER_ACTIONS.SPAWN_BALL,
+        payload: { kind: "classic", count: 1 },
+      },
+    ],
+  },
+  {
+    id: "reward_ice_quench_x2",
+    name: "Quench ×2",
+    category: BONUS_CATEGORIES.BONUS,
+    rarity: "epic",
+    icon: "snowflake",
+    durationLevels: null,
+    triggers: [
+      {
+        on: TRIGGER_EVENTS.EFFECT_CANCELLED,
+        action: TRIGGER_ACTIONS.ACTIVATE,
+        match: { cancelled: "burning", by: "frozen" },
+        payload: { bonusId: "reward_score_total_x2" },
+      },
+    ],
+  },
+  {
+    id: "reward_lucky_reel",
+    name: "Lucky Reel",
+    category: BONUS_CATEGORIES.BONUS,
+    rarity: "epic",
+    icon: "dices",
+    durationLevels: null,
+    modifiers: [
+      { paramKey: PARAM_KEYS.SLOT_LUCKY_REEL_CHANCE, op: "add", value: 0.1 },
+    ],
+  },
+  {
+    id: "reward_coins_x2",
+    name: "Coins ×2",
+    category: BONUS_CATEGORIES.BONUS,
+    rarity: "rare",
+    icon: "coins",
+    durationLevels: 3,
+    modifiers: [
+      {
+        paramKey: PARAM_KEYS.DESTROY_COIN_MULTIPLIER,
+        op: "multiply",
+        value: 2,
+      },
+    ],
+  },
+  {
+    id: "reward_coins_x3",
+    name: "Coins ×3",
+    category: BONUS_CATEGORIES.BONUS,
+    rarity: "legendary",
+    icon: "banknote",
+    durationLevels: null,
+    modifiers: [
+      {
+        paramKey: PARAM_KEYS.DESTROY_COIN_MULTIPLIER,
+        op: "multiply",
+        value: 3,
+      },
+    ],
+  },
+  {
+    id: "reward_extra_recycles",
+    name: "Recycles +2",
+    category: BONUS_CATEGORIES.BONUS,
+    rarity: "common",
+    icon: "recycle",
+    durationLevels: null,
+    modifiers: [
+      { paramKey: PARAM_KEYS.TELEPORT_RECYCLE_MAX_BONUS, op: "add", value: 2 },
+    ],
+  },
+  {
+    id: "reward_extra_ball",
+    name: "+1 Ball",
+    category: BONUS_CATEGORIES.BONUS,
+    rarity: "common",
+    icon: "circle-plus",
     durationLevels: 1,
     directives: [
       {
@@ -281,103 +328,133 @@ export const SESSION_BONUSES = [
     ],
   },
   {
-    id: "session_coin_drop_x2",
-    name: "Coins ×2",
-    type: BONUS_TYPES.SESSION,
+    id: "reward_bomb_radius",
+    name: "Big Bombs",
     category: BONUS_CATEGORIES.BONUS,
-    cost: 1500,
-    abilityRequired: null,
     rarity: "rare",
-    icon: "🪙",
-    durationLevels: 3,
-    modifiers: [
-      { paramKey: PARAM_KEYS.DESTROY_COIN_MULTIPLIER, op: "multiply", value: 2 },
-    ],
-  },
-  {
-    id: "session_extra_recycles",
-    name: "Recycles",
-    type: BONUS_TYPES.SESSION,
-    category: BONUS_CATEGORIES.BONUS,
-    cost: 800,
-    abilityRequired: null,
-    rarity: "rare",
-    icon: "🌀",
+    icon: "bomb",
     durationLevels: null,
     modifiers: [
-      { paramKey: PARAM_KEYS.TELEPORT_RECYCLE_MAX_BONUS, op: "add", value: 2 },
-    ],
-  },
-  {
-    id: "session_destroy_coins_x3",
-    name: "Coins ×3",
-    type: BONUS_TYPES.SESSION,
-    category: BONUS_CATEGORIES.BONUS,
-    cost: 3000,
-    abilityRequired: null,
-    rarity: "epic",
-    icon: "🪙",
-    durationLevels: null,
-    modifiers: [
-      { paramKey: PARAM_KEYS.DESTROY_COIN_MULTIPLIER, op: "multiply", value: 3 },
-    ],
-  },
-  {
-    id: "session_peg_discount_20",
-    name: "Peg -20%",
-    type: BONUS_TYPES.SESSION,
-    category: BONUS_CATEGORIES.BONUS,
-    cost: 1500,
-    abilityRequired: null,
-    rarity: "rare",
-    icon: "💸",
-    durationLevels: null,
-    modifiers: [
-      { paramKey: PARAM_KEYS.PEG_REPLACE_DISCOUNT, op: "multiply", value: 0.8 },
+      { paramKey: PARAM_KEYS.BOMB_RADIUS_BONUS, op: "add", value: 40 },
     ],
   },
 ];
 
 // ────────────────────────────────────────────────────────────────────
-// Session maluses (never sold in shop; rolled by mystery cell / peg)
+// Reward maluses (obtained via mystery)
 // ────────────────────────────────────────────────────────────────────
 
-/** @type {BonusDef[]} */
-export const SESSION_MALUSES = [
+/**
+ * Every malus rolls its duration at activation (`durationRandom: true`) from
+ * `RANDOM_DURATIONS`. Maluses with a variable magnitude declare `values` on
+ * their modifier; one is rolled once and frozen.
+ * @type {BonusDef[]}
+ */
+export const REWARD_MALUSES = [
   {
     id: "malus_obfuscate_level_number",
-    type: BONUS_TYPES.SESSION,
+    name: "Blind",
     category: BONUS_CATEGORIES.MALUS,
-    cost: 0,
-    abilityRequired: null,
     rarity: "malus",
-    icon: "❓",
-    durationLevels: 1,
+    icon: "eye-off",
+    durationRandom: true,
     modifiers: [
       { paramKey: PARAM_KEYS.REVEAL_LEVEL_NUMBER, op: "set", value: false },
     ],
   },
   {
-    id: "malus_player_hp_drain",
-    type: BONUS_TYPES.SESSION,
+    id: "malus_shop_price",
+    name: "Racket",
     category: BONUS_CATEGORIES.MALUS,
-    cost: 0,
-    abilityRequired: null,
     rarity: "malus",
-    icon: "💔",
-    durationLevels: 1,
+    icon: "shopping-cart",
+    durationRandom: true,
     modifiers: [
-      { paramKey: PARAM_KEYS.PLAYER_MAX_HP_BONUS, op: "add", value: -3 },
+      {
+        paramKey: PARAM_KEYS.SHOP_PRICE_MULT,
+        op: "multiply",
+        values: [2, 5, 10],
+      },
+    ],
+  },
+  {
+    id: "malus_cannon_misfire",
+    name: "Misfire",
+    category: BONUS_CATEGORIES.MALUS,
+    rarity: "malus",
+    icon: "flame",
+    durationRandom: true,
+    modifiers: [
+      {
+        paramKey: PARAM_KEYS.CANNON_MISFIRE_CHANCE,
+        op: "add",
+        values: [0.1, 0.3, 0.5],
+      },
+    ],
+  },
+  {
+    id: "malus_mystery_common",
+    name: "Jinx",
+    category: BONUS_CATEGORIES.MALUS,
+    rarity: "malus",
+    icon: "circle-help",
+    durationRandom: true,
+    modifiers: [
+      { paramKey: PARAM_KEYS.MYSTERY_FORCE_COMMON, op: "set", value: true },
+    ],
+  },
+  {
+    id: "malus_objective_double",
+    name: "Double Trouble",
+    category: BONUS_CATEGORIES.MALUS,
+    rarity: "malus",
+    icon: "target",
+    durationRandom: true,
+    modifiers: [
+      { paramKey: PARAM_KEYS.OBJECTIVE_MULTIPLIER, op: "multiply", value: 2 },
+    ],
+  },
+  {
+    id: "malus_slot_no_reroll",
+    name: "Jammed",
+    category: BONUS_CATEGORIES.MALUS,
+    rarity: "malus",
+    icon: "ban",
+    durationRandom: true,
+    modifiers: [
+      { paramKey: PARAM_KEYS.SLOT_REROLL_DISABLED, op: "set", value: true },
+    ],
+  },
+  {
+    id: "malus_slot_common",
+    name: "Cheap Reels",
+    category: BONUS_CATEGORIES.MALUS,
+    rarity: "malus",
+    icon: "chevrons-down",
+    durationRandom: true,
+    modifiers: [
+      { paramKey: PARAM_KEYS.SLOT_FORCE_COMMON, op: "set", value: true },
+    ],
+  },
+  {
+    id: "malus_score_penalty",
+    name: "Handicap",
+    category: BONUS_CATEGORIES.MALUS,
+    rarity: "malus",
+    icon: "trending-down",
+    durationRandom: true,
+    modifiers: [
+      {
+        paramKey: PARAM_KEYS.SCORE_TOTAL_MULTIPLIER,
+        op: "multiply",
+        values: [0.9, 0.85, 0.8, 0.75, 0.7],
+      },
     ],
   },
 ];
 
-/** Every entry, indexed by id. */
-export const ALL_BONUSES = [
-  ...PERMANENT_BONUSES,
-  ...SESSION_BONUSES,
-  ...SESSION_MALUSES,
-];
+/** Every reward entry, indexed by id. */
+export const ALL_BONUSES = [...REWARD_BONUSES, ...REWARD_MALUSES];
 
 /**
  * @param {string} id

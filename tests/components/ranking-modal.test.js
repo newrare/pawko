@@ -37,8 +37,8 @@ describe("RankingModal", () => {
     saveManager.addRanking("default", { score: 300, level: 2 });
     const modal = new RankingModal();
     modal.open();
-    const scores = [...document.querySelectorAll(".pk-rank-score")].map(
-      (el) => Number(el.textContent),
+    const scores = [...document.querySelectorAll(".pk-rank-score")].map((el) =>
+      Number(el.textContent),
     );
     expect(scores).toEqual([500, 300, 100]);
     modal.destroy();

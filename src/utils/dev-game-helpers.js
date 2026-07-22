@@ -27,6 +27,7 @@ export function buildTestLayers(filter, width) {
     layer.pegs = [];
     const startSlot = row % 2;
     for (let i = startSlot; i < Slot.count; i += 2) {
+      if (!Slot.isClear(i, w)) continue;
       const x = Slot.xFor(i, w);
       layer.pegs.push(createPeg(type, { x, y: 0, slot: i }));
     }

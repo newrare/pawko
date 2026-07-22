@@ -81,11 +81,31 @@
     opacity 0.28s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.pk-shop-slot[data-level="full"]  { height: 240px; padding: 6px 0; opacity: 1; }
-.pk-shop-slot[data-level="mini"]  { height: 56px;  padding: 6px 0; opacity: 0.92; }
-.pk-shop-slot[data-level="micro"] { height: 44px;  padding: 6px 0; opacity: 0.74; }
-.pk-shop-slot[data-level="tiny"]  { height: 38px;  padding: 6px 0; opacity: 0.55; }
-.pk-shop-slot[data-level="dot"]   { height: 26px;  padding: 4px 0; opacity: 0.4; }
+.pk-shop-slot[data-level="full"] {
+  height: 240px;
+  padding: 6px 0;
+  opacity: 1;
+}
+.pk-shop-slot[data-level="mini"] {
+  height: 56px;
+  padding: 6px 0;
+  opacity: 0.92;
+}
+.pk-shop-slot[data-level="micro"] {
+  height: 44px;
+  padding: 6px 0;
+  opacity: 0.74;
+}
+.pk-shop-slot[data-level="tiny"] {
+  height: 38px;
+  padding: 6px 0;
+  opacity: 0.55;
+}
+.pk-shop-slot[data-level="dot"] {
+  height: 26px;
+  padding: 4px 0;
+  opacity: 0.4;
+}
 
 .pk-shop-slot.is-empty {
   pointer-events: none;
@@ -154,17 +174,45 @@
 }
 
 /* --- Rarity custom properties --- */
-.pk-shop-rarity-permanent  { --rc: var(--pk-gold-light); --rb: var(--pk-gold-dim); --rg: rgba(212, 175, 55, 0.22); }
-.pk-shop-rarity-legendary  { --rc: #fbbf24;              --rb: #d97706;            --rg: rgba(217, 119,   6, 0.28); }
-.pk-shop-rarity-epic       { --rc: #c084fc;              --rb: #9333ea;            --rg: rgba(147,  51, 234, 0.24); }
-.pk-shop-rarity-rare       { --rc: #93c5fd;              --rb: #2563eb;            --rg: rgba( 37,  99, 235, 0.22); }
-.pk-shop-rarity-common     { --rc: #86efac;              --rb: #16a34a;            --rg: rgba( 22, 163,  74, 0.18); }
+.pk-shop-rarity-permanent {
+  --rc: var(--pk-gold-light);
+  --rb: var(--pk-gold-dim);
+  --rg: rgba(212, 175, 55, 0.22);
+}
+.pk-shop-rarity-legendary {
+  --rc: #fbbf24;
+  --rb: #d97706;
+  --rg: rgba(217, 119, 6, 0.28);
+}
+.pk-shop-rarity-epic {
+  --rc: #c084fc;
+  --rb: #9333ea;
+  --rg: rgba(147, 51, 234, 0.24);
+}
+.pk-shop-rarity-rare {
+  --rc: #93c5fd;
+  --rb: #2563eb;
+  --rg: rgba(37, 99, 235, 0.22);
+}
+.pk-shop-rarity-common {
+  --rc: #86efac;
+  --rb: #16a34a;
+  --rg: rgba(22, 163, 74, 0.18);
+}
 
 /* --- Progressive card widths --- */
-.pk-shop-card-full  { width: 100%; }
-.pk-shop-card-mini  { width: 80%; }
-.pk-shop-card-micro { width: 60%; }
-.pk-shop-card-tiny  { width: 42%; }
+.pk-shop-card-full {
+  width: 100%;
+}
+.pk-shop-card-mini {
+  width: 80%;
+}
+.pk-shop-card-micro {
+  width: 60%;
+}
+.pk-shop-card-tiny {
+  width: 42%;
+}
 
 /* --- Mini / micro / tiny shared base --- */
 .pk-shop-card-mini,
@@ -330,8 +378,15 @@
   z-index: 1;
 }
 
-.pk-shop-card-full .pk-shop-card-pip.pip-tl { top: 8px; left: 10px; }
-.pk-shop-card-full .pk-shop-card-pip.pip-br { bottom: 8px; right: 10px; transform: rotate(180deg); }
+.pk-shop-card-full .pk-shop-card-pip.pip-tl {
+  top: 8px;
+  left: 10px;
+}
+.pk-shop-card-full .pk-shop-card-pip.pip-br {
+  bottom: 8px;
+  right: 10px;
+  transform: rotate(180deg);
+}
 
 .pk-shop-card-full .pip-v {
   font-size: 1rem;

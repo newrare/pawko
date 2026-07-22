@@ -52,7 +52,9 @@
   top: var(--gt-safe-top, 0px);
   min-width: 260px;
   width: max-content;
-  max-width: calc((100vw - var(--gt-safe-left, 0px) - var(--gt-safe-width, 0px) - 24px) * 2);
+  max-width: calc(
+    (100vw - var(--gt-safe-left, 0px) - var(--gt-safe-width, 0px) - 24px) * 2
+  );
   max-height: var(--gt-safe-height, 80vh);
   overflow-y: auto;
   overflow-x: hidden;
@@ -63,7 +65,11 @@
   border: 1px dashed rgba(0, 255, 136, 0.45);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   pointer-events: auto;
-  font: 700 11px/1.3 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font:
+    700 11px/1.3 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
   color: #d4ffe5;
 }
 
@@ -103,7 +109,11 @@
   padding: 5px 6px;
   margin-bottom: 3px;
   border-radius: 4px;
-  font: 700 10px/1.2 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font:
+    700 10px/1.2 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
   color: #d4ffe5;
   background: rgba(0, 255, 136, 0.08);
   text-align: left;
@@ -111,22 +121,34 @@
   transition: background 120ms ease;
 }
 
-.pk-dev-admin-btn:hover { background: rgba(0, 255, 136, 0.2); }
-.pk-dev-admin-btn:active { background: rgba(0, 255, 136, 0.35); }
+.pk-dev-admin-btn:hover {
+  background: rgba(0, 255, 136, 0.2);
+}
+.pk-dev-admin-btn:active {
+  background: rgba(0, 255, 136, 0.35);
+}
 
 .pk-dev-admin-btn--classic {
   background: rgba(212, 175, 55, 0.12);
   color: #f5d77a;
 }
-.pk-dev-admin-btn--classic:hover { background: rgba(212, 175, 55, 0.25); }
-.pk-dev-admin-btn--classic:active { background: rgba(212, 175, 55, 0.4); }
+.pk-dev-admin-btn--classic:hover {
+  background: rgba(212, 175, 55, 0.25);
+}
+.pk-dev-admin-btn--classic:active {
+  background: rgba(212, 175, 55, 0.4);
+}
 
 .pk-dev-admin-btn--test {
   border-color: #a78bfa;
   color: #ddd6fe;
 }
-.pk-dev-admin-btn--test:hover { background: rgba(167, 139, 250, 0.25); }
-.pk-dev-admin-btn--test:active { background: rgba(167, 139, 250, 0.4); }
+.pk-dev-admin-btn--test:hover {
+  background: rgba(167, 139, 250, 0.25);
+}
+.pk-dev-admin-btn--test:active {
+  background: rgba(167, 139, 250, 0.4);
+}
 
 .pk-dev-admin-row {
   display: flex;
@@ -155,7 +177,11 @@
   border-radius: 3px;
   background: rgba(0, 20, 10, 0.85);
   color: #d4ffe5;
-  font: 700 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+  font:
+    700 11px/1.4 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
   cursor: pointer;
 }
 .pk-dev-admin-select option {
@@ -168,11 +194,17 @@
   cursor: not-allowed;
   background: rgba(167, 139, 250, 0.04);
 }
-.pk-dev-admin-btn--test:disabled:hover { background: rgba(167, 139, 250, 0.04); }
+.pk-dev-admin-btn--test:disabled:hover {
+  background: rgba(167, 139, 250, 0.04);
+}
 
 .pk-dev-admin-btn--malus {
   background: rgba(239, 68, 68, 0.15);
   color: #fecaca;
 }
-.pk-dev-admin-btn--malus:hover { background: rgba(239, 68, 68, 0.3); }
-.pk-dev-admin-btn--malus:active { background: rgba(239, 68, 68, 0.45); }
+.pk-dev-admin-btn--malus:hover {
+  background: rgba(239, 68, 68, 0.3);
+}
+.pk-dev-admin-btn--malus:active {
+  background: rgba(239, 68, 68, 0.45);
+}

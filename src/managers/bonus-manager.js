@@ -1,92 +1,107 @@
-import { STORAGE_KEYS } from "../configs/constants.js";
 import { EventEmitter } from "../utils/event-emitter.js";
 import {
-  BONUS_TYPES,
   BONUS_CATEGORIES,
-  PERMANENT_BONUSES,
-  SESSION_BONUSES,
-  SESSION_MALUSES,
+  DURATION_UNITS,
+  RANDOM_DURATIONS,
+  REWARD_BONUSES,
+  REWARD_MALUSES,
   findBonus,
 } from "../configs/bonus-defs.js";
 
 /**
- * BonusManager — owns four pieces of state:
+ * BonusManager — owns the **run-scoped** reward state. Nothing here is
+ * persisted: rewards live and die within a single run.
  *
- *  1. **unlocked** (persistent): permanent bonuses the player owns.
- *     Persisted under `STORAGE_KEYS.BONUSES`.
- *  2. **session** (transient): session bonuses *and* maluses currently
- *     active. Each entry has a `remaining` counter expressed in levels;
- *     `Infinity` means run-scoped (only cleared on `clearSession()` /
- *     `resetAll()` / a new run).
- *  3. **directive queue** (transient): one-shot actions queued at the
- *     moment a session entry is activated. Drained by the game
- *     controller at the start of the next round via
+ *  1. **session** (transient): reward bonuses *and* maluses currently active.
+ *     Each entry is `{ unit, remaining, modifiers }`:
+ *       - `unit` — the countdown unit (`level` / `shop` / `mystery` / `run`).
+ *       - `remaining` — ticks left in that unit; `Infinity` = run-scoped.
+ *       - `modifiers` — the def's modifiers with any `values` magnitude
+ *         **already rolled** at activation and frozen for the lifetime.
+ *  2. **directive queue** (transient): one-shot actions queued when a reward
+ *     is activated. Drained by the game controller once per round via
  *     `consumeDirectives()`.
+ *  3. **pending session** (transient): rewards queued to activate at the start
+ *     of the next round (used by the mystery peg).
  *
- * `resolve(paramKey, baseValue)` walks every active modifier
- * (permanent + session bonus + session malus) and applies them in
- * `add → multiply → set` order.
+ * Both a reward's duration (when `durationRandom`) and each `values` modifier
+ * magnitude are rolled **once, at activation**, using an injectable RNG.
+ *
+ * `resolve(paramKey, baseValue)` walks every active modifier (bonus + malus)
+ * and applies them in `add → multiply → set` order.
+ * `getActiveTriggers(event)` returns the active event-driven triggers for a
+ * gameplay event, dispatched by the controller.
  *
  * Emits `change` on every state mutation.
  */
 class BonusManager extends EventEmitter {
-  /** @type {Set<string>} owned permanent bonus IDs */
-  #unlocked = new Set();
-
-  /** @type {Map<string, number>} session id → remaining levels (Infinity = run-scoped) */
+  /** @type {Map<string, { unit: string, remaining: number, modifiers: import('../configs/bonus-defs.js').BonusModifier[] }>} */
   #session = new Map();
 
   /** @type {import('../configs/bonus-defs.js').BonusDirective[]} */
   #directives = [];
 
-  /** @type {string[]} session ids queued to activate at the next pinboard start */
+  /** @type {string[]} reward ids queued to activate at the next pinboard start */
   #pendingSession = [];
-
-  constructor() {
-    super();
-    this.#load();
-  }
-
-  // ─── Permanent bonuses ─────────────────────────────────────
-
-  /**
-   * @param {string} id
-   * @returns {boolean} true when newly unlocked
-   */
-  unlockPermanent(id) {
-    const def = findBonus(id);
-    if (!def || def.type !== BONUS_TYPES.PERMANENT) return false;
-    if (this.#unlocked.has(id)) return false;
-    this.#unlocked.add(id);
-    this.#save();
-    this.emit("change");
-    return true;
-  }
-
-  /** @param {string} id */
-  isPermanentUnlocked(id) {
-    return this.#unlocked.has(id);
-  }
-
-  /** @returns {string[]} */
-  getUnlockedPermanent() {
-    return [...this.#unlocked];
-  }
 
   // ─── Session entries (bonuses + maluses) ───────────────────
 
   /**
-   * Activate a session entry — bonus OR malus. `durationLevels == null`
-   * is stored as Infinity (run-scoped). Refreshes the duration when
-   * already active. Queues every directive carried by the def.
+   * Roll a reward's duration into `{ unit, remaining }`. `durationRandom` picks
+   * uniformly from `RANDOM_DURATIONS`; otherwise `durationLevels` is used
+   * (`null` → run-scoped / Infinity).
+   * @param {import('../configs/bonus-defs.js').BonusDef} def
+   * @param {() => number} rng
+   */
+  #rollDuration(def, rng) {
+    if (def.durationRandom) {
+      const i = Math.min(
+        RANDOM_DURATIONS.length - 1,
+        Math.floor(rng() * RANDOM_DURATIONS.length),
+      );
+      const opt = RANDOM_DURATIONS[i];
+      return { unit: opt.unit, remaining: opt.count };
+    }
+    if (def.durationLevels == null) {
+      return { unit: DURATION_UNITS.RUN, remaining: Infinity };
+    }
+    return { unit: DURATION_UNITS.LEVEL, remaining: def.durationLevels };
+  }
+
+  /**
+   * Resolve a def's modifiers into concrete `{ paramKey, op, value }`, rolling
+   * one magnitude from any `values` array.
+   * @param {import('../configs/bonus-defs.js').BonusDef} def
+   * @param {() => number} rng
+   * @returns {import('../configs/bonus-defs.js').BonusModifier[]}
+   */
+  #rollModifiers(def, rng) {
+    return (def.modifiers ?? []).map((m) => {
+      if (Array.isArray(m.values) && m.values.length > 0) {
+        const i = Math.min(
+          m.values.length - 1,
+          Math.floor(rng() * m.values.length),
+        );
+        return { paramKey: m.paramKey, op: m.op, value: m.values[i] };
+      }
+      return { paramKey: m.paramKey, op: m.op, value: m.value };
+    });
+  }
+
+  /**
+   * Activate a reward — bonus OR malus. The duration (and any variable modifier
+   * magnitude) is rolled now and frozen. Re-activating refreshes the entry.
+   * Queues every directive carried by the def.
    * @param {string} id
+   * @param {{ rng?: () => number }} [opts]
    * @returns {boolean}
    */
-  activateSession(id) {
+  activateSession(id, { rng = Math.random } = {}) {
     const def = findBonus(id);
-    if (!def || def.type !== BONUS_TYPES.SESSION) return false;
-    const dur = def.durationLevels == null ? Infinity : def.durationLevels;
-    this.#session.set(id, dur);
+    if (!def) return false;
+    const { unit, remaining } = this.#rollDuration(def, rng);
+    const modifiers = this.#rollModifiers(def, rng);
+    this.#session.set(id, { unit, remaining, modifiers });
     if (Array.isArray(def.directives)) {
       for (const d of def.directives) this.#directives.push(d);
     }
@@ -95,14 +110,15 @@ class BonusManager extends EventEmitter {
   }
 
   /**
-   * Convenience wrapper for maluses. Same semantics as activateSession()
-   * but rejects ids that are not maluses.
+   * Convenience wrapper for maluses. Same semantics as activateSession() but
+   * rejects ids that are not maluses.
    * @param {string} id
+   * @param {{ rng?: () => number }} [opts]
    */
-  activateMalus(id) {
+  activateMalus(id, opts) {
     const def = findBonus(id);
     if (!def || def.category !== BONUS_CATEGORIES.MALUS) return false;
-    return this.activateSession(id);
+    return this.activateSession(id, opts);
   }
 
   /** @param {string} id */
@@ -111,20 +127,21 @@ class BonusManager extends EventEmitter {
   }
 
   /**
-   * @returns {Array<{ id: string, remaining: number, def: import('../configs/bonus-defs.js').BonusDef }>}
+   * @returns {Array<{ id: string, remaining: number, unit: string, def: import('../configs/bonus-defs.js').BonusDef }>}
    */
   getActiveSession() {
     const out = [];
-    for (const [id, remaining] of this.#session) {
+    for (const [id, entry] of this.#session) {
       const def = findBonus(id);
-      if (def) out.push({ id, remaining, def });
+      if (def)
+        out.push({ id, remaining: entry.remaining, unit: entry.unit, def });
     }
     return out;
   }
 
   /**
-   * Drain and return every pending one-shot directive. Called once per
-   * round by the game controller.
+   * Drain and return every pending one-shot directive. Called once per round
+   * by the game controller.
    * @returns {import('../configs/bonus-defs.js').BonusDirective[]}
    */
   consumeDirectives() {
@@ -135,20 +152,18 @@ class BonusManager extends EventEmitter {
   }
 
   /**
-   * Queue a session bonus to be activated at the start of the next pinboard.
-   * Used by MysteryPeg so the bonus takes effect on the following level, not
-   * the current one.
+   * Queue a reward to be activated at the start of the next pinboard. Used by
+   * MysteryPeg so the reward takes effect on the following level.
    * @param {string} id
    */
   queueSessionNext(id) {
-    const def = findBonus(id);
-    if (!def || def.type !== BONUS_TYPES.SESSION) return;
+    if (!findBonus(id)) return;
     this.#pendingSession.push(id);
   }
 
   /**
-   * Activate every pending queued session bonus. Called once at the start
-   * of each pinboard round (alongside consumeDirectives).
+   * Activate every pending queued reward. Called once at the start of each
+   * pinboard round (alongside consumeDirectives).
    */
   consumeQueuedSessions() {
     if (this.#pendingSession.length === 0) return;
@@ -157,31 +172,62 @@ class BonusManager extends EventEmitter {
   }
 
   /**
-   * Tick session counters down by one level. Entries with Infinity
-   * remaining (run-scoped) are skipped. Expiring entries' `onExpire`
-   * callbacks run before they are removed.
+   * Tick every session entry counted in `unit` down by one. Run-scoped entries
+   * (Infinity) and entries in other units are skipped. Expiring entries'
+   * `onExpire` callbacks run before removal.
+   * @param {string} unit — a DURATION_UNITS value
    * @param {object} [ctx]
    */
-  onLevelUp(ctx = {}) {
+  #tick(unit, ctx = {}) {
     if (this.#session.size === 0) return;
     const expired = [];
-    for (const [id, remaining] of this.#session) {
-      if (!Number.isFinite(remaining)) continue;
-      const next = remaining - 1;
+    for (const [id, entry] of this.#session) {
+      if (entry.unit !== unit) continue;
+      if (!Number.isFinite(entry.remaining)) continue;
+      const next = entry.remaining - 1;
       if (next <= 0) expired.push(id);
-      else this.#session.set(id, next);
+      else entry.remaining = next;
     }
     for (const id of expired) {
       this.#session.delete(id);
-      const def = findBonus(id);
-      def?.onExpire?.(ctx);
+      findBonus(id)?.onExpire?.(ctx);
     }
     this.emit("change");
   }
 
+  /**
+   * Tick level-scoped entries. Called on level victory.
+   * @param {object} [ctx]
+   */
+  onLevelUp(ctx = {}) {
+    this.#tick(DURATION_UNITS.LEVEL, ctx);
+  }
+
+  /**
+   * Tick shop-scoped entries. Called when the boutique is entered.
+   * @param {object} [ctx]
+   */
+  onShopVisited(ctx = {}) {
+    this.#tick(DURATION_UNITS.SHOP, ctx);
+  }
+
+  /**
+   * Tick mystery-scoped entries. Called when a mystery reward is drawn (before
+   * the new reward is applied, so the drawing mystery does not count itself).
+   * @param {object} [ctx]
+   */
+  onMysteryDraw(ctx = {}) {
+    this.#tick(DURATION_UNITS.MYSTERY, ctx);
+  }
+
   /** Clears every session entry + pending directive + queued sessions (used on game over / new run). */
   clearSession() {
-    if (this.#session.size === 0 && this.#directives.length === 0 && this.#pendingSession.length === 0) return;
+    if (
+      this.#session.size === 0 &&
+      this.#directives.length === 0 &&
+      this.#pendingSession.length === 0
+    )
+      return;
     this.#session.clear();
     this.#directives = [];
     this.#pendingSession = [];
@@ -202,8 +248,8 @@ class BonusManager extends EventEmitter {
     const adds = [];
     const muls = [];
     const sets = [];
-    for (const def of this.#activeDefs()) {
-      for (const mod of def.modifiers ?? []) {
+    for (const entry of this.#session.values()) {
+      for (const mod of entry.modifiers ?? []) {
         if (mod.paramKey !== paramKey) continue;
         if (mod.op === "add") adds.push(mod.value);
         else if (mod.op === "multiply") muls.push(mod.value);
@@ -222,65 +268,43 @@ class BonusManager extends EventEmitter {
     return value;
   }
 
-  *#activeDefs() {
-    for (const id of this.#unlocked) {
-      const def = findBonus(id);
-      if (def) yield def;
-    }
+  /**
+   * Return the active event-driven triggers for a gameplay event, in
+   * activation order. The controller applies each `{ def, trigger }` through
+   * its `#applyTriggers` dispatcher.
+   * @param {string} event — one of TRIGGER_EVENTS
+   * @returns {Array<{ def: import('../configs/bonus-defs.js').BonusDef, trigger: import('../configs/bonus-defs.js').BonusTrigger }>}
+   */
+  getActiveTriggers(event) {
+    const out = [];
     for (const id of this.#session.keys()) {
       const def = findBonus(id);
-      if (def) yield def;
+      for (const trigger of def?.triggers ?? []) {
+        if (trigger.on === event) out.push({ def, trigger });
+      }
     }
+    return out;
   }
 
   // ─── Catalogue helpers ─────────────────────────────────────
 
-  getAllPermanent() {
-    return PERMANENT_BONUSES;
-  }
-
-  getAllSession() {
-    return SESSION_BONUSES;
+  getAllBonuses() {
+    return REWARD_BONUSES;
   }
 
   getAllMaluses() {
-    return SESSION_MALUSES;
-  }
-
-  /** Shop catalogue — maluses are never sold. */
-  getAll() {
-    return [...PERMANENT_BONUSES, ...SESSION_BONUSES];
+    return REWARD_MALUSES;
   }
 
   // ─── Reset ─────────────────────────────────────────────────
 
   resetAll() {
-    this.#unlocked.clear();
-    this.#session.clear();
-    this.#directives = [];
-    this.#pendingSession = [];
-    this.#save();
-    this.emit("change");
+    this.clearSession();
   }
 
   /**
-   * Remove every owned permanent bonus. Leaves session entries
-   * untouched.
-   * @returns {boolean} true if at least one entry was cleared
-   */
-  clearPermanent() {
-    if (this.#unlocked.size === 0) return false;
-    this.#unlocked.clear();
-    this.#save();
-    this.emit("change");
-    return true;
-  }
-
-  /**
-   * Remove every active session entry whose category matches
-   * `category`. Pending directives are left alone — they were already
-   * queued for the next round and may have come from entries we are
-   * keeping.
+   * Remove every active session entry whose category matches `category`.
+   * Pending directives are left alone.
    * @param {'bonus' | 'malus'} category
    * @returns {boolean} true if at least one entry was cleared
    */
@@ -298,7 +322,6 @@ class BonusManager extends EventEmitter {
 
   /**
    * Remove every active session **bonus** (category === 'bonus').
-   * Maluses stay in place.
    * @returns {boolean} true if at least one entry was cleared
    */
   clearSessionBonuses() {
@@ -307,7 +330,6 @@ class BonusManager extends EventEmitter {
 
   /**
    * Remove every active session **malus** (category === 'malus').
-   * Bonuses stay in place.
    * @returns {boolean} true if at least one entry was cleared
    */
   clearSessionMaluses() {
@@ -316,41 +338,10 @@ class BonusManager extends EventEmitter {
 
   /** @internal — for tests */
   _resetForTests() {
-    this.#unlocked.clear();
     this.#session.clear();
     this.#directives = [];
     this.#pendingSession = [];
-    localStorage.removeItem(STORAGE_KEYS.BONUSES);
     this.clear();
-  }
-
-  // ─── Persistence ───────────────────────────────────────────
-
-  #load() {
-    const raw = localStorage.getItem(STORAGE_KEYS.BONUSES);
-    if (!raw) return;
-    try {
-      const data = JSON.parse(raw);
-      if (Array.isArray(data?.unlocked)) {
-        for (const id of data.unlocked) {
-          const def = findBonus(id);
-          if (def?.type === BONUS_TYPES.PERMANENT) this.#unlocked.add(id);
-        }
-      }
-    } catch {
-      /* ignore malformed payload */
-    }
-  }
-
-  #save() {
-    try {
-      localStorage.setItem(
-        STORAGE_KEYS.BONUSES,
-        JSON.stringify({ unlocked: [...this.#unlocked] }),
-      );
-    } catch (err) {
-      console.error("[bonus] failed to persist:", err);
-    }
   }
 }
 

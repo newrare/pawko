@@ -29,11 +29,17 @@
   --pk-peg-color: var(--pk-bumper-ring);
 }
 
-.pk-peg.pk-flash { animation: pk-peg-flash 0.18s ease-out; }
-.pk-peg--bumper.pk-flash { animation: pk-bumper-flash 0.22s ease-out; }
+.pk-peg.pk-flash {
+  animation: pk-peg-flash 0.18s ease-out;
+}
+.pk-peg--bumper.pk-flash {
+  animation: pk-bumper-flash 0.22s ease-out;
+}
 
 /* Tremble must override both bumper idle and flash (higher specificity). */
-.pk-peg.pk-tremble { animation: pk-tremble 0.15s ease-in-out infinite !important; }
+.pk-peg.pk-tremble {
+  animation: pk-tremble 0.15s ease-in-out infinite !important;
+}
 
 /* --- Coin — yellow rotated square, pulsing glow --- */
 .pk-peg--coin {
@@ -50,7 +56,7 @@
   rotate: 45deg;
   border-radius: 3px;
   border: 2.5px solid var(--pk-peg-diamond);
-  box-shadow: 0 0 4px rgba(167,139,250,.2);
+  box-shadow: 0 0 4px rgba(167, 139, 250, 0.2);
   animation: pk-diamond-pulse 10s ease-in-out infinite;
   --pk-peg-color: var(--pk-peg-diamond);
 }
@@ -64,7 +70,7 @@
   --pk-peg-color: var(--pk-peg-glue);
 }
 .pk-peg--glue::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: -7px;
   border-radius: 50%;
@@ -81,8 +87,13 @@
 }
 
 @keyframes pk-teleport-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* --- Chest — amber rounded square --- */
@@ -105,7 +116,7 @@
    inset so its outer edge sits exactly at that radius from the peg center. */
 .pk-peg--shield-active::after,
 .pk-peg--shield-down::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: calc(11px - var(--pk-shield-radius, 20px));
   border-radius: 50%;
@@ -127,16 +138,25 @@
   --pk-peg-color: var(--pk-peg-mystery);
 }
 .pk-peg--mystery::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: -1px;
   border-radius: 3px;
-  background: conic-gradient(#f87171, #fb923c, #facc15, #4ade80, #22d3ee, #818cf8, #e879f9, #f87171);
+  background: conic-gradient(
+    #f87171,
+    #fb923c,
+    #facc15,
+    #4ade80,
+    #22d3ee,
+    #818cf8,
+    #e879f9,
+    #f87171
+  );
   animation: pk-mystery-hue 3s linear infinite;
   pointer-events: none;
 }
 .pk-peg--mystery::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 3px;
   border-radius: 2px;
@@ -144,11 +164,15 @@
   pointer-events: none;
 }
 @keyframes pk-mystery-hue {
-  from { filter: hue-rotate(0deg); }
-  to   { filter: hue-rotate(360deg); }
+  from {
+    filter: hue-rotate(0deg);
+  }
+  to {
+    filter: hue-rotate(360deg);
+  }
 }
 
-/* --- Elemental pegs (tower-defense) ---
+/* --- Elemental pegs ---
    The ring-only look mirrors the corresponding "ball-effect" states from
    the styleguide (frozen / burned / electrified): the elemental peg
    itself carries the effect identity, not a transient state on a classic
@@ -165,12 +189,14 @@
 .pk-peg--ice {
   background: rgba(56, 189, 248, 0.15);
   border-color: var(--pk-peg-ice);
-  box-shadow: 0 0 8px rgba(56, 189, 248, 0.8), 0 0 16px rgba(14, 165, 233, 0.5);
+  box-shadow:
+    0 0 8px rgba(56, 189, 248, 0.8),
+    0 0 16px rgba(14, 165, 233, 0.5);
   --pk-peg-color: var(--pk-peg-ice);
   animation: pk-peg-frozen-flicker-3 0.5s ease-in-out infinite alternate;
 }
 .pk-peg--ice::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: -2px;
   border-radius: 50%;
@@ -190,7 +216,7 @@
   animation: pk-electric-flicker 0.15s steps(2) infinite alternate;
 }
 .pk-peg--electrical::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: -4px;
   border-radius: 50%;
@@ -205,14 +231,14 @@
 /* Bomb peg — metallic silver ring over a dark orb, with a shrinking
    corona ring to signal the peg is tappable. */
 .pk-peg--bomb {
-  background: rgba(8, 6, 12, 0.80);
+  background: rgba(8, 6, 12, 0.8);
   border-color: var(--pk-peg-bomb);
   box-shadow: 0 0 8px rgba(200, 205, 212, 0.55);
   --pk-peg-color: var(--pk-peg-bomb);
   cursor: pointer;
 }
 .pk-peg--bomb::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 50%;
   left: 50%;
@@ -226,9 +252,17 @@
   pointer-events: none;
 }
 @keyframes pk-bomb-ring-shrink {
-  0%   { transform: translate(-50%, -50%) scale(2.6); opacity: 0; }
-  25%  { opacity: 0.85; }
-  100% { transform: translate(-50%, -50%) scale(0.6); opacity: 0; }
+  0% {
+    transform: translate(-50%, -50%) scale(2.6);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0.6);
+    opacity: 0;
+  }
 }
 
 /* --- Bomb explosion effects (detonation center rendered inside the pinboard) ---
@@ -241,33 +275,64 @@
   width: calc(var(--pk-bomb-radius, 80px) * 2);
   height: calc(var(--pk-bomb-radius, 80px) * 2);
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 180, 40, 0.4) 0%, rgba(239, 68, 68, 0.3) 55%, transparent 100%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 180, 40, 0.4) 0%,
+    rgba(239, 68, 68, 0.3) 55%,
+    transparent 100%
+  );
   transform: translate(-50%, -50%) scale(0);
   pointer-events: none;
   animation: pk-bomb-blast-zone 0.65s ease-out forwards;
 }
 @keyframes pk-bomb-blast-zone {
-  0%   { transform: translate(-50%, -50%) scale(0); opacity: 1; }
-  18%  { transform: translate(-50%, -50%) scale(1.05); opacity: 0.9; }
-  40%  { transform: translate(-50%, -50%) scale(1);    opacity: 0.75; }
-  100% { transform: translate(-50%, -50%) scale(1);    opacity: 0; }
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 1;
+  }
+  18% {
+    transform: translate(-50%, -50%) scale(1.05);
+    opacity: 0.9;
+  }
+  40% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.75;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
 }
 
 /* Central bright flash — stays within the blast zone */
 .pk-bomb-flash {
   position: absolute;
-  width: calc(var(--pk-bomb-radius, 80px) * 1.0);
-  height: calc(var(--pk-bomb-radius, 80px) * 1.0);
+  width: calc(var(--pk-bomb-radius, 80px) * 1);
+  height: calc(var(--pk-bomb-radius, 80px) * 1);
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 240, 120, 1) 0%, rgba(255, 100, 20, 0.9) 40%, transparent 100%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 240, 120, 1) 0%,
+    rgba(255, 100, 20, 0.9) 40%,
+    transparent 100%
+  );
   transform: translate(-50%, -50%) scale(0);
   pointer-events: none;
   animation: pk-bomb-flash 0.28s ease-out forwards;
 }
 @keyframes pk-bomb-flash {
-  0%   { transform: translate(-50%, -50%) scale(0); opacity: 1; }
-  30%  { transform: translate(-50%, -50%) scale(0.6); opacity: 1; }
-  100% { transform: translate(-50%, -50%) scale(1);   opacity: 0; }
+  0% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 1;
+  }
+  30% {
+    transform: translate(-50%, -50%) scale(0.6);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
 }
 
 /* Boundary ring — traces the exact damage radius edge */
@@ -302,8 +367,14 @@
   animation: pk-bomb-debris 0.55s ease-out forwards;
 }
 @keyframes pk-bomb-debris {
-  0%   { transform: translate(0, 0) scale(1); opacity: 1; }
-  100% { transform: translate(var(--dx), var(--dy)) scale(0.2); opacity: 0; }
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) scale(0.2);
+    opacity: 0;
+  }
 }
 
 /* --- Tremble animation for last-hit pegs --- */
@@ -311,10 +382,19 @@
   animation: pk-tremble 0.15s ease-in-out infinite;
 }
 @keyframes pk-tremble {
-  0%, 100% { transform: translate(0, 0); }
-  25% { transform: translate(-1px, 0.5px); }
-  50% { transform: translate(1px, -0.5px); }
-  75% { transform: translate(-0.5px, -1px); }
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(-1px, 0.5px);
+  }
+  50% {
+    transform: translate(1px, -0.5px);
+  }
+  75% {
+    transform: translate(-0.5px, -1px);
+  }
 }
 
 /* --- HP remaining label, shown briefly at peg centre after a hit --- */
@@ -344,62 +424,142 @@
   rotate: -45deg;
 }
 @keyframes pk-hp-label-fade {
-  0%   { opacity: 1; }
-  65%  { opacity: 1; }
-  100% { opacity: 0; }
+  0% {
+    opacity: 1;
+  }
+  65% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 /* --- Peg keyframes --- */
 
 /* Implode on destruction: the ring contracts to its own centre and vanishes. */
 @keyframes pk-peg-implode {
-  0%   { transform: scale(1);    opacity: 1; }
-  55%  { transform: scale(0.35); opacity: 0.7; }
-  100% { transform: scale(0);    opacity: 0; }
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  55% {
+    transform: scale(0.35);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
 }
 
 @keyframes pk-peg-flash {
-  0%   { transform: scale(1); filter: brightness(1); }
-  50%  { transform: scale(1.4); filter: brightness(1.4); }
-  100% { transform: scale(1); filter: brightness(1); }
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.4);
+    filter: brightness(1.4);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
 }
 
 @keyframes pk-bumper-flash {
-  0%   { transform: scale(1); }
-  50%  { transform: scale(1.6); filter: brightness(1.4); }
-  100% { transform: scale(1); }
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.6);
+    filter: brightness(1.4);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 @keyframes pk-bumper-idle {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.06); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
 }
 
 @keyframes pk-coin-pulse {
-  0%, 100% { box-shadow: 0 0 4px rgba(250,204,21,.2); }
-  50%      { box-shadow: 0 0 18px rgba(250,204,21,.9), 0 0 28px rgba(250,204,21,.2), inset 0 0 6px rgba(250,204,21,.35); }
+  0%,
+  100% {
+    box-shadow: 0 0 4px rgba(250, 204, 21, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 0 18px rgba(250, 204, 21, 0.9),
+      0 0 28px rgba(250, 204, 21, 0.2),
+      inset 0 0 6px rgba(250, 204, 21, 0.35);
+  }
 }
 
 @keyframes pk-diamond-pulse {
-  0%, 100% { box-shadow: 0 0 4px rgba(167,139,250,.2); }
-  50%      { box-shadow: 0 0 18px rgba(167,139,250,.9), 0 0 28px rgba(167,139,250,.2), inset 0 0 6px rgba(167,139,250,.35); }
+  0%,
+  100% {
+    box-shadow: 0 0 4px rgba(167, 139, 250, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 0 18px rgba(167, 139, 250, 0.9),
+      0 0 28px rgba(167, 139, 250, 0.2),
+      inset 0 0 6px rgba(167, 139, 250, 0.35);
+  }
 }
 
 @keyframes pk-glue-blob {
-  0%   { border-radius: 50%; }
-  20%  { border-radius: 62% 38% 55% 45% / 45% 57% 43% 55%; }
-  40%  { border-radius: 40% 60% 43% 57% / 58% 42% 58% 42%; }
-  60%  { border-radius: 55% 45% 62% 38% / 38% 62% 45% 55%; }
-  80%  { border-radius: 46% 54% 38% 62% / 62% 38% 54% 46%; }
-  100% { border-radius: 50%; }
+  0% {
+    border-radius: 50%;
+  }
+  20% {
+    border-radius: 62% 38% 55% 45% / 45% 57% 43% 55%;
+  }
+  40% {
+    border-radius: 40% 60% 43% 57% / 58% 42% 58% 42%;
+  }
+  60% {
+    border-radius: 55% 45% 62% 38% / 38% 62% 45% 55%;
+  }
+  80% {
+    border-radius: 46% 54% 38% 62% / 62% 38% 54% 46%;
+  }
+  100% {
+    border-radius: 50%;
+  }
 }
 
 @keyframes pk-glue-outer {
-  0%   { border-radius: 50%; transform: scale(1); opacity: .5; }
-  25%  { border-radius: 56% 44% 58% 42% / 42% 58% 44% 56%; }
-  50%  { border-radius: 42% 58% 44% 56% / 56% 44% 58% 42%; transform: scale(1.06); opacity: .22; }
-  75%  { border-radius: 58% 42% 50% 50% / 48% 52% 42% 58%; }
-  100% { border-radius: 50%; transform: scale(1); opacity: .5; }
+  0% {
+    border-radius: 50%;
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  25% {
+    border-radius: 56% 44% 58% 42% / 42% 58% 44% 56%;
+  }
+  50% {
+    border-radius: 42% 58% 44% 56% / 56% 44% 58% 42%;
+    transform: scale(1.06);
+    opacity: 0.22;
+  }
+  75% {
+    border-radius: 58% 42% 50% 50% / 48% 52% 42% 58%;
+  }
+  100% {
+    border-radius: 50%;
+    transform: scale(1);
+    opacity: 0.5;
+  }
 }
 
 /* --- Peg Save System — rescue ring, pulse, save flash, combo HUD --- */
@@ -421,7 +581,9 @@
   height: 100%;
   border-radius: 50%;
   border: 2px solid var(--gt-accent, #22d3ee);
-  box-shadow: 0 0 8px var(--gt-accent, #22d3ee), inset 0 0 4px var(--gt-accent, #22d3ee);
+  box-shadow:
+    0 0 8px var(--gt-accent, #22d3ee),
+    inset 0 0 4px var(--gt-accent, #22d3ee);
   transform: translate(-50%, -50%) scale(3);
   animation: pk-rescue-shrink 2000ms linear forwards;
   pointer-events: none;

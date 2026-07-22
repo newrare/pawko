@@ -34,26 +34,36 @@ if (import.meta.env.DEV) {
     import("./scenes/ability-scene.js"),
     import("./utils/dev-overlay.js"),
     import("./utils/dev-admin-panel.js"),
-  ]).then(([{ StyleguideScene }, { ShopScene }, { AbilityScene }, { installDevOverlay }, { installDevAdminPanel }]) => {
-    const install = () => {
-      if (DEV_FLAGS.SHOW_SAFE_ZONE) installDevOverlay();
-      installDevAdminPanel({
-        onTitle: () => router.start(TitleScene),
-        onStyleguide: () => router.start(StyleguideScene),
-        onShop: () => router.start(ShopScene),
-        onAbility: () => router.start(AbilityScene),
-        onTestPegs: (type) => router.start(GameScene, { testPegs: type ?? "all" }),
-        onResetRun: () => {
-          saveManager.clearGridState();
-          saveManager.clearPinboardState();
-          bonusManager.clearSession();
-          router.start(LevelSelectorScene);
-        },
-      });
-    };
-    if (document.body) install();
-    else document.addEventListener("DOMContentLoaded", install, { once: true });
-  });
+  ]).then(
+    ([
+      { StyleguideScene },
+      { ShopScene },
+      { AbilityScene },
+      { installDevOverlay },
+      { installDevAdminPanel },
+    ]) => {
+      const install = () => {
+        if (DEV_FLAGS.SHOW_SAFE_ZONE) installDevOverlay();
+        installDevAdminPanel({
+          onTitle: () => router.start(TitleScene),
+          onStyleguide: () => router.start(StyleguideScene),
+          onShop: () => router.start(ShopScene),
+          onAbility: () => router.start(AbilityScene),
+          onTestPegs: (type) =>
+            router.start(GameScene, { testPegs: type ?? "all" }),
+          onResetRun: () => {
+            saveManager.clearGridState();
+            saveManager.clearPinboardState();
+            bonusManager.clearSession();
+            router.start(LevelSelectorScene);
+          },
+        });
+      };
+      if (document.body) install();
+      else
+        document.addEventListener("DOMContentLoaded", install, { once: true });
+    },
+  );
 }
 
 export default router;

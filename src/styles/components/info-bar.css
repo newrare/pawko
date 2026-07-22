@@ -35,7 +35,10 @@
   cursor: pointer;
   user-select: none;
   box-shadow: var(--gt-shadow-sm);
-  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    transform 0.1s;
 }
 
 .pk-info-pill:active {

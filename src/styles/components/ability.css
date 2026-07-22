@@ -57,7 +57,9 @@
   color: #ef4444;
   letter-spacing: 0.1em;
 }
-.pk-ability-wallet-delta[hidden] { display: none; }
+.pk-ability-wallet-delta[hidden] {
+  display: none;
+}
 
 /* --- Stacks (6 horizontal rows, one per category) --- */
 
@@ -101,9 +103,17 @@
   cursor: pointer;
   transition: transform 0.15s;
 }
-.pk-chip-wrap:not(:first-child) { margin-left: -14px; }
-.pk-chip-wrap:hover { transform: translateY(-3px); z-index: 20 !important; }
-.pk-chip-wrap.is-active { z-index: 21 !important; transform: translateY(-3px); }
+.pk-chip-wrap:not(:first-child) {
+  margin-left: -14px;
+}
+.pk-chip-wrap:hover {
+  transform: translateY(-3px);
+  z-index: 20 !important;
+}
+.pk-chip-wrap.is-active {
+  z-index: 21 !important;
+  transform: translateY(-3px);
+}
 .pk-chip-wrap.is-active .pk-chip {
   outline: 2px solid var(--pk-gold);
   outline-offset: 3px;
@@ -119,16 +129,26 @@
   align-items: center;
   justify-content: center;
   background: conic-gradient(
-    var(--pk-chip-main) 0deg 22.5deg, var(--pk-chip-alt) 22.5deg 45deg,
-    var(--pk-chip-main) 45deg 67.5deg, var(--pk-chip-alt) 67.5deg 90deg,
-    var(--pk-chip-main) 90deg 112.5deg, var(--pk-chip-alt) 112.5deg 135deg,
-    var(--pk-chip-main) 135deg 157.5deg, var(--pk-chip-alt) 157.5deg 180deg,
-    var(--pk-chip-main) 180deg 202.5deg, var(--pk-chip-alt) 202.5deg 225deg,
-    var(--pk-chip-main) 225deg 247.5deg, var(--pk-chip-alt) 247.5deg 270deg,
-    var(--pk-chip-main) 270deg 292.5deg, var(--pk-chip-alt) 292.5deg 315deg,
-    var(--pk-chip-main) 315deg 337.5deg, var(--pk-chip-alt) 337.5deg 360deg
+    var(--pk-chip-main) 0deg 22.5deg,
+    var(--pk-chip-alt) 22.5deg 45deg,
+    var(--pk-chip-main) 45deg 67.5deg,
+    var(--pk-chip-alt) 67.5deg 90deg,
+    var(--pk-chip-main) 90deg 112.5deg,
+    var(--pk-chip-alt) 112.5deg 135deg,
+    var(--pk-chip-main) 135deg 157.5deg,
+    var(--pk-chip-alt) 157.5deg 180deg,
+    var(--pk-chip-main) 180deg 202.5deg,
+    var(--pk-chip-alt) 202.5deg 225deg,
+    var(--pk-chip-main) 225deg 247.5deg,
+    var(--pk-chip-alt) 247.5deg 270deg,
+    var(--pk-chip-main) 270deg 292.5deg,
+    var(--pk-chip-alt) 292.5deg 315deg,
+    var(--pk-chip-main) 315deg 337.5deg,
+    var(--pk-chip-alt) 337.5deg 360deg
   );
-  box-shadow: 0 5px 0 rgba(0, 0, 0, 0.55), 0 8px 16px rgba(0, 0, 0, 0.6);
+  box-shadow:
+    0 5px 0 rgba(0, 0, 0, 0.55),
+    0 8px 16px rgba(0, 0, 0, 0.6);
   transition: box-shadow 0.15s;
 }
 .pk-chip-inner {
@@ -148,7 +168,10 @@
   box-shadow: inset 0 2px 5px rgba(255, 255, 255, 0.07);
   position: relative;
 }
-.pk-chip-icon { font-size: 1rem; line-height: 1; }
+.pk-chip-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
 .pk-chip-level {
   font-size: 0.42rem;
   letter-spacing: 0.1em;
@@ -159,33 +182,45 @@
 /* --- Chip color variants --- */
 
 .pk-chip--crimson {
-  --pk-chip-main: #4a1020; --pk-chip-alt: #b82030;
-  --pk-chip-face: #140408; --pk-chip-face-hi: #260810;
+  --pk-chip-main: #4a1020;
+  --pk-chip-alt: #b82030;
+  --pk-chip-face: #140408;
+  --pk-chip-face-hi: #260810;
   --pk-chip-glow: rgba(184, 32, 48, 0.7);
 }
 .pk-chip--gold {
-  --pk-chip-main: #705828; --pk-chip-alt: #c4a030;
-  --pk-chip-face: #140a00; --pk-chip-face-hi: #221400;
+  --pk-chip-main: #705828;
+  --pk-chip-alt: #c4a030;
+  --pk-chip-face: #140a00;
+  --pk-chip-face-hi: #221400;
   --pk-chip-glow: rgba(196, 160, 48, 0.7);
 }
 .pk-chip--blue {
-  --pk-chip-main: #1a2a5c; --pk-chip-alt: #3870cc;
-  --pk-chip-face: #060e1e; --pk-chip-face-hi: #101c32;
+  --pk-chip-main: #1a2a5c;
+  --pk-chip-alt: #3870cc;
+  --pk-chip-face: #060e1e;
+  --pk-chip-face-hi: #101c32;
   --pk-chip-glow: rgba(56, 112, 204, 0.7);
 }
 .pk-chip--ice {
-  --pk-chip-main: #06607e; --pk-chip-alt: #60c4e8;
-  --pk-chip-face: #021420; --pk-chip-face-hi: #062234;
+  --pk-chip-main: #06607e;
+  --pk-chip-alt: #60c4e8;
+  --pk-chip-face: #021420;
+  --pk-chip-face-hi: #062234;
   --pk-chip-glow: rgba(96, 196, 232, 0.75);
 }
 .pk-chip--epic {
-  --pk-chip-main: #380e62; --pk-chip-alt: #8828dc;
-  --pk-chip-face: #0c0420; --pk-chip-face-hi: #160832;
+  --pk-chip-main: #380e62;
+  --pk-chip-alt: #8828dc;
+  --pk-chip-face: #0c0420;
+  --pk-chip-face-hi: #160832;
   --pk-chip-glow: rgba(136, 40, 220, 0.7);
 }
 .pk-chip--green {
-  --pk-chip-main: #145228; --pk-chip-alt: #2bbf5b;
-  --pk-chip-face: #04140a; --pk-chip-face-hi: #082414;
+  --pk-chip-main: #145228;
+  --pk-chip-alt: #2bbf5b;
+  --pk-chip-face: #04140a;
+  --pk-chip-face-hi: #082414;
   --pk-chip-glow: rgba(43, 191, 91, 0.7);
 }
 
@@ -198,8 +233,12 @@
   --pk-chip-face: #1a1a1a;
   --pk-chip-face-hi: #2a2a2a;
 }
-.pk-chip-wrap--locked .pk-chip { filter: grayscale(75%) brightness(0.35); }
-.pk-chip-wrap--locked { cursor: default; }
+.pk-chip-wrap--locked .pk-chip {
+  filter: grayscale(75%) brightness(0.35);
+}
+.pk-chip-wrap--locked {
+  cursor: default;
+}
 
 /* --- Detail panel — pinned bottom, leaves room for HUD bottom buttons --- */
 
@@ -223,7 +262,9 @@
   opacity: 0.35;
   text-align: center;
 }
-.pk-ability-detail-empty-icon { font-size: 2rem; }
+.pk-ability-detail-empty-icon {
+  font-size: 2rem;
+}
 .pk-ability-detail-empty-text {
   font-size: 0.6rem;
   letter-spacing: 0.2em;
@@ -252,8 +293,14 @@
   height: 52px;
   cursor: default;
 }
-.pk-chip--preview .pk-chip-inner { width: 36px; height: 36px; }
-.pk-ability-detail-meta { flex: 1; min-width: 0; }
+.pk-chip--preview .pk-chip-inner {
+  width: 36px;
+  height: 36px;
+}
+.pk-ability-detail-meta {
+  flex: 1;
+  min-width: 0;
+}
 .pk-ability-detail-name {
   font-size: 0.95rem;
   color: var(--pk-gold-light);
@@ -299,7 +346,9 @@
   letter-spacing: 0.15em;
 }
 
-.pk-ability-detail-btn { width: 100%; }
+.pk-ability-detail-btn {
+  width: 100%;
+}
 .pk-ability-detail-btn--owned,
 .pk-ability-detail-btn--locked,
 .pk-ability-detail-btn--broke {

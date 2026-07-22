@@ -52,8 +52,6 @@ class OptionsManager extends EventEmitter {
     return this.#options.sound;
   }
 
-
-
   // ─── Persistence ─────────────────────────────────────
 
   #load() {

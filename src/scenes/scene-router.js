@@ -32,6 +32,15 @@ export class SceneRouter {
   /** @type {HudBar | null} */
   #hud = null;
 
+  /**
+   * Monotonic navigation counter. Incremented on every `start()` so a
+   * re-entrant `start()` (a scene that redirects from inside its own
+   * `mount()`) can be detected and the orphaned outer scene torn down
+   * instead of clobbering the newer `#current`.
+   * @type {number}
+   */
+  #generation = 0;
+
   /** @param {HTMLElement} container */
   constructor(container) {
     this.#container = container;
@@ -44,12 +53,25 @@ export class SceneRouter {
    * @param {object} [data]
    */
   start(SceneClass, data = {}) {
+    const generation = ++this.#generation;
     this.#destroyCurrent();
     const el = document.createElement("div");
     el.className = "gt-scene";
     this.#container.appendChild(el);
     const scene = new SceneClass(this, data);
     scene.mount(el);
+
+    /* `mount()` may re-enter `start()` (a scene that immediately redirects,
+       e.g. LevelSelectorScene routing to AbilityScene on a fresh run). If it
+       did, a newer generation now owns `#current`; this scene is orphaned —
+       tear it down here instead of overwriting the live one. Without this the
+       redirected-to scene leaks (never destroyed, stays in the DOM). */
+    if (this.#generation !== generation) {
+      scene.destroy();
+      el.remove();
+      return;
+    }
+
     this.#current = scene;
     this.#currentEl = el;
 

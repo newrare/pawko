@@ -22,7 +22,7 @@ const STATES = {
     trailAlphaMax: 0.08,
     headAlpha: 0.55,
     pegAlpha: 0,
-    types: ['heart', 'diamond', 'club', 'spade', 'heart', 'diamond', 'club'],
+    types: ["heart", "diamond", "club", "spade", "heart", "diamond", "club"],
   },
   shop: {
     count: 9,
@@ -30,15 +30,25 @@ const STATES = {
     trailAlphaMax: 0.18,
     headAlpha: 0.65,
     pegAlpha: 0.008,
-    types: ['heart', 'diamond', 'club', 'spade', 'coin', 'heart', 'diamond', 'club', 'coin'],
+    types: [
+      "heart",
+      "diamond",
+      "club",
+      "spade",
+      "coin",
+      "heart",
+      "diamond",
+      "club",
+      "coin",
+    ],
   },
   plinko: {
     count: 17,
     trailLen: 11,
     trailAlphaMax: 0.35,
-    headAlpha: 0.80,
+    headAlpha: 0.8,
     pegAlpha: 0.04,
-    types: ['ball'],
+    types: ["ball"],
   },
 };
 
@@ -49,7 +59,8 @@ const STATES = {
  */
 function buildPegs(W, H) {
   const pegs = [];
-  const cols = 9, rows = 7;
+  const cols = 9,
+    rows = 7;
   const gx = W / (cols + 1);
   const gy = (H * 0.72) / (rows + 1);
   const startY = H * 0.06;
@@ -83,7 +94,7 @@ export class BackgroundAnimator {
     this.#state = state;
     this.#build(root);
     this.#onResize();
-    window.addEventListener('resize', this.#onResize);
+    window.addEventListener("resize", this.#onResize);
     this.#rafId = requestAnimationFrame(this.#tick);
   }
 
@@ -92,7 +103,7 @@ export class BackgroundAnimator {
       cancelAnimationFrame(this.#rafId);
       this.#rafId = null;
     }
-    window.removeEventListener('resize', this.#onResize);
+    window.removeEventListener("resize", this.#onResize);
     this.#layer.remove();
   }
 
@@ -100,26 +111,26 @@ export class BackgroundAnimator {
 
   /** @param {HTMLElement} root */
   #build(root) {
-    const layer = document.createElement('div');
-    layer.className = 'pk-bg-layer';
+    const layer = document.createElement("div");
+    layer.className = "pk-bg-layer";
     layer.dataset.bgState = this.#state;
 
-    const atmoCalm = document.createElement('div');
-    atmoCalm.className = 'pk-bg-atmo pk-bg-atmo--calm';
+    const atmoCalm = document.createElement("div");
+    atmoCalm.className = "pk-bg-atmo pk-bg-atmo--calm";
 
-    const atmoShop = document.createElement('div');
-    atmoShop.className = 'pk-bg-atmo pk-bg-atmo--shop';
+    const atmoShop = document.createElement("div");
+    atmoShop.className = "pk-bg-atmo pk-bg-atmo--shop";
 
-    const atmoPlinko = document.createElement('div');
-    atmoPlinko.className = 'pk-bg-atmo pk-bg-atmo--plinko';
+    const atmoPlinko = document.createElement("div");
+    atmoPlinko.className = "pk-bg-atmo pk-bg-atmo--plinko";
 
-    const canvas = document.createElement('canvas');
+    const canvas = document.createElement("canvas");
 
-    const stripes = document.createElement('div');
-    stripes.className = 'pk-bg-stripes';
+    const stripes = document.createElement("div");
+    stripes.className = "pk-bg-stripes";
 
-    const vignette = document.createElement('div');
-    vignette.className = 'pk-bg-vignette';
+    const vignette = document.createElement("div");
+    vignette.className = "pk-bg-vignette";
 
     layer.appendChild(atmoCalm);
     layer.appendChild(atmoShop);
@@ -132,13 +143,13 @@ export class BackgroundAnimator {
 
     this.#layer = layer;
     this.#canvas = canvas;
-    this.#ctx = canvas.getContext('2d');
+    this.#ctx = canvas.getContext("2d");
   }
 
   /* ─── Resize ─────────────────────────────────────────────────────────── */
 
   #onResize = () => {
-    this.#W = this.#canvas.width  = this.#layer.clientWidth;
+    this.#W = this.#canvas.width = this.#layer.clientWidth;
     this.#H = this.#canvas.height = this.#layer.clientHeight;
     this.#pegs = buildPegs(this.#W, this.#H);
   };
@@ -149,15 +160,20 @@ export class BackgroundAnimator {
     const s = this.#state;
     const cfg = STATES[s];
     const type = cfg.types[Math.floor(Math.random() * cfg.types.length)];
-    const isSuit = ['heart', 'diamond', 'club', 'spade'].includes(type);
-    const r = type === 'ball' ? 7 + Math.random() * 5
-            : type === 'coin' ? 8 + Math.random() * 4
-            : isSuit ? 11 + Math.random() * 7
+    const isSuit = ["heart", "diamond", "club", "spade"].includes(type);
+    const r =
+      type === "ball"
+        ? 7 + Math.random() * 5
+        : type === "coin"
+          ? 8 + Math.random() * 4
+          : isSuit
+            ? 11 + Math.random() * 7
             : 6 + Math.random() * 4;
 
-    const W = this.#W, H = this.#H;
+    const W = this.#W,
+      H = this.#H;
 
-    if (s === 'calm') {
+    if (s === "calm") {
       const angle = Math.random() * Math.PI * 2;
       const speed = 0.12 + Math.random() * 0.2;
       return {
@@ -165,29 +181,36 @@ export class BackgroundAnimator {
         y: H * 0.15 + Math.random() * H * 0.7,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
-        r, type, trail: [],
+        r,
+        type,
+        trail: [],
         wobble: Math.random() * Math.PI * 2,
         wobbleFreq: 0.005 + Math.random() * 0.006,
         wobbleAmp: 0.3 + Math.random() * 0.5,
         rotation: Math.random() * Math.PI * 2,
         rotSpeed: (Math.random() - 0.5) * 0.01,
-        pstate: 'calm', lastHit: -99,
+        pstate: "calm",
+        lastHit: -99,
       };
     }
 
-    if (s === 'shop') {
+    if (s === "shop") {
       return {
         x: W * 0.08 + Math.random() * W * 0.84,
         y: -r - 2,
         vx: (Math.random() - 0.5) * 0.9,
         vy: 0.5 + Math.random() * 0.6,
-        r, type, trail: [],
+        r,
+        type,
+        trail: [],
         wobble: Math.random() * Math.PI * 2,
         wobbleFreq: 0.018 + Math.random() * 0.012,
         wobbleAmp: 0.25 + Math.random() * 0.4,
         rotation: Math.random() * Math.PI * 2,
-        rotSpeed: (Math.random() < 0.5 ? 1 : -1) * (0.02 + Math.random() * 0.035),
-        pstate: 'shop', lastHit: -99,
+        rotSpeed:
+          (Math.random() < 0.5 ? 1 : -1) * (0.02 + Math.random() * 0.035),
+        pstate: "shop",
+        lastHit: -99,
       };
     }
 
@@ -197,10 +220,16 @@ export class BackgroundAnimator {
       y: -r - 2,
       vx: (Math.random() - 0.5) * 1.4,
       vy: 0.9 + Math.random() * 0.9,
-      r, type: 'ball', trail: [],
-      wobble: 0, wobbleFreq: 0, wobbleAmp: 0,
-      rotation: 0, rotSpeed: 0,
-      pstate: 'plinko', lastHit: -99,
+      r,
+      type: "ball",
+      trail: [],
+      wobble: 0,
+      wobbleFreq: 0,
+      wobbleAmp: 0,
+      rotation: 0,
+      rotSpeed: 0,
+      pstate: "plinko",
+      lastHit: -99,
     };
   }
 
@@ -209,9 +238,10 @@ export class BackgroundAnimator {
   /** @param {object} p */
   #update(p) {
     const s = p.pstate;
-    const W = this.#W, H = this.#H;
+    const W = this.#W,
+      H = this.#H;
 
-    if (s === 'calm') {
+    if (s === "calm") {
       p.wobble += p.wobbleFreq;
       p.vx += Math.sin(p.wobble) * p.wobbleAmp * 0.009;
       p.vy += Math.cos(p.wobble * 0.6) * p.wobbleAmp * 0.005;
@@ -226,7 +256,7 @@ export class BackgroundAnimator {
       if (p.y > H + p.r + 5) p.y = -p.r - 5;
     }
 
-    if (s === 'shop') {
+    if (s === "shop") {
       p.wobble += p.wobbleFreq;
       p.vx += Math.sin(p.wobble) * p.wobbleAmp * 0.014;
       p.vx *= 0.955;
@@ -237,19 +267,27 @@ export class BackgroundAnimator {
       p.y += p.vy;
     }
 
-    if (s === 'plinko') {
+    if (s === "plinko") {
       p.vy += 0.14;
       p.vx *= 0.975;
-      p.x  += p.vx;
-      p.y  += p.vy;
-      if (p.x < p.r)     { p.x = p.r;     p.vx =  Math.abs(p.vx) * 0.5; }
-      if (p.x > W - p.r) { p.x = W - p.r; p.vx = -Math.abs(p.vx) * 0.5; }
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.x < p.r) {
+        p.x = p.r;
+        p.vx = Math.abs(p.vx) * 0.5;
+      }
+      if (p.x > W - p.r) {
+        p.x = W - p.r;
+        p.vx = -Math.abs(p.vx) * 0.5;
+      }
       for (const peg of this.#pegs) {
-        const dx = p.x - peg.x, dy = p.y - peg.y;
+        const dx = p.x - peg.x,
+          dy = p.y - peg.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         if (dist < p.r + 5.5 && this.#frame - p.lastHit > 7) {
           const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
-          const nx = dx / dist, ny = dy / dist;
+          const nx = dx / dist,
+            ny = dy / dist;
           p.vx = nx * speed * 0.45 + (Math.random() - 0.5) * 1.8;
           p.vy = Math.abs(ny) * speed * 0.4 + 0.7;
           p.lastHit = this.#frame;
@@ -266,7 +304,7 @@ export class BackgroundAnimator {
 
   /** @param {object} p @returns {boolean} */
   #isDead(p) {
-    if (p.pstate === 'calm') return false;
+    if (p.pstate === "calm") return false;
     return p.y > this.#H + p.r + 20;
   }
 
@@ -277,10 +315,17 @@ export class BackgroundAnimator {
    */
   #drawBall(x, y, r, a) {
     const ctx = this.#ctx;
-    const g = ctx.createRadialGradient(x - r * 0.32, y - r * 0.32, r * 0.08, x, y, r);
-    g.addColorStop(0,  `rgba(110,60,80,${a})`);
-    g.addColorStop(0.6,`rgba(80,40,55,${a * 0.85})`);
-    g.addColorStop(1,  `rgba(50,22,35,${a * 0.55})`);
+    const g = ctx.createRadialGradient(
+      x - r * 0.32,
+      y - r * 0.32,
+      r * 0.08,
+      x,
+      y,
+      r,
+    );
+    g.addColorStop(0, `rgba(110,60,80,${a})`);
+    g.addColorStop(0.6, `rgba(80,40,55,${a * 0.85})`);
+    g.addColorStop(1, `rgba(50,22,35,${a * 0.55})`);
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fillStyle = g;
@@ -301,9 +346,9 @@ export class BackgroundAnimator {
     ctx.translate(x, y);
     ctx.rotate(rot);
     const g = ctx.createRadialGradient(-r * 0.3, -r * 0.35, r * 0.05, 0, 0, r);
-    g.addColorStop(0,   `rgba(160,120,55,${a})`);
-    g.addColorStop(0.45,`rgba(110,80,28,${a})`);
-    g.addColorStop(1,   `rgba(60,40,12,${a * 0.7})`);
+    g.addColorStop(0, `rgba(160,120,55,${a})`);
+    g.addColorStop(0.45, `rgba(110,80,28,${a})`);
+    g.addColorStop(1, `rgba(60,40,12,${a * 0.7})`);
     ctx.beginPath();
     ctx.arc(0, 0, r, 0, Math.PI * 2);
     ctx.fillStyle = g;
@@ -315,9 +360,9 @@ export class BackgroundAnimator {
     ctx.stroke();
     ctx.fillStyle = `rgba(8,2,4,${a * 0.4})`;
     ctx.font = `bold ${Math.round(r * 1.08)}px Georgia`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('$', 0, 1);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("$", 0, 1);
     ctx.restore();
   }
 
@@ -326,24 +371,24 @@ export class BackgroundAnimator {
    * @param {string} suit @param {number} a
    */
   #drawSuit(x, y, r, suit, a) {
-    const glyphs = { heart: '♥', diamond: '♦', club: '♣', spade: '♠' };
-    const isRed  = suit === 'heart' || suit === 'diamond';
+    const glyphs = { heart: "♥", diamond: "♦", club: "♣", spade: "♠" };
+    const isRed = suit === "heart" || suit === "diamond";
     const ctx = this.#ctx;
     ctx.save();
     ctx.globalAlpha = a;
     ctx.font = `${Math.round(r * 2.1)}px Georgia`;
-    ctx.textAlign    = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.shadowBlur  = r * 0.8;
-    ctx.shadowColor = isRed ? 'rgba(90,18,30,.5)' : 'rgba(100,72,20,.5)';
-    ctx.fillStyle   = isRed ? '#5c1422' : '#6e5018';
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.shadowBlur = r * 0.8;
+    ctx.shadowColor = isRed ? "rgba(90,18,30,.5)" : "rgba(100,72,20,.5)";
+    ctx.fillStyle = isRed ? "#5c1422" : "#6e5018";
     ctx.fillText(glyphs[suit], x, y);
     ctx.restore();
   }
 
   /** @param {object} p */
   #drawTrail(p) {
-    if (p.pstate !== 'plinko') return;
+    if (p.pstate !== "plinko") return;
     const len = p.trail.length;
     if (len < 2) return;
     const maxA = STATES[this.#state].trailAlphaMax;
@@ -353,13 +398,14 @@ export class BackgroundAnimator {
       const a = ratio * ratio * maxA;
       const w = ratio * p.r * 1.3;
       if (w < 0.2) continue;
-      const t0 = p.trail[i - 1], t1 = p.trail[i];
+      const t0 = p.trail[i - 1],
+        t1 = p.trail[i];
       ctx.beginPath();
       ctx.moveTo(t0.x, t0.y);
       ctx.lineTo(t1.x, t1.y);
       ctx.strokeStyle = `rgba(160,88,104,${a})`;
       ctx.lineWidth = w;
-      ctx.lineCap = 'round';
+      ctx.lineCap = "round";
       ctx.stroke();
     }
   }
@@ -367,9 +413,9 @@ export class BackgroundAnimator {
   /** @param {object} p */
   #drawParticle(p) {
     const a = STATES[this.#state].headAlpha;
-    if (p.type === 'ball') {
+    if (p.type === "ball") {
       this.#drawBall(p.x, p.y, p.r, a);
-    } else if (p.type === 'coin') {
+    } else if (p.type === "coin") {
       this.#drawCoin(p.x, p.y, p.r, p.rotation, a);
     } else {
       this.#drawSuit(p.x, p.y, p.r, p.type, a);
@@ -381,7 +427,14 @@ export class BackgroundAnimator {
     if (pegAlpha < 0.003) return;
     const ctx = this.#ctx;
     for (const peg of this.#pegs) {
-      const g = ctx.createRadialGradient(peg.x - 1.5, peg.y - 1.5, 0.8, peg.x, peg.y, 5);
+      const g = ctx.createRadialGradient(
+        peg.x - 1.5,
+        peg.y - 1.5,
+        0.8,
+        peg.x,
+        peg.y,
+        5,
+      );
       g.addColorStop(0, `rgba(160,88,104,${pegAlpha * 2.2})`);
       g.addColorStop(1, `rgba(106,24,40,${pegAlpha})`);
       ctx.beginPath();
@@ -392,7 +445,7 @@ export class BackgroundAnimator {
   }
 
   #drawHitFlashes() {
-    this.#hitFlashes = this.#hitFlashes.filter(h => h.t < 16);
+    this.#hitFlashes = this.#hitFlashes.filter((h) => h.t < 16);
     const ctx = this.#ctx;
     for (const h of this.#hitFlashes) {
       const p = h.t / 16;
@@ -409,13 +462,14 @@ export class BackgroundAnimator {
   #tick = () => {
     this.#frame++;
     const ctx = this.#ctx;
-    const W = this.#W, H = this.#H;
+    const W = this.#W,
+      H = this.#H;
     const cfg = STATES[this.#state];
 
     ctx.clearRect(0, 0, W, H);
 
     this.#drawPegs();
-    if (this.#state === 'plinko') this.#drawHitFlashes();
+    if (this.#state === "plinko") this.#drawHitFlashes();
 
     for (let i = this.#particles.length - 1; i >= 0; i--) {
       this.#update(this.#particles[i]);

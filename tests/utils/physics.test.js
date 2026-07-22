@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { collideCircles, reflect, clampVelocity } from "../../src/utils/physics.js";
+import {
+  collideCircles,
+  reflect,
+  clampVelocity,
+} from "../../src/utils/physics.js";
 
 describe("collideCircles", () => {
   it("returns null when circles are apart", () => {

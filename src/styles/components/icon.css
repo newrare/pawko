@@ -1,0 +1,180 @@
+/* --- Lucide inline-SVG icons. Rendered by src/utils/icon.js as <svg
+       class="pk-icon">. Icons stroke with currentColor, so colour comes
+       from the host element — reach for the design tokens below. --- */
+
+.pk-icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+/* --- Semantic colour modifiers — always token-driven, never hardcoded --- */
+.pk-icon--gold {
+  color: var(--gt-color-gold);
+}
+.pk-icon--gold-light {
+  color: var(--gt-color-gold-light);
+}
+.pk-icon--crimson {
+  color: var(--gt-color-primary-2);
+}
+.pk-icon--rose {
+  color: var(--gt-color-text-sec);
+}
+.pk-icon--dim {
+  color: var(--gt-color-text-dim);
+}
+.pk-icon--success {
+  color: var(--gt-color-success);
+}
+.pk-icon--danger {
+  color: var(--gt-color-danger);
+}
+.pk-icon--warning {
+  color: var(--gt-color-warning);
+}
+
+/* =====================================================
+   Featured icon card — item / icon highlight.
+   Adapted from the icon-last.html reference (shimmer 12 s +
+   ping radar) onto the Velvet Rouge × Classic Gold palette.
+   Accent is driven by --pk-featured-accent (defaults to gold);
+   override it inline to tint per rarity.
+   ===================================================== */
+.pk-featured {
+  --pk-featured-accent: var(--gt-color-gold);
+  --pk-featured-shimmer: rgba(245, 215, 122, 0.5);
+  --pk-featured-sweep: 120deg;
+  --pk-featured-shimmer-period: 12s;
+  --pk-featured-ping-period: 2s;
+  position: relative;
+  width: 132px;
+  height: 132px;
+  border-radius: var(--gt-radius-lg);
+  animation: pk-featured-ping var(--pk-featured-ping-period) ease-out infinite;
+}
+
+.pk-featured-surface {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: radial-gradient(
+    circle at 50% 30%,
+    var(--pk-crimson-deep),
+    var(--pk-bg-card)
+  );
+  border: 2px solid var(--pk-featured-accent);
+  color: var(--pk-featured-accent);
+}
+
+.pk-featured-surface .pk-icon {
+  width: 56px;
+  height: 56px;
+  position: relative;
+  z-index: 2;
+  filter: drop-shadow(
+    0 0 8px color-mix(in srgb, var(--pk-featured-accent) 55%, transparent)
+  );
+}
+
+/* Shimmer very rare: sweeps across ~9 % of the 12 s cycle, then waits offscreen */
+.pk-featured-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: linear-gradient(
+    var(--pk-featured-sweep),
+    transparent 30%,
+    var(--pk-featured-shimmer) 50%,
+    transparent 70%
+  );
+  transform: translateX(-150%);
+  animation: pk-featured-shimmer var(--pk-featured-shimmer-period) linear
+    infinite;
+}
+
+.pk-featured-tag {
+  position: absolute;
+  bottom: -11px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--gt-font-display);
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  background: var(--pk-featured-accent);
+  color: var(--pk-bg-card);
+  padding: 3px 12px;
+  border-radius: var(--gt-radius-sm);
+  white-space: nowrap;
+  z-index: 5;
+  box-shadow: var(--gt-shadow-sm);
+}
+
+/* --- Per-rarity accent presets --- */
+.pk-featured--legendary {
+  --pk-featured-accent: var(--gt-color-gold);
+}
+.pk-featured--epic {
+  --pk-featured-accent: var(--pk-crimson);
+}
+.pk-featured--rare {
+  --pk-featured-accent: var(--pk-rose);
+}
+.pk-featured--common {
+  --pk-featured-accent: var(--pk-rose-dim);
+}
+/* Malus — inverted: dark Background-filled surface, rose accent, no shimmer/ping */
+.pk-featured--malus {
+  --pk-featured-accent: var(--pk-rose);
+  animation: none;
+}
+.pk-featured--malus .pk-featured-surface {
+  background: var(--pk-bg);
+}
+.pk-featured--malus .pk-featured-surface::before {
+  content: none;
+  animation: none;
+}
+
+@keyframes pk-featured-shimmer {
+  0% {
+    transform: translateX(-150%);
+  }
+  9% {
+    transform: translateX(150%);
+  }
+  100% {
+    transform: translateX(150%);
+  }
+}
+
+@keyframes pk-featured-ping {
+  0% {
+    box-shadow: 0 0 0 0
+      color-mix(in srgb, var(--pk-featured-accent) 60%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 22px
+      color-mix(in srgb, var(--pk-featured-accent) 0%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0
+      color-mix(in srgb, var(--pk-featured-accent) 0%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pk-featured,
+  .pk-featured-surface::before {
+    animation: none;
+  }
+}
