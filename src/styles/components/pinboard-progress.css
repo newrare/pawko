@@ -31,8 +31,9 @@
   box-shadow: 0 -1px 10px rgba(74, 222, 128, 0.1);
 }
 
-/* --- Dashed horizon line marking the objective, centered label between two
-       dashed rules: ------ objective: N pts ------ --- */
+/* --- Dashed objective line with compact chips hugging its two ends:
+       ─Lv1───────────────────────────500─
+       level id on the left, target value on the right. --- */
 
 .pk-pinboard-progress-line {
   position: absolute;
@@ -42,32 +43,40 @@
   display: flex;
   align-items: center;
   gap: var(--gt-space-2);
-  padding: 0 var(--gt-space-3);
+  padding: 0 var(--gt-space-2);
   transform: translateY(-50%);
 }
 
+/* Short dashed caps at each end, plus the flexible rule that fills the middle. */
 .pk-pinboard-progress-line::before,
 .pk-pinboard-progress-line::after {
   content: "";
+  flex: 0 0 12px;
+  border-top: 2px dashed var(--pk-progress-line);
+}
+
+.pk-pinboard-progress-rule {
   flex: 1 1 auto;
   border-top: 2px dashed var(--pk-progress-line);
 }
 
-.pk-pinboard-progress-label {
+.pk-pinboard-progress-level,
+.pk-pinboard-progress-value {
   flex: 0 0 auto;
   font-size: 0.7rem;
   font-weight: 800;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
+  letter-spacing: 1px;
   color: var(--pk-progress-label-fg);
   white-space: nowrap;
 }
 
 .pk-pinboard-progress--reached .pk-pinboard-progress-line::before,
-.pk-pinboard-progress--reached .pk-pinboard-progress-line::after {
+.pk-pinboard-progress--reached .pk-pinboard-progress-line::after,
+.pk-pinboard-progress--reached .pk-pinboard-progress-rule {
   border-top-color: var(--pk-progress-line-reached);
 }
 
-.pk-pinboard-progress--reached .pk-pinboard-progress-label {
+.pk-pinboard-progress--reached .pk-pinboard-progress-level,
+.pk-pinboard-progress--reached .pk-pinboard-progress-value {
   color: var(--pk-progress-label-reached-fg);
 }

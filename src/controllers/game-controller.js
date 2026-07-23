@@ -26,6 +26,7 @@ import {
   CANNON,
   TOTAL_LEVELS,
   SLOT_MACHINE,
+  CENTRAL_SCORE,
   RARITY,
   RARITY_WEIGHTS,
 } from "../configs/constants.js";
@@ -48,7 +49,7 @@ import { loadPinboard, persistPinboard } from "../utils/pinboard-state.js";
 import { PinboardVfx } from "../utils/pinboard-vfx.js";
 import { buildTestLayers } from "../utils/dev-game-helpers.js";
 import { CurrencyHud } from "../components/currency-hud.js";
-import { ScoreHud } from "../components/score-hud.js";
+import { CentralScore } from "../components/central-score.js";
 import { PinboardProgress } from "../components/pinboard-progress.js";
 import { SlotMachineHud } from "../components/slot-machine.js";
 import { SlotMachine } from "../entities/slot-machine.js";
@@ -108,6 +109,7 @@ export class GameController {
   /** @type {number} */ #pinboardWidth = 0;
   /** @type {number} */ #pinboardHeight = 0;
   /** @type {boolean} */ #ended = false;
+  /** @type {boolean} True once #endRound has run (re-entry guard). */ #roundResolved = false;
   /** @type {number | null} */ #rafId = null;
   /** @type {number} */ #lastTs = 0;
 
@@ -116,8 +118,6 @@ export class GameController {
   /** @type {number} */ #gateZoneHeight = 0;
   /** @type {{ left: number, right: number }[]} */ #gateWalls = [];
 
-  /** @type {import('../components/modal-base.js').BaseModal | null} */ #overModal =
-    null;
   /** @type {SlowFloatBackground | null} */ #bg = null;
 
   /* --- Peg Save System --- */
@@ -128,8 +128,8 @@ export class GameController {
   /* --- Currency HUD (coins + diamonds, bottom-left) --- */
   /** @type {CurrencyHud | null} */ #currencyHud = null;
 
-  /* --- Score HUD (live hit score × multiplier) --- */
-  /** @type {ScoreHud | null} */ #scoreHud = null;
+  /* --- Central score (single readout, faint during play, foreground reveal) --- */
+  /** @type {CentralScore | null} */ #centralScore = null;
   /** @type {boolean} True while leftover balls are being converted to mult. */ #converting = false;
 
   /* --- Pinboard background objective progress --- */
@@ -189,10 +189,12 @@ export class GameController {
     this.#currencyHud = new CurrencyHud();
     this.#currencyHud.mount(this.#safeEl);
 
-    /* Live hit-score × multiplier readout, top-center. The objective is not
-       shown here — it lives on the background progress bar below. */
-    this.#scoreHud = new ScoreHud();
-    this.#scoreHud.mount(this.#safeEl);
+    /* Single score readout, centered on the board: a faint watermark of the
+       running hit score during play, brought to the foreground for the
+       end-of-round multiplier reveal (see CentralScore). There is no corner
+       HUD; the objective lives on the background progress bar. */
+    this.#centralScore = new CentralScore();
+    this.#centralScore.mount(this.#safeEl);
 
     /* Background objective progress — lives inside the pinboard, behind the
        pegs and balls, filling like a bar as the live score climbs. Carries the
@@ -200,6 +202,10 @@ export class GameController {
     if (this.#pinboardEl) {
       this.#progress = new PinboardProgress();
       this.#progress.mount(this.#pinboardEl);
+      /* Shared, run-wide scale: the board top maps to the last level's
+         objective, so the dashed line climbs from the bottom (level 1) toward
+         the top (last level) while the scale itself stays constant. */
+      this.#progress.setScale(levelObjective(TOTAL_LEVELS));
       this.#progress.setLevelInfo(this.#levelId, TOTAL_LEVELS);
       this.#progress.setObjective(this.#objective);
       /* During play the bar tracks raw hits; multipliers grow it at the end. */
@@ -272,12 +278,10 @@ export class GameController {
     if (this.#aimRaf !== null) cancelAnimationFrame(this.#aimRaf);
     this.#aimRaf = null;
     this.#trajDots = [];
-    this.#overModal?.destroy();
-    this.#overModal = null;
     this.#currencyHud?.destroy();
     this.#currencyHud = null;
-    this.#scoreHud?.destroy();
-    this.#scoreHud = null;
+    this.#centralScore?.destroy();
+    this.#centralScore = null;
     this.#progress?.destroy();
     this.#progress = null;
     this.#slotHud?.destroy();
@@ -510,33 +514,32 @@ export class GameController {
   }
 
   /**
-   * Feed the background progress its geometry and place the score HUD midway
-   * between the cannon and the objective line. The horizon line sits 50 px
-   * above the top peg row (the last, highest layer), clamped so it stays
-   * on-board even with a tall stack.
+   * Feed the background progress its geometry and place the slot machine HUD
+   * in the upper band. The progress bar owns its own objective line now — it
+   * derives it from the shared score scale — so it only needs the board height.
+   * The slot machine stays anchored to the top peg row (a marker sitting 50 px
+   * above the highest layer), independent of where the objective line falls.
    */
   #updateProgressGeometry() {
     const h = this.#pinboardHeight;
+    this.#progress?.setGeometry({ height: h });
+
     const topPegY =
       this.#layers.length > 0
         ? h - this.#layers.length * PLINKO.LAYER_HEIGHT
         : h * 0.15;
-    const lineY = Math.max(14, topPegY - PLINKO.PROGRESS_LINE_MARGIN);
-    this.#progress?.setGeometry({ height: h, lineY });
+    const pegMarkerY = Math.max(14, topPegY - PLINKO.PROGRESS_LINE_MARGIN);
 
-    /* Vertical stack (pinboard-local y): cannon → score → slot machine →
-       objective line. The machine sits in the upper band, well above the line;
-       the score HUD is centered between the cannon and the machine. Score is
-       expressed in safe-zone coords (pinboard offset + local y); the machine
-       top is a pinboard-local y. */
+    /* Vertical stack (pinboard-local y): cannon → slot machine → top peg row.
+       The machine sits in the upper band, well above the pegs. The score HUD is
+       a fixed panel pinned to the pinboard's top-right corner (CSS), so it needs
+       no geometry here. */
     const cannonLocalY = CANNON.PIVOT_OFFSET_TOP;
     const machineTop = Math.min(
-      lineY - 46,
-      cannonLocalY + Math.max(150, (lineY - cannonLocalY) * 0.42),
+      pegMarkerY - 46,
+      cannonLocalY + Math.max(150, (pegMarkerY - cannonLocalY) * 0.42),
     );
     this.#slotHud?.setGeometry({ top: machineTop });
-    const scoreLocalY = (cannonLocalY + machineTop) / 2;
-    this.#scoreHud?.setVerticalCenter(this.#pinboardOffsetTop + scoreLocalY);
   }
 
   /** @param {import('../entities/layer.js').Layer} layer */
@@ -612,9 +615,8 @@ export class GameController {
     this.#aiming = true;
     this.#aimTarget = this.#pointerToPinboard(event);
     this.#cannonEl?.setAttribute("data-aiming", "true");
-    /* Aiming: dim the score HUD and fade the slot machine into the background
-       so neither obstructs the shot. */
-    this.#scoreHud?.dim();
+    /* Aiming: fade the slot machine into the background so it does not obstruct
+       the shot. The central score is a faint watermark and needs no dimming. */
     this.#refreshSlotDim();
     /* Apply the angle synchronously so an instant tap (no move) still fires
        toward the tap point; defer only the heavier trajectory sim to a rAF. */
@@ -1324,8 +1326,10 @@ export class GameController {
       abilityManager.resolve(PARAM_KEYS.GATE_MULT_FACTOR, 1);
     if (delta > 0) {
       this.#score.addMultiplier(delta);
-      this.#scoreHud?.setMultiplier(this.#score.multiplier);
-      /* Multipliers do not move the bar during play — they apply at the end. */
+      /* The multiplier is not shown as a running number: it is banked here and
+         replayed at the end as blue balls landing on the central score. During
+         play only the transient blue +N× pop at the gate hints at it. Multipliers
+         do not move the bar during play — they apply at the end. */
       this.#popMultiplier(delta, ball.x, this.#pinboardHeight);
     }
     this.#captureBall(ball, gate);
@@ -1393,7 +1397,7 @@ export class GameController {
     this.#score.addHit(points);
     this.#markScoreActivity();
     const applyScore = () => {
-      this.#scoreHud?.setHitScore(this.#score.hitScore);
+      this.#centralScore?.setScore(this.#score.hitScore);
       this.#progress?.setScore(this.#score.hitScore);
     };
     if (this.#vfx) {
@@ -1401,7 +1405,7 @@ export class GameController {
         points,
         x,
         y,
-        this.#scoreHud?.hitsEl ?? null,
+        this.#centralScore?.valueEl ?? null,
         type,
         applyScore,
       );
@@ -1703,6 +1707,12 @@ export class GameController {
    */
   #refreshSlotDim() {
     if (!this.#slotHud) return;
+    /* Once the round is resolved, keep the slot machine faded behind the
+       foreground score reveal — never let it pop back to full opacity. */
+    if (this.#roundResolved) {
+      this.#slotHud.setDimmed(true);
+      return;
+    }
     const now = performance.now();
     const scoreActive =
       now - this.#lastScoreChangeTs < SLOT_MACHINE.DIM_SCORE_IDLE_MS;
@@ -2138,10 +2148,10 @@ export class GameController {
       audioManager.playSfx("click");
       this.#vfx?.flyBallToMultiplier(
         this.#cannonCountEl,
-        this.#scoreHud?.multEl ?? null,
+        this.#centralScore?.valueEl ?? null,
         () => {
+          /* Bank the multiplier; it replays on the central score at the end. */
           this.#score.addMultiplier(1);
-          this.#scoreHud?.setMultiplier(this.#score.multiplier);
         },
       );
       this.#bag.timeout(convertOne, 300);
@@ -2151,7 +2161,8 @@ export class GameController {
   }
 
   #endRound() {
-    if (this.#overModal) return;
+    if (this.#roundResolved) return;
+    this.#roundResolved = true;
     this.#ended = true;
     this.#stopLoop();
 
@@ -2195,46 +2206,117 @@ export class GameController {
       pegShopManager.reset();
     };
 
-    const openModal = () => {
-      Promise.all([import("../components/level-end-modal.js")]).then(
-        ([{ LevelEndModal }]) => {
-          this.#overModal = new LevelEndModal({
-            victory,
-            levelId: this.#levelId,
-            hitScore,
-            multiplier,
-            finalScore,
-            objective,
-            onContinue: () => this.#router?.start(LevelSelectorScene),
-            onRetry: () => {
-              resetRun();
-              this.#router?.start(LevelSelectorScene);
-            },
-            onBack: () => {
-              resetRun();
-              this.#router?.start(LevelSelectorScene);
-            },
-          });
-          this.#overModal.open();
-        },
-      );
+    /* Continuing leaves for the level selector. On defeat the whole run is
+       reset first (there is no separate retry/back — a single Continue). */
+    const goToLevels = () => {
+      if (!victory) resetRun();
+      this.#router?.start(LevelSelectorScene);
     };
 
-    /* Play the reveal: the total grows one multiplier at a time, and the
-       background bar climbs in lock-step (from raw hits up to the final
-       score). Open the level-end modal once it settles. */
-    const reveal = this.#scoreHud?.reveal({
-      finalScore,
-      victory,
-      hitScore,
-      steps,
-      onStep: (total) => {
-        this.#progress?.setScore(total);
+    this.#revealTotal({ hitScore, finalScore, steps, victory, goToLevels });
+  }
+
+  /**
+   * End-of-round reveal. Bring the central score to the foreground, then fly one
+   * blue multiplier ball per gained multiplier from its gate onto the score:
+   * each landing grows the total one step and pops a blue ×N label. The
+   * background bar climbs in lock-step. When the last ball lands the total
+   * settles and a Continue button fades in — there is no level-end modal.
+   * @param {{ hitScore: number, finalScore: number, steps: number[],
+   *   victory: boolean, goToLevels: () => void }} args
+   */
+  #revealTotal({ hitScore, finalScore, steps, victory, goToLevels }) {
+    const cs = this.#centralScore;
+    if (!cs) {
+      goToLevels();
+      return;
+    }
+
+    /* Phase 3 — the total hit 100%: settle, then the action button + (on a
+       loss) Game Over land. */
+    const finish = () => {
+      cs.finish(finalScore, {
+        continueLabel: victory
+          ? i18n.t("game.victory.continue")
+          : i18n.t("game.defeat.new_run"),
+        gameOverLabel: victory ? null : i18n.t("game.defeat.title"),
+        onContinue: goToLevels,
+      });
+      this.#progress?.setScore(finalScore);
+      this.#markScoreActivity();
+    };
+
+    /* Phase 2 (late) — near the end of the count-up, fade the win/lose effect
+       (sunburst / lava) in. Fires once, when the total crosses the reveal
+       ratio of the final score, so the outcome is only hinted at the last
+       moment. */
+    let outcomeShown = false;
+    const revealThreshold = finalScore * CENTRAL_SCORE.OUTCOME_REVEAL_RATIO;
+    const maybeRevealOutcome = (total) => {
+      if (outcomeShown || total < revealThreshold) return;
+      outcomeShown = true;
+      cs.revealOutcome(victory);
+    };
+
+    /* Phase 1 — the round ends: drop the dark overlay and show the score
+       (outcome still withheld); keep the slot machine faded in the background. */
+    cs.enterForeground();
+    this.#slotHud?.setDimmed(true);
+    /* The reveal grows from ×1 (the multiplier is banked in `steps`). */
+    let runningMult = 1;
+    cs.setScore(hitScore);
+    this.#progress?.setScore(hitScore);
+    this.#markScoreActivity();
+
+    const stepList = steps.filter((d) => d > 0);
+    if (stepList.length === 0) {
+      /* No multiplier gained: the total is already final. Reveal the effect,
+         then settle. */
+      cs.revealOutcome(victory);
+      this.#bag.timeout(finish, CENTRAL_SCORE.SETTLE_DELAY_MS);
+      return;
+    }
+
+    /* Multiplier orbs fly in the central-score layer so they stay above the
+       dark overlay. */
+    const fly = (fromEl, onArrive) =>
+      this.#vfx
+        ? this.#vfx.flyBallToMultiplier(fromEl, cs.valueEl, onArrive, cs.orbLayer)
+        : onArrive();
+
+    const playStep = (idx) => {
+      if (idx >= stepList.length) {
+        if (!outcomeShown) {
+          outcomeShown = true;
+          cs.revealOutcome(victory);
+        }
+        this.#bag.timeout(finish, CENTRAL_SCORE.SETTLE_DELAY_MS);
+        return;
+      }
+      const delta = stepList[idx];
+      fly(this.#multiplierGateEl(delta, idx), () => {
+        runningMult += delta;
+        const newTotal = Math.round(hitScore * runningMult);
+        this.#progress?.setScore(newTotal);
         this.#markScoreActivity();
-      },
-    });
-    if (reveal) reveal.then(openModal);
-    else openModal();
+        maybeRevealOutcome(newTotal);
+        cs.applyStep(newTotal, delta, () =>
+          this.#bag.timeout(() => playStep(idx + 1), 320),
+        );
+      });
+    };
+    this.#bag.timeout(() => playStep(0), 550);
+  }
+
+  /**
+   * Pick the multiplier gate a blue reveal ball flies from: an x2 gate for a
+   * ≥2 contribution, else x1; sides alternate so successive balls fan out.
+   * @param {number} delta @param {number} idx @returns {HTMLElement | null}
+   */
+  #multiplierGateEl(delta, idx) {
+    const tier = delta >= 2 ? "x2" : "x1";
+    const side = idx % 2 === 0 ? "left" : "right";
+    return this.#safeEl?.querySelector(`[data-gate="${tier}_${side}"]`) ?? null;
   }
 
   #markLevelComplete() {

@@ -1,22 +1,28 @@
 import { ListenerBag } from "../utils/listener-bag.js";
 import { i18n } from "../managers/i18n-manager.js";
+import { PLINKO } from "../configs/constants.js";
 
 /**
  * PinboardProgress — the objective read-out rendered *behind* the pegs and
  * balls, filling the whole pinboard like a live progress bar.
  *
- * Two visual parts, both inside the pinboard box (so they scroll/clip with it):
- *  - a bottom-anchored fill whose height tracks the live score, and
- *  - a dashed horizon line sitting just above the top peg row, labelled
- *    `—— objective: N pts ——`.
+ * The board maps a single, run-wide score scale: the bottom is 0 and the top
+ * is `scale` — the objective of the *last* level. Every level shares this
+ * scale, so only the dashed objective line moves: it sits low on the board for
+ * level 1 (a small objective) and climbs toward the top as the level objective
+ * approaches the last level's. The bottom-anchored fill rises with the live
+ * score on that same scale, meeting the line exactly when score === objective.
  *
- * The fill reaches the horizon line exactly when the live score equals the
- * objective; a higher score keeps rising past the line toward the top of the
- * board (capped at the board height). It never intercepts pointer events and
- * lives at the lowest z-index of the pinboard, so gameplay reads on top of it.
+ * The label is compact and hugs the two ends of the dashed rule:
  *
- * Pure geometry — no gameplay knowledge. The controller feeds it the objective,
- * the live score and the board geometry; the component only paints.
+ *     ─Lv1───────────────────────────500─
+ *
+ * with the level id on the left and the target value on the right. The whole
+ * thing never intercepts pointer events and lives at the lowest z-index of the
+ * pinboard, so gameplay reads on top of it.
+ *
+ * Pure geometry — no gameplay knowledge. The controller feeds it the scale, the
+ * objective, the live score and the board height; the component only paints.
  */
 export class PinboardProgress {
   /** @type {HTMLElement | null} */
@@ -24,17 +30,17 @@ export class PinboardProgress {
   /** @type {ListenerBag} */
   #bag = new ListenerBag();
 
-  /** @type {number} Target score that maps to the horizon line. */
+  /** @type {number} Score that maps to the top of the board (last-level objective). */
+  #scale = 0;
+  /** @type {number} Target score that maps to the dashed line for this level. */
   #objective = 0;
-  /** @type {number} Current level id, shown in the label. */
+  /** @type {number} Current level id, shown in the left chip. */
   #level = 1;
-  /** @type {number} Total number of levels, shown in the label. */
-  #total = 1;
   /** @type {number} Live score driving the fill height. */
   #score = 0;
   /** @type {number} Pinboard height in px. */
   #height = 0;
-  /** @type {number} Y (px from the pinboard top) of the horizon line. */
+  /** @type {number} Y (px from the pinboard top) of the dashed objective line. */
   #lineY = 0;
 
   /** @param {HTMLElement} root — the pinboard element */
@@ -45,7 +51,9 @@ export class PinboardProgress {
     el.innerHTML = `
       <div class="pk-pinboard-progress-fill" data-role="fill"></div>
       <div class="pk-pinboard-progress-line" data-role="line">
-        <span class="pk-pinboard-progress-label" data-role="label"></span>
+        <span class="pk-pinboard-progress-level" data-role="level"></span>
+        <span class="pk-pinboard-progress-rule"></span>
+        <span class="pk-pinboard-progress-value" data-role="value"></span>
       </div>
     `;
     /* Insert as the first child so it sits behind the peg stack. */
@@ -63,21 +71,35 @@ export class PinboardProgress {
     this.#el = null;
   }
 
+  /**
+   * Set the run-wide score scale: the score that maps to the very top of the
+   * board (the objective of the last level). Shared by every level so the bar
+   * reads consistently across the run.
+   * @param {number} value
+   */
+  setScale(value) {
+    this.#scale = Math.max(0, value);
+    this.#renderGeometry();
+    this.#renderFill();
+  }
+
   /** @param {number} value */
   setObjective(value) {
     this.#objective = Math.max(0, value);
     this.#renderLabel();
+    this.#renderGeometry();
     this.#renderFill();
   }
 
   /**
-   * Set the level info shown in the horizon label ("Level {level}/{total}").
+   * Set the level info shown in the compact label. Only the level id is shown
+   * (the left chip); `total` is accepted for call-site symmetry but unused now
+   * that the compact label drops the "/total" suffix.
    * @param {number} level — current 1-based level id
-   * @param {number} total — total number of levels in the run
+   * @param {number} [_total] — total number of levels (no longer displayed)
    */
-  setLevelInfo(level, total) {
+  setLevelInfo(level, _total) {
     this.#level = Math.max(1, Math.floor(level || 1));
-    this.#total = Math.max(1, Math.floor(total || 1));
     this.#renderLabel();
   }
 
@@ -88,51 +110,76 @@ export class PinboardProgress {
   }
 
   /**
-   * Feed the board geometry. `lineY` is the y (px from the pinboard top) of the
-   * horizon line — the controller places it just above the top peg row.
-   * @param {{ height: number, lineY: number }} geo
+   * Feed the board geometry. Only the height is needed — the objective line is
+   * derived from the shared score scale, not from the peg layout.
+   * @param {{ height: number }} geo
    */
-  setGeometry({ height, lineY }) {
+  setGeometry({ height }) {
     this.#height = Math.max(0, height);
-    this.#lineY = Math.max(0, Math.min(lineY, this.#height));
     this.#renderGeometry();
     this.#renderFill();
   }
 
-  /** Position the dashed horizon line. */
-  #renderGeometry() {
-    const line = this.#el?.querySelector('[data-role="line"]');
-    if (line) line.style.top = `${this.#lineY}px`;
+  /** @returns {number} Y (px from the pinboard top) of the objective line. */
+  get lineY() {
+    return this.#lineY;
   }
 
   /**
-   * Height of the bottom-anchored fill. The distance from the board bottom up
-   * to the horizon line represents exactly `objective` points; the fill scales
-   * linearly with the score and is capped at the full board height so an
-   * over-shoot still reads as "past the line" without leaving the board.
+   * Effective scale ceiling: the run-wide scale when set, otherwise the level
+   * objective (backward-safe fallback so the bar still reads without a scale).
+   */
+  #ceiling() {
+    return this.#scale > 0 ? this.#scale : this.#objective;
+  }
+
+  /**
+   * Position the dashed objective line on the shared scale: the line sits
+   * `objective / scale` of the way up the board. It is clamped so the line —
+   * and its label — stay on-board, reserving `PROGRESS_TOP_RESERVE` px at the
+   * top for the last level's near-ceiling objective.
+   */
+  #renderGeometry() {
+    const line = this.#el?.querySelector('[data-role="line"]');
+    if (!line) return;
+    const ceiling = this.#ceiling();
+    const frac = ceiling > 0 ? Math.min(1, this.#objective / ceiling) : 0;
+    const raw = (1 - frac) * this.#height;
+    this.#lineY = Math.max(
+      PLINKO.PROGRESS_TOP_RESERVE,
+      Math.min(raw, this.#height),
+    );
+    line.style.top = `${this.#lineY}px`;
+  }
+
+  /**
+   * Height of the bottom-anchored fill. The fill scales linearly with the live
+   * score on the shared scale (`score / scale`), capped at the full board
+   * height. Because the line sits at `objective / scale`, the fill meets the
+   * line exactly when the score reaches the objective.
    */
   #renderFill() {
     const fill = this.#el?.querySelector('[data-role="fill"]');
     if (!fill) return;
-    const distToLine = Math.max(0, this.#height - this.#lineY);
-    const frac = this.#objective > 0 ? this.#score / this.#objective : 0;
-    const px = Math.min(this.#height, frac * distToLine);
+    const ceiling = this.#ceiling();
+    const frac = ceiling > 0 ? this.#score / ceiling : 0;
+    const px = Math.max(0, Math.min(this.#height, frac * this.#height));
     fill.style.height = `${px}px`;
     const reached = this.#objective > 0 && this.#score >= this.#objective;
     fill.classList.toggle("pk-pinboard-progress-fill--reached", reached);
     this.#el?.classList.toggle("pk-pinboard-progress--reached", reached);
   }
 
-  /** Refresh the objective label text (also on locale change). */
+  /** Refresh the compact label chips (also on locale change). */
   #renderLabel() {
-    const label = this.#el?.querySelector('[data-role="label"]');
-    if (label) {
-      label.textContent = i18n.t("game.progress.objective", {
+    const levelEl = this.#el?.querySelector('[data-role="level"]');
+    if (levelEl) {
+      levelEl.textContent = i18n.t("game.progress.level", {
         level: this.#level,
-        total: this.#total,
-        value: this.#format(this.#objective),
       });
     }
+    const valueEl = this.#el?.querySelector('[data-role="value"]');
+    if (valueEl) valueEl.textContent = this.#format(this.#objective);
   }
 
   /** @param {number} n */

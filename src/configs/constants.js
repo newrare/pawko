@@ -182,10 +182,10 @@ export const PLINKO = {
   LAYER_TOP_PADDING: 30,
   /** Gap (px) between the objective horizon line and the top peg row. */
   PROGRESS_LINE_MARGIN: 50,
-  /** Distance (px) from the pinboard top to the target dashed line.
-     Defines the empty zone reserved for the objective label and caps the
-     gauge fill so its top edge meets the target line at 100%. */
-  TARGET_LINE_OFFSET: 20,
+  /** Minimum distance (px) from the pinboard top to the objective dashed line.
+     Reserves room for the compact level/value label so the last level's line
+     (which maps to the very top of the shared score scale) never clips. */
+  PROGRESS_TOP_RESERVE: 20,
   /* Physics */
   GRAVITY: 600,
   RESTITUTION_PEG: 0.4,
@@ -499,4 +499,14 @@ export const SLOT_MACHINE = {
   /** Grace window (ms) after the last score change during which the machine
       stays faded in the background (score still "increasing"). */
   DIM_SCORE_IDLE_MS: 600,
+};
+
+/* Central score end-of-round reveal timing. */
+export const CENTRAL_SCORE = {
+  /** Fraction of the final total at which the win/lose effect (sunburst / lava)
+      starts fading in, mid count-up — so the outcome is only hinted late. */
+  OUTCOME_REVEAL_RATIO: 0.7,
+  /** Delay (ms) after the total reaches 100% before the action button + Game
+      Over appear, letting the effect finish blooming. */
+  SETTLE_DELAY_MS: 700,
 };

@@ -27,7 +27,7 @@ beforeEach(() => {
 });
 
 describe("MysteryChoiceModal", () => {
-  it("renders one card per choice", () => {
+  it("renders one power card per choice", () => {
     const modal = new MysteryChoiceModal({
       choices: [
         bonusChoice("reward_coins_x3", "legendary"),
@@ -35,7 +35,7 @@ describe("MysteryChoiceModal", () => {
       ],
     });
     modal.open();
-    const cards = document.querySelectorAll(".pk-mystery-card");
+    const cards = document.querySelectorAll(".pk-power-card");
     expect(cards).toHaveLength(2);
     modal.destroy();
   });
@@ -45,10 +45,20 @@ describe("MysteryChoiceModal", () => {
       choices: [bonusChoice("a", "legendary"), bonusChoice("b", "epic")],
     });
     modal.open();
-    expect(
-      document.querySelector(".pk-mystery-card--legendary"),
-    ).not.toBeNull();
-    expect(document.querySelector(".pk-mystery-card--epic")).not.toBeNull();
+    expect(document.querySelector(".pk-power-card--legendary")).not.toBeNull();
+    expect(document.querySelector(".pk-power-card--epic")).not.toBeNull();
+    modal.destroy();
+  });
+
+  it("renders a clickable card carrying its choose action and index", () => {
+    const modal = new MysteryChoiceModal({
+      choices: [bonusChoice("a", "rare"), bonusChoice("b", "epic")],
+    });
+    modal.open();
+    const cards = document.querySelectorAll(".pk-power-card.gt-clickable");
+    expect(cards).toHaveLength(2);
+    expect(cards[0].getAttribute("data-action")).toBe("choose");
+    expect(cards[1].getAttribute("data-index")).toBe("1");
     modal.destroy();
   });
 
@@ -57,10 +67,20 @@ describe("MysteryChoiceModal", () => {
       choices: [bonusChoice("reward_coins_x3", "legendary")],
     });
     modal.open();
-    const card = document.querySelector(".pk-mystery-card");
-    expect(card.querySelector(".pk-mystery-card-title")).not.toBeNull();
-    expect(card.querySelector(".pk-mystery-card-icon .pk-icon")).not.toBeNull();
-    expect(card.querySelector(".pk-mystery-card-desc")).not.toBeNull();
+    const card = document.querySelector(".pk-power-card");
+    expect(card.querySelector(".pk-power-card-title")).not.toBeNull();
+    expect(card.querySelector(".pk-power-card-hero .pk-icon")).not.toBeNull();
+    expect(card.querySelector(".pk-power-card-desc")).not.toBeNull();
+    modal.destroy();
+  });
+
+  it("shows a duration and a type stat row per card", () => {
+    const modal = new MysteryChoiceModal({
+      choices: [bonusChoice("reward_coins_x3", "legendary")],
+    });
+    modal.open();
+    const rows = document.querySelectorAll(".pk-power-card-list li");
+    expect(rows).toHaveLength(2);
     modal.destroy();
   });
 
@@ -69,11 +89,11 @@ describe("MysteryChoiceModal", () => {
       choices: [malusChoice("malus_half_coins")],
     });
     modal.open();
-    const card = document.querySelector(".pk-mystery-card--malus");
+    const card = document.querySelector(".pk-power-card--malus");
     expect(card).not.toBeNull();
     // Uses the bonus.malus.* namespace, not bonus.reward.* — so the title is
     // the resolved string, never the raw key.
-    const title = card.querySelector(".pk-mystery-card-title").textContent;
+    const title = card.querySelector(".pk-power-card-title").textContent;
     expect(title).not.toBe("bonus.reward.malus_half_coins");
     expect(title.length).toBeGreaterThan(0);
     modal.destroy();
@@ -84,7 +104,7 @@ describe("MysteryChoiceModal", () => {
       choices: [currencyChoice("coins", 60), currencyChoice("diamonds", 2)],
     });
     modal.open();
-    const titles = [...document.querySelectorAll(".pk-mystery-card-title")].map(
+    const titles = [...document.querySelectorAll(".pk-power-card-title")].map(
       (t) => t.textContent,
     );
     expect(titles.some((t) => t.includes("60"))).toBe(true);
@@ -97,7 +117,7 @@ describe("MysteryChoiceModal", () => {
     const choices = [bonusChoice("a", "legendary"), bonusChoice("b", "rare")];
     const modal = new MysteryChoiceModal({ choices, onChoose });
     modal.open();
-    const second = document.querySelectorAll(".pk-mystery-card")[1];
+    const second = document.querySelectorAll(".pk-power-card")[1];
     second.dispatchEvent(new Event("pointerdown", { bubbles: true }));
     expect(onChoose).toHaveBeenCalledTimes(1);
     expect(onChoose).toHaveBeenCalledWith(choices[1]);

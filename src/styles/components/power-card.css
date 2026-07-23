@@ -1,0 +1,318 @@
+/* --- Power card — item / reward card (mystery choice + style guide).
+       Design ported from the "forge" concept (card-final) onto the Velvet
+       Rouge palette: emphasised hero icon, background watermark, footer stat
+       list, pop-out rarity badge. Accent + animation are driven per rarity
+       through --pk-pc-accent below. --- */
+
+.pk-power-card {
+  --pk-pc-accent: var(--pk-gold);
+  --pk-pc-accent-2: var(--pk-gold-dim);
+  --pk-pc-ink: var(--pk-bg-card);
+  position: relative;
+  display: block;
+  width: 100%;
+  font-family: var(--gt-font-body);
+  text-align: center;
+  color: inherit;
+  transition:
+    transform 150ms ease,
+    filter 150ms ease;
+}
+
+/* clickable variant resets the native button chrome */
+button.pk-power-card {
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+.pk-power-card.gt-clickable:hover,
+.pk-power-card.gt-clickable:focus-visible {
+  transform: translateY(-4px);
+  filter: brightness(1.07);
+  outline: none;
+}
+
+.pk-power-card-inner {
+  position: relative;
+  height: 100%;
+  padding: 26px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--gt-radius-lg);
+  overflow: hidden;
+  background: var(--pk-bg-card);
+  border: 1px solid var(--pk-crimson-deep);
+  box-shadow: var(--gt-shadow-md);
+}
+
+/* Forge texture — molten glow at the base + spark columns, tinted by accent */
+.pk-power-card-inner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.5;
+  background:
+    radial-gradient(
+      circle at 50% 120%,
+      color-mix(in srgb, var(--pk-pc-accent) 42%, transparent),
+      transparent 46%
+    ),
+    repeating-linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--pk-pc-accent-2) 28%, transparent) 0 6px,
+      transparent 6px 15px
+    );
+}
+
+.pk-power-card.gt-clickable:hover .pk-power-card-inner {
+  border-color: var(--pk-pc-accent);
+}
+.pk-power-card.gt-clickable:focus-visible .pk-power-card-inner {
+  border-color: var(--pk-pc-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--pk-pc-accent) 45%, transparent);
+}
+
+/* --- Background watermark icon --- */
+.pk-power-card-bg {
+  position: absolute;
+  right: -30px;
+  bottom: -40px;
+  z-index: 0;
+  color: var(--pk-pc-accent);
+  opacity: 0.08;
+  pointer-events: none;
+}
+.pk-power-card-bg .pk-icon {
+  width: 200px;
+  height: 200px;
+}
+
+/* --- Hero icon (emphasised, shimmer + ping gated per rarity) --- */
+.pk-power-card-hero {
+  position: relative;
+  z-index: 2;
+  width: 104px;
+  height: 104px;
+  margin: 4px auto;
+  display: grid;
+  place-items: center;
+}
+.pk-power-card-hero-frame {
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: radial-gradient(
+    circle at 50% 30%,
+    var(--pk-crimson-deep),
+    var(--pk-bg-card)
+  );
+  border: 2px solid var(--pk-pc-accent);
+  box-shadow: 0 0 26px color-mix(in srgb, var(--pk-pc-accent) 42%, transparent);
+}
+.pk-power-card-hero-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: linear-gradient(
+    120deg,
+    transparent 30%,
+    color-mix(in srgb, var(--pk-pc-accent) 55%, transparent) 50%,
+    transparent 70%
+  );
+  transform: translateX(-150%);
+}
+.pk-power-card-hero .pk-icon {
+  position: relative;
+  z-index: 2;
+  width: 52px;
+  height: 52px;
+  color: var(--pk-pc-accent);
+  filter: drop-shadow(
+    0 0 8px color-mix(in srgb, var(--pk-pc-accent) 55%, transparent)
+  );
+}
+
+.pk-power-card-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.pk-power-card-title {
+  font-family: var(--gt-font-display);
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  margin-top: 10px;
+  color: var(--pk-gold-light);
+}
+.pk-power-card-desc {
+  font-size: 0.7rem;
+  line-height: 1.55;
+  color: var(--pk-rose);
+  margin-top: 6px;
+  flex: 1;
+}
+
+/* --- Footer stat list --- */
+.pk-power-card-list {
+  list-style: none;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--pk-crimson-deep);
+  text-align: left;
+}
+.pk-power-card-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 3px 0;
+  font-size: 0.66rem;
+}
+.pk-power-card-k {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--pk-rose-dim);
+  white-space: nowrap;
+}
+.pk-power-card-k .pk-icon {
+  width: 13px;
+  height: 13px;
+  color: var(--pk-pc-accent);
+}
+.pk-power-card-dots {
+  flex: 1;
+  border-bottom: 1px dotted var(--pk-rose-muted);
+  transform: translateY(-3px);
+}
+.pk-power-card-v {
+  font-family: var(--gt-font-display);
+  font-weight: 800;
+  color: var(--pk-pc-accent);
+  white-space: nowrap;
+}
+
+/* --- Pop-out rarity badge --- */
+.pk-power-card-badge {
+  position: absolute;
+  z-index: 50;
+  top: 12px;
+  right: -8px;
+  font-family: var(--gt-font-display);
+  font-size: 0.5rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  color: var(--pk-pc-ink);
+  background: var(--pk-pc-accent);
+  border-radius: var(--gt-radius-sm);
+  box-shadow: var(--gt-shadow-sm);
+  white-space: nowrap;
+}
+.pk-power-card-badge::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  right: 0;
+  width: 0;
+  height: 0;
+  border: 3px solid transparent;
+  border-top-color: var(--pk-pc-accent-2);
+  border-left-color: var(--pk-pc-accent-2);
+}
+
+/* --- Per-rarity presets — authentic to the game (icon.css / mystery). --- */
+.pk-power-card--legendary {
+  --pk-pc-accent: var(--pk-gold);
+  --pk-pc-accent-2: var(--pk-gold-dim);
+  --pk-pc-ink: var(--pk-bg-card);
+}
+.pk-power-card--epic {
+  --pk-pc-accent: var(--pk-crimson);
+  --pk-pc-accent-2: var(--pk-crimson-deep);
+  --pk-pc-ink: var(--pk-gold-light);
+}
+.pk-power-card--rare {
+  --pk-pc-accent: var(--pk-rose);
+  --pk-pc-accent-2: var(--pk-rose-muted);
+  --pk-pc-ink: var(--pk-bg);
+}
+.pk-power-card--common {
+  --pk-pc-accent: var(--pk-rose-dim);
+  --pk-pc-accent-2: var(--pk-crimson-muted);
+  --pk-pc-ink: var(--pk-bg);
+}
+.pk-power-card--malus {
+  --pk-pc-accent: var(--pk-rose);
+  --pk-pc-accent-2: var(--pk-rose-muted);
+  --pk-pc-ink: var(--pk-bg);
+}
+
+/* Ping radar — legendary only */
+.pk-power-card--legendary .pk-power-card-hero {
+  border-radius: 8px;
+  animation: pk-power-ping 2s ease-out infinite;
+}
+@keyframes pk-power-ping {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--pk-pc-accent) 60%, transparent);
+  }
+  70% {
+    box-shadow: 0 0 0 18px
+      color-mix(in srgb, var(--pk-pc-accent) 0%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--pk-pc-accent) 0%, transparent);
+  }
+}
+
+/* Shimmer sweep — legendary + epic only */
+.pk-power-card--legendary .pk-power-card-hero-frame::before,
+.pk-power-card--epic .pk-power-card-hero-frame::before {
+  animation: pk-power-shimmer 12s linear infinite;
+}
+@keyframes pk-power-shimmer {
+  0% {
+    transform: translateX(-150%);
+  }
+  9% {
+    transform: translateX(150%);
+  }
+  100% {
+    transform: translateX(150%);
+  }
+}
+
+/* Malus — inverted: dark hero surface, subdued glow, dashed badge */
+.pk-power-card--malus .pk-power-card-hero-frame {
+  background: var(--pk-bg);
+}
+.pk-power-card--malus .pk-power-card-inner::before {
+  opacity: 0.28;
+}
+.pk-power-card--malus .pk-power-card-title {
+  color: var(--pk-rose);
+}
+.pk-power-card--malus .pk-power-card-badge {
+  background: transparent;
+  color: var(--pk-pc-accent);
+  border: 1px dashed var(--pk-pc-accent);
+  box-shadow: none;
+}
+.pk-power-card--malus .pk-power-card-badge::after {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pk-power-card--legendary .pk-power-card-hero,
+  .pk-power-card-hero-frame::before {
+    animation: none;
+  }
+}

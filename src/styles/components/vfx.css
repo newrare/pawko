@@ -604,8 +604,8 @@
     0 2px 3px rgba(0, 0, 0, 0.7);
 }
 
-/* --- Blue orb flying from the cannon counter into the multiplier readout,
-       when leftover balls are converted to multipliers post-objective. --- */
+/* --- Blue multiplier orb: flies from the cannon counter or an x1/x2 gate onto
+       the central score (leftover-ball conversion + end-of-round reveal). --- */
 
 .pk-mult-fly {
   position: absolute;

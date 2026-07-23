@@ -79,12 +79,15 @@ export class SlotMachineHud {
     el.innerHTML = `
       <div class="pk-slot-frame">
         <div class="pk-slot-reels" data-role="reels"></div>
+        <button class="pk-slot-lever gt-clickable" data-role="reroll"
+                type="button" title="${i18n.t("slotmachine.reroll")}">
+          <span class="pk-slot-lever-arm">
+            <span class="pk-slot-lever-knob">${iconSvg("rotate-cw")}</span>
+          </span>
+          <span class="pk-slot-lever-base"></span>
+          <span class="pk-slot-reroll-cost" data-role="cost"></span>
+        </button>
       </div>
-      <button class="pk-slot-reroll gt-clickable" data-role="reroll"
-              type="button" title="${i18n.t("slotmachine.reroll")}">
-        <span class="pk-slot-reroll-icon">${iconSvg("rotate-cw")}</span>
-        <span class="pk-slot-reroll-cost" data-role="cost"></span>
-      </button>
     `;
     root.appendChild(el);
     this.#el = el;
@@ -312,10 +315,20 @@ export class SlotMachineHud {
   // ─── Drag & drop ─────────────────────────────────────────────────────
 
   #onReelDown = (event) => {
+    const target = /** @type {HTMLElement} */ (event.target);
+
+    /* The re-spin lever: pull it on press. Driving it from pointerdown (not a
+       native click) is deliberate — the lever swings out from under the finger
+       during its pull animation, so the closing click can land off-target and
+       be lost. The click listener stays for keyboard activation; a mid-spin
+       re-entry is a no-op (guarded in #onRerollClick). */
+    if (target.closest('[data-role="reroll"]')) {
+      this.#onRerollClick();
+      return;
+    }
+
     if (this.#spinning) return;
-    const reelEl = /** @type {HTMLElement} */ (event.target).closest(
-      ".pk-slot-reel--filled",
-    );
+    const reelEl = target.closest(".pk-slot-reel--filled");
     if (!reelEl || !this.#el?.contains(reelEl)) return;
     const index = Number(reelEl.dataset.idx);
     const type = this.#machine.typeAt(index);
@@ -326,6 +339,9 @@ export class SlotMachineHud {
 
     const ghost = document.createElement("div");
     ghost.className = "pk-slot-ghost";
+    /* Carry the reel type so the ghost keeps the icon's accent color
+       (e.g. a red "fire" icon stays red) while being dragged onto a peg. */
+    ghost.dataset.type = type;
     ghost.innerHTML = iconForUpgrade(type);
     document.body.appendChild(ghost);
     this.#drag = { index, type, ghost };

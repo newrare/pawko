@@ -1,7 +1,7 @@
-/* --- Mystery choice modal — forced pick of one reward card. Cards reuse the
-       .pk-featured item-highlight treatment (icon.css); per-rarity animation
-       is gated here: legendary = shimmer + ping radar, epic = shimmer,
-       rare / common = static. Accent flows from --pk-mc-accent. --- */
+/* --- Mystery choice modal — forced pick of one reward card. The choices are
+       rendered with the shared power card (power-card.css); this file only
+       lays out the modal shell and tightens the cards for the narrow modal
+       width. Per-rarity accent + shimmer / ping live in power-card.css. --- */
 
 .pk-mystery-modal .gt-modal {
   width: min(94vw, var(--gt-safe-width, 480px), 460px);
@@ -20,104 +20,33 @@
   justify-content: center;
 }
 
-.pk-mystery-card {
-  --pk-mc-accent: var(--pk-rose-muted);
+/* --- Compact the power card for the modal's narrow, two-up layout. --- */
+.pk-mystery-cards .pk-power-card {
   flex: 1 1 0;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  padding: 1rem 0.75rem 1.25rem;
-  background: var(--pk-bg-card);
-  border: 1px solid var(--pk-crimson-deep);
-  border-radius: var(--gt-radius-lg);
-  color: var(--gt-color-text-sec);
-  font-family: inherit;
-  text-align: center;
-  cursor: pointer;
-  transition:
-    border-color 150ms ease,
-    transform 150ms ease;
 }
-
-.pk-mystery-card:hover,
-.pk-mystery-card:focus-visible {
-  border-color: var(--pk-mc-accent);
-  transform: translateY(-2px);
-  outline: none;
+.pk-mystery-cards .pk-power-card-inner {
+  padding: 22px 12px 14px;
 }
-
-.pk-mystery-card-title {
-  display: flex;
-  align-items: center;
-  min-height: 2.4em;
-  font-family: var(--gt-font-display);
-  font-size: 0.8rem;
-  font-weight: 800;
-  letter-spacing: 1px;
-  color: var(--pk-mc-accent);
+.pk-mystery-cards .pk-power-card-hero {
+  width: 84px;
+  height: 84px;
 }
-
-.pk-mystery-card-desc {
-  font-size: 0.66rem;
-  line-height: 1.5;
-  color: var(--gt-color-text-dim);
-}
-
-/* --- Icon surface — smaller than the standalone 132px .pk-featured tile.
-       Accent + shimmer tint are driven by the card's rarity accent. --- */
-.pk-mystery-card .pk-featured {
-  --pk-featured-accent: var(--pk-mc-accent);
-  --pk-featured-shimmer: color-mix(
-    in srgb,
-    var(--pk-mc-accent) 50%,
-    transparent
-  );
-  width: 92px;
-  height: 92px;
-}
-
-.pk-mystery-card .pk-featured-surface .pk-icon {
+.pk-mystery-cards .pk-power-card-hero .pk-icon {
   width: 42px;
   height: 42px;
 }
-
-/* --- Per-rarity accent presets --- */
-.pk-mystery-card--legendary {
-  --pk-mc-accent: var(--gt-color-gold);
-}
-.pk-mystery-card--epic {
-  --pk-mc-accent: var(--pk-crimson);
-}
-.pk-mystery-card--rare {
-  --pk-mc-accent: var(--pk-rose);
-}
-.pk-mystery-card--common {
-  --pk-mc-accent: var(--pk-rose-muted);
-}
-/* Malus — inverted card: the icon surface is filled with the dark Background
-   color, with a readable rose accent for the icon / title / border. */
-.pk-mystery-card--malus {
-  --pk-mc-accent: var(--pk-rose);
-}
-.pk-mystery-card--malus .pk-featured-surface {
-  background: var(--pk-bg);
+.pk-mystery-cards .pk-power-card-bg .pk-icon {
+  width: 150px;
+  height: 150px;
 }
 
-/* --- Animation gating.
-       Ping radar (the .pk-featured element animation) — legendary only. --- */
-.pk-mystery-card--epic .pk-featured,
-.pk-mystery-card--rare .pk-featured,
-.pk-mystery-card--common .pk-featured,
-.pk-mystery-card--malus .pk-featured {
-  animation: none;
+/* The modal body (.gt-modal) clips overflow, so keep the badge inside the
+   card rather than poking past its border. */
+.pk-mystery-cards .pk-power-card-badge {
+  top: 8px;
+  right: 6px;
 }
-
-/* Shimmer sweep (the ::before) — legendary + epic only. */
-.pk-mystery-card--rare .pk-featured-surface::before,
-.pk-mystery-card--common .pk-featured-surface::before,
-.pk-mystery-card--malus .pk-featured-surface::before {
-  content: none;
-  animation: none;
+.pk-mystery-cards .pk-power-card-badge::after {
+  display: none;
 }

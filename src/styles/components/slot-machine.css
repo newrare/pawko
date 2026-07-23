@@ -28,14 +28,17 @@
   opacity: 0.16;
 }
 .pk-slot-machine--dimmed .pk-slot-reel,
-.pk-slot-machine--dimmed .pk-slot-reroll {
+.pk-slot-machine--dimmed .pk-slot-lever {
   pointer-events: none;
 }
 
-/* --- Art Déco frame --- */
+/* --- Art Déco frame — holds the reels and, on its right, the re-spin lever. */
 .pk-slot-frame {
   position: relative;
-  padding: 12px 15px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 12px 14px;
   border-radius: var(--gt-radius-lg);
   background: linear-gradient(180deg, var(--pk-bg-card), #180509);
   border: 1px solid var(--pk-gold-dim);
@@ -122,10 +125,12 @@
   color: var(--pk-slot-accent, var(--pk-gold-light));
 }
 
+/* The reel frame keeps a neutral gold — only the icon carries the per-type
+   accent, so the drum border never turns red/blue/etc. with its final icon. */
 .pk-slot-reel--filled {
   cursor: grab;
-  border-color: var(--pk-slot-accent);
-  box-shadow: 0 0 6px -1px var(--pk-slot-accent);
+  border-color: var(--pk-gold-dim);
+  box-shadow: 0 0 6px -2px rgba(0, 0, 0, 0.6);
 }
 .pk-slot-reel--filled:active,
 .pk-slot-reel--dragging {
@@ -168,74 +173,144 @@
   font-size: 1.5rem;
 }
 
-/* --- Per-type accents (reuse the shared peg tokens) --- */
-.pk-slot-reel[data-type="fire"] {
+/* --- Per-type accents (reuse the shared peg tokens) ---
+   Shared by the reel and the floating drag ghost, so an icon keeps its color
+   from the drum through the whole drag onto a peg. */
+.pk-slot-reel[data-type="fire"],
+.pk-slot-ghost[data-type="fire"] {
   --pk-slot-accent: var(--pk-peg-fire);
 }
-.pk-slot-reel[data-type="ice"] {
+.pk-slot-reel[data-type="ice"],
+.pk-slot-ghost[data-type="ice"] {
   --pk-slot-accent: var(--pk-peg-ice);
 }
-.pk-slot-reel[data-type="electrical"] {
+.pk-slot-reel[data-type="electrical"],
+.pk-slot-ghost[data-type="electrical"] {
   --pk-slot-accent: var(--pk-peg-electrical);
 }
-.pk-slot-reel[data-type="coin"] {
+.pk-slot-reel[data-type="coin"],
+.pk-slot-ghost[data-type="coin"] {
   --pk-slot-accent: var(--pk-peg-coin);
 }
-.pk-slot-reel[data-type="bumper"] {
+.pk-slot-reel[data-type="bumper"],
+.pk-slot-ghost[data-type="bumper"] {
   --pk-slot-accent: var(--pk-bumper-ring);
 }
-.pk-slot-reel[data-type="glue"] {
+.pk-slot-reel[data-type="glue"],
+.pk-slot-ghost[data-type="glue"] {
   --pk-slot-accent: var(--pk-peg-glue);
 }
-.pk-slot-reel[data-type="teleport"] {
+.pk-slot-reel[data-type="teleport"],
+.pk-slot-ghost[data-type="teleport"] {
   --pk-slot-accent: var(--pk-teleport-ring);
 }
-.pk-slot-reel[data-type="shield"] {
+.pk-slot-reel[data-type="shield"],
+.pk-slot-ghost[data-type="shield"] {
   --pk-slot-accent: var(--pk-peg-shield);
 }
-.pk-slot-reel[data-type="bomb"] {
+.pk-slot-reel[data-type="bomb"],
+.pk-slot-ghost[data-type="bomb"] {
   --pk-slot-accent: var(--pk-peg-bomb);
 }
 
-/* --- Re-spin button --- */
-.pk-slot-reroll {
+/* --- Re-spin lever (the "bandit manchot" arm), mounted inside the frame to
+       the right of the reels. The arm pivots down at its base on press. --- */
+.pk-slot-lever {
   pointer-events: auto;
-  display: inline-flex;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 5px;
-  padding: 3px 14px;
-  border-radius: 999px;
-  border: 1px solid var(--pk-gold);
-  background: var(--pk-bg-card);
-  color: var(--pk-gold-light);
-  font-family: var(--gt-font-display);
-  font-weight: 700;
-  font-size: 0.82rem;
+  gap: 3px;
+  padding: 0;
+  background: none;
+  border: none;
   cursor: pointer;
-  transition:
-    transform 0.12s ease,
-    opacity 0.2s ease;
 }
-.pk-slot-reroll:not([disabled]):active {
-  transform: scale(0.94);
+
+/* The rod. Pivots at its base (bottom center) so the knob swings down. */
+.pk-slot-lever-arm {
+  position: relative;
+  width: 5px;
+  height: 26px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--pk-gold-light), var(--pk-gold-dim));
+  box-shadow: 0 1px 3px -1px rgba(0, 0, 0, 0.7);
+  transform-origin: bottom center;
+  transition: transform 0.14s cubic-bezier(0.3, 0.8, 0.3, 1.2);
 }
-.pk-slot-reroll[disabled] {
+
+/* Round knob at the top of the arm. */
+.pk-slot-lever-knob {
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(
+    circle at 35% 30%,
+    var(--pk-crimson),
+    var(--pk-crimson-deep)
+  );
+  border: 1px solid var(--pk-gold);
+  box-shadow:
+    0 3px 6px -2px rgba(0, 0, 0, 0.7),
+    inset 0 1px 2px rgba(255, 255, 255, 0.25);
+  color: var(--pk-gold-light);
+}
+.pk-slot-lever-knob .pk-icon {
+  width: 12px;
+  height: 12px;
+}
+
+/* Small pivot hub bolting the arm to the frame floor. */
+.pk-slot-lever-base {
+  width: 13px;
+  height: 6px;
+  border-radius: 3px 3px 4px 4px;
+  background: linear-gradient(180deg, var(--pk-gold-dim), #180509);
+  box-shadow: 0 3px 8px -5px rgba(0, 0, 0, 0.8);
+}
+
+/* Pull the arm down on press. */
+.pk-slot-lever:not([disabled]):active .pk-slot-lever-arm {
+  transform: rotate(26deg);
+}
+
+.pk-slot-lever[disabled] {
   opacity: 0.4;
   cursor: default;
+}
+.pk-slot-lever[disabled] .pk-slot-lever-arm {
+  background: linear-gradient(180deg, var(--pk-rose-dim), var(--pk-rose-muted));
+}
+.pk-slot-lever[disabled] .pk-slot-lever-knob {
+  background: var(--pk-crimson-muted);
   border-color: var(--pk-rose-muted);
   color: var(--pk-rose-dim);
 }
-.pk-slot-reroll-icon {
-  display: inline-flex;
-  font-size: 0.9rem;
-}
+
 .pk-slot-reroll-cost {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
+  gap: 2px;
+  font-family: var(--gt-font-display);
+  font-weight: 700;
+  font-size: 0.72rem;
+  color: var(--pk-gold-light);
 }
 .pk-slot-reroll-cost .pk-icon {
   color: var(--pk-gold);
+}
+.pk-slot-lever[disabled] .pk-slot-reroll-cost {
+  color: var(--pk-rose-dim);
+}
+.pk-slot-lever[disabled] .pk-slot-reroll-cost .pk-icon {
+  color: var(--pk-rose-muted);
 }
 
 /* --- Floating drag token (appended to <body>, follows the pointer) --- */
@@ -247,6 +322,7 @@
   z-index: 60;
   font-size: 1.6rem;
   pointer-events: none;
+  color: var(--pk-slot-accent, var(--pk-gold-light));
   filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.6));
   animation: pk-slot-ghost-pop 0.14s ease-out;
 }

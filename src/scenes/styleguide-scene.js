@@ -4,6 +4,10 @@ import { layout } from "../managers/layout-manager.js";
 import { SlowFloatBackground } from "../utils/slow-float-background.js";
 import { buttonHtml } from "../components/ui/button.js";
 import { toggleRowHtml } from "../components/ui/toggle-row.js";
+import { powerCardHtml } from "../components/ui/power-card.js";
+import { mysteryChoiceCardProps } from "../components/mystery-choice-modal.js";
+import { findBonus } from "../configs/bonus-defs.js";
+import { MYSTERY_CHOICE_TYPES } from "../utils/mystery-choice.js";
 import { mountSparkWeb } from "../utils/spark-web.js";
 import { iconSvg } from "../utils/icon.js";
 
@@ -80,7 +84,7 @@ export class StyleguideScene {
       ${this.#renderIcons()}
       ${this.#renderTypography()}
       ${this.#renderCards()}
-      ${this.#renderMysteryCards()}
+      ${this.#renderPowerCards()}
       ${this.#renderButtons()}
       ${this.#renderToggles()}
       ${this.#renderPegs()}
@@ -342,75 +346,50 @@ export class StyleguideScene {
     `;
   }
 
-  #renderMysteryCards() {
-    // Mirrors MysteryChoiceModal.#renderCard so cards can be tuned here in
-    // isolation. Per-rarity treatment: legendary = shimmer + ping radar,
-    // epic = shimmer, rare / common = static, malus = inverted (dark surface).
-    const card = ({ rarity, icon, title, desc }) => `
-      <div class="pk-mystery-card pk-mystery-card--${rarity}">
-        <span class="pk-mystery-card-title">${title}</span>
-        <span class="pk-mystery-card-icon pk-featured">
-          <span class="pk-featured-surface">${iconSvg(icon)}</span>
-        </span>
-        <span class="pk-mystery-card-desc">${desc}</span>
-      </div>`;
+  #renderPowerCards() {
+    // The shared power card (powerCardHtml) rendered through the same
+    // mysteryChoiceCardProps() mapper the MysteryChoiceModal uses, so the
+    // guide previews the real reward picker. One representative reward per
+    // rarity: legendary (shimmer + ping) · epic (shimmer) · rare · common ·
+    // malus (inverted).
+    const bonusCard = (id) => {
+      const def = findBonus(id);
+      if (!def) return "";
+      const choice = {
+        type: MYSTERY_CHOICE_TYPES.BONUS,
+        def,
+        rarity: def.rarity,
+      };
+      return powerCardHtml(mysteryChoiceCardProps(choice));
+    };
 
-    // One representative reward per rarity (title + desc pulled from locales).
     const rewards = [
-      {
-        rarity: "legendary",
-        icon: "coins",
-        key: "bonus.reward.reward_coins_x3",
-      },
-      {
-        rarity: "epic",
-        icon: "sparkles",
-        key: "bonus.reward.reward_score_total_x2",
-      },
-      { rarity: "rare", icon: "bomb", key: "bonus.reward.reward_bomb_radius" },
-      {
-        rarity: "common",
-        icon: "circle-plus",
-        key: "bonus.reward.reward_extra_ball",
-      },
-      { rarity: "malus", icon: "coins", key: "bonus.malus.malus_half_coins" },
+      "reward_coins_x3", // legendary
+      "reward_score_total_x2", // epic
+      "reward_bomb_radius", // rare
+      "reward_extra_ball", // common
+      "malus_score_penalty", // malus
     ]
-      .map((r) =>
-        card({
-          rarity: r.rarity,
-          icon: r.icon,
-          title: i18n.t(r.key),
-          desc: i18n.t(`${r.key}.desc`),
-        }),
-      )
+      .map(bonusCard)
       .join("");
 
-    // Currency fallback cards (common) shown when too few rewards remain.
-    const fallback = [
-      { icon: "coins", currency: "coins", amount: 60 },
-      { icon: "gem", currency: "diamonds", amount: 2 },
-    ]
-      .map((f) =>
-        card({
-          rarity: "common",
-          icon: f.icon,
-          title: i18n.t(`mystery_choice.currency.${f.currency}`, {
-            n: f.amount,
-          }),
-          desc: i18n.t(`mystery_choice.currency.${f.currency}.desc`, {
-            n: f.amount,
-          }),
-        }),
-      )
-      .join("");
+    // Currency fallback card (common) shown when too few rewards remain.
+    const fallback = powerCardHtml(
+      mysteryChoiceCardProps({
+        type: MYSTERY_CHOICE_TYPES.CURRENCY,
+        currency: "coins",
+        amount: 60,
+        rarity: "common",
+      }),
+    );
 
     const grid =
-      "display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;align-items:stretch;";
+      "display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:24px 16px;align-items:stretch;";
 
     return `
       <section class="gt-sg-section">
-        <h2 class="gt-sg-h2">Mystery choice — reward cards</h2>
-        <span class="gt-sg-sub-label" style="display:block;">Per rarity — legendary (shimmer + ping) · epic (shimmer) · rare · common · malus (inverted)</span>
+        <h2 class="gt-sg-h2">Power cards — mystery choice (par rareté)</h2>
+        <span class="gt-sg-sub-label" style="display:block;">Shared card used by the mystery-cell reward picker · legendary (shimmer + ping) · epic (shimmer) · rare · common · malus (inverted)</span>
         <div style="${grid}">${rewards}</div>
 
         <span class="gt-sg-sub-label" style="margin-top:1.4rem;display:block;">Currency fallback — common card (offered when too few rewards remain)</span>

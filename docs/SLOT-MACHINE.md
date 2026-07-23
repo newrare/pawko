@@ -1,17 +1,22 @@
 # Slot machine — peg-upgrade drum
 
-The **slot machine** ("bandit manchot") lives inside the pinboard, centered
-between the score HUD (raised to hug the cannon) and the objective horizon
-line. On level open its reels spin and settle on random **peg upgrades**; the
+The **slot machine** ("bandit manchot") lives inside the pinboard, in the
+upper band between the score HUD (raised to hug the cannon) and the top peg
+row. On level open its reels spin and settle on random **peg upgrades**; the
 player **drags an upgrade onto a classic peg** to evolve it. A reel emptied by
 a drop can be re-filled with a paid **re-spin**.
+
+Its vertical placement follows the **top peg row**, not the objective line —
+the objective line now moves per level on the shared score scale (low for
+level 1, high for the last level), so the machine is anchored to the pegs to
+keep a stable position.
 
 ```
 [ cannon ]
 [ score HUD ]          ← raised near the cannon
-[ 🔥 ❄️ ⚡ 🟠 ]  ↻ 25   ← slot machine, centered
-——— objective line ———
+[ 🔥 ❄️ ⚡ 🟠 ]  ↻ 25   ← slot machine, above the top peg row
 · · · pegs · · ·
+─Lv1──────────────500─  ← objective line (position varies per level)
 ```
 
 ## Rules

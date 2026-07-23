@@ -90,6 +90,11 @@ describe("SlotMachineHud", () => {
     expect(ghosts().length).toBe(0);
   });
 
+  it("tags the drag ghost with its reel type so it keeps the icon color", () => {
+    active()[1].dispatchEvent(pointer("pointerdown", 10, 20));
+    expect(ghosts()[0].dataset.type).toBe("fire");
+  });
+
   it("empties the source reel when the drop is applied", () => {
     active()[0].dispatchEvent(pointer("pointerdown", 5, 5));
     window.dispatchEvent(pointer("pointerup", 50, 50));
@@ -116,6 +121,13 @@ describe("SlotMachineHud", () => {
 
   it("re-spin click re-rolls all reels and calls onReroll", () => {
     rerollBtn().dispatchEvent(new Event("click", { bubbles: true }));
+    expect(onReroll).toHaveBeenCalledOnce();
+  });
+
+  it("re-spin also fires when the lever is pulled (pointerdown)", () => {
+    // The lever swings out from under the finger, so a native click can be
+    // lost — pointerdown must drive the re-spin.
+    rerollBtn().dispatchEvent(pointer("pointerdown", 0, 0));
     expect(onReroll).toHaveBeenCalledOnce();
   });
 

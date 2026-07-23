@@ -171,19 +171,23 @@ export class PinboardVfx {
   }
 
   /**
-   * Fly a blue multiplier orb from the cannon ball counter toward the score
-   * HUD multiplier, then invoke `onArrive` when it lands (so the caller raises
-   * the multiplier exactly as the orb merges into it). Used when the objective
-   * is already met and the leftover cannon balls are converted to multipliers.
-   * Both coordinates are resolved against the safe-zone box.
-   * @param {HTMLElement | null} fromEl — source element (cannon counter)
-   * @param {HTMLElement | null} toEl — target element (multiplier readout)
+   * Fly a blue multiplier orb from `fromEl` toward `toEl`, then invoke
+   * `onArrive` when it lands (so the caller applies the multiplier exactly as
+   * the orb merges in). Used both when leftover cannon balls are converted to
+   * multipliers (cannon counter → central score) and for the end-of-round
+   * reveal (an x1/x2 gate → central score). Coordinates resolve against the
+   * safe-zone box.
+   * @param {HTMLElement | null} fromEl — source element
+   * @param {HTMLElement | null} toEl — target element (central score)
    * @param {() => void} [onArrive]
+   * @param {HTMLElement | null} [layerEl] — host layer (defaults to the ball
+   *   layer); pass a layer above the reveal overlay so the orb stays visible.
    */
-  flyBallToMultiplier(fromEl, toEl, onArrive) {
+  flyBallToMultiplier(fromEl, toEl, onArrive, layerEl) {
     const { ballLayerEl, safeEl, bag } = this.deps;
+    const host = layerEl ?? ballLayerEl;
     const safeRect = safeEl?.getBoundingClientRect();
-    if (!ballLayerEl || !fromEl || !safeRect) {
+    if (!host || !fromEl || !safeRect) {
       onArrive?.();
       return;
     }
@@ -207,7 +211,7 @@ export class PinboardVfx {
     orb.style.top = `${startY}px`;
     orb.style.setProperty("--pk-fly-dx", `${dx.toFixed(1)}px`);
     orb.style.setProperty("--pk-fly-dy", `${dy.toFixed(1)}px`);
-    ballLayerEl.appendChild(orb);
+    host.appendChild(orb);
     bag.timeout(() => {
       onArrive?.();
       orb.remove();

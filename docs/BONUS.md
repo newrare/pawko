@@ -43,12 +43,15 @@ source to **common** rewards while active.
   a **common** currency card granting coins or diamonds (amounts from
   `MYSTERY_CHOICE.FALLBACK_*` in `constants.js`). The pure draw logic lives in
   [`src/utils/mystery-choice.js`](../src/utils/mystery-choice.js)
-  (`buildMysteryChoices`); cards reuse the `.pk-featured` item-highlight from
-  the style guide, gated per rarity:
+  (`buildMysteryChoices`); cards are rendered with the shared **power card**
+  ([`src/components/ui/power-card.js`](../src/components/ui/power-card.js),
+  styled in `power-card.css`) — hero icon, background watermark, footer stat
+  list (duration + type) and a pop-out rarity badge — previewed in the style
+  guide. Accent and animation are gated per rarity:
   - legendary — gold, shimmer + ping radar
   - epic — crimson, shimmer
-  - rare — rose · common — rose-muted (static)
-  - malus — inverted card (dark Background-filled surface, rose accent, static)
+  - rare — rose · common — rose-dim (static)
+  - malus — inverted card (dark surface, dashed badge, static)
 
 ## Three kinds of effect
 
@@ -89,12 +92,12 @@ on a def:
 
 Each unit is ticked by its own game-controller event:
 
-| unit      | ticked by                    | fired when                       |
-| --------- | ---------------------------- | -------------------------------- |
-| `level`   | `bonusManager.onLevelUp()`   | a level is completed (victory)   |
-| `shop`    | `bonusManager.onShopVisited()` | the boutique is entered        |
-| `mystery` | `bonusManager.onMysteryDraw()` | a mystery reward is drawn      |
-| `run`     | — (never)                    | cleared only on a new run        |
+| unit      | ticked by                      | fired when                       |
+| --------- | ------------------------------ | -------------------------------- |
+| `level`   | `bonusManager.onLevelUp()`     | a level is completed (victory)   |
+| `shop`    | `bonusManager.onShopVisited()` | the boutique is entered          |
+| `mystery` | `bonusManager.onMysteryDraw()` | a mystery reward is drawn        |
+| `run`     | — (never)                      | cleared only on a new run        |
 
 On reaching 0 the entry is removed and the optional `onExpire()` fires.
 

@@ -11,6 +11,7 @@
 @import "./components/icon.css";
 @import "./components/button.css";
 @import "./components/modal.css";
+@import "./components/power-card.css";
 @import "./components/mystery-choice.css";
 @import "./components/toggle.css";
 @import "./components/title.css";
@@ -24,7 +25,7 @@
 @import "./components/hud.css";
 @import "./components/info-bar.css";
 @import "./components/currency-hud.css";
-@import "./components/score-hud.css";
+@import "./components/central-score.css";
 @import "./components/pinboard-progress.css";
 @import "./components/slot-machine.css";
 @import "./components/ball.css";
